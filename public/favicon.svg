@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+  <!-- Shield body with very light fill so it reads well at small sizes -->
+  <path d="M16 2L5 7L5 18.5C5 25 9.5 29.5 16 31.5C22.5 29.5 27 25 27 18.5L27 7Z"
+        stroke="#0F172A" stroke-width="2" stroke-linejoin="round" fill="#EFF6FF"/>
+  <!-- Eye: almond/ellipse with pointed corners -->
+  <path d="M9 18.5C11.5 14.3 20.5 14.3 23 18.5C20.5 22.7 11.5 22.7 9 18.5Z"
+        stroke="#0F172A" stroke-width="1.2" fill="none"/>
+  <!-- Iris -->
+  <circle cx="16" cy="18.5" r="3.2" fill="#2563EB"/>
+  <!-- Pupil -->
+  <circle cx="16" cy="18.5" r="1.6" fill="#0F172A"/>
+  <!-- Glint -->
+  <circle cx="17.2" cy="17.3" r="0.65" fill="white"/>
+  <circle cx="15.2" cy="18.1" r="0.35" fill="white"/>
+</svg>
