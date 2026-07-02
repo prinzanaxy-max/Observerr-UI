@@ -26,19 +26,6 @@ const Icon = ({ name, className = '' }: { name: string; className?: string }) =>
         aria-hidden="true">{name}</span>
 );
 
-const ObserrLogo = ({ className = '' }) => (
-  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"
-       className={className} aria-hidden="true">
-    <path d="M16 2.5L5 7L5 18.5C5 25.2 9.5 29.8 16 31.8C22.5 29.8 27 25.2 27 18.5L27 7Z"
-          stroke="#0F172A" strokeWidth="1.8" strokeLinejoin="round" fill="none"/>
-    <path d="M9 18.5C11.5 14.3 20.5 14.3 23 18.5C20.5 22.7 11.5 22.7 9 18.5Z"
-          stroke="#0F172A" strokeWidth="1.2" strokeLinejoin="round" fill="none"/>
-    <circle cx="16" cy="18.5" r="3.2" fill="#2563EB"/>
-    <circle cx="16" cy="18.5" r="1.6" fill="#0F172A"/>
-    <circle cx="17.2" cy="17.3" r="0.65" fill="white"/>
-    <circle cx="15.2" cy="18.1" r="0.35" fill="white"/>
-  </svg>
-);
 
 /* ─── Course colours ──────────────────────────────────────────────────────── */
 const cc = (code: string) =>
