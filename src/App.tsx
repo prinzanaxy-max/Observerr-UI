@@ -8,6 +8,13 @@ import AuthPage          from './pages/AuthPage';
 import DashboardPage     from './pages/DashboardPage';
 import StudentDashboard  from './pages/StudentDashboard';
 import LecturerDashboard from './pages/LecturerDashboard';
+import LecturerExamsPage from './pages/LecturerExamsPage';
+import LecturerLiveMonitoringPage from './pages/LecturerLiveMonitoringPage';
+import LecturerStudentTimelinePage from './pages/LecturerStudentTimelinePage';
+import LecturerStudentsPage from './pages/LecturerStudentsPage';
+import LecturerIntegrityReportsPage from './pages/LecturerIntegrityReportsPage';
+import LecturerProctoringPage from './pages/LecturerProctoringPage';
+import LecturerCreateExamPage from './pages/LecturerCreateExamPage';
 import AccessDeniedPage  from './pages/AccessDeniedPage';
 import NotFoundPage      from './pages/NotFoundPage';
 import ProtectedRoute    from './components/ProtectedRoute';
@@ -45,6 +52,14 @@ function App() {
         {/* Role-protected — LECTURER only */}
         <Route element={<RoleProtectedRoute roles={['LECTURER']} />}>
           <Route path="/lecturer" element={<LecturerDashboard />} />
+          <Route path="/lecturer/exams" element={<LecturerExamsPage />} />
+          <Route path="/lecturer/exams/new" element={<LecturerCreateExamPage />} />
+          <Route path="/lecturer/exams/:examId/live" element={<LecturerLiveMonitoringPage />} />
+          <Route path="/lecturer/exams/:examId/students/:studentId/timeline" element={<LecturerStudentTimelinePage />} />
+          <Route path="/lecturer/students" element={<LecturerStudentsPage />} />
+          <Route path="/lecturer/students/:studentId/timeline" element={<LecturerStudentTimelinePage />} />
+          <Route path="/lecturer/reports" element={<LecturerIntegrityReportsPage />} />
+          <Route path="/lecturer/proctoring" element={<LecturerProctoringPage />} />
         </Route>
 
         {/* Error pages */}

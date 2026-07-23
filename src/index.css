@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -65,80 +66,63 @@ body {
   display: block;
 }
 
-/* ── Auth Page — Card Layout ───────────────────────────────────────────── */
+/* ── Landing Page — green accent utilities ─────────────────────────────── */
+.landing-btn-primary {
+  background: linear-gradient(135deg, #2b6c00 0%, #85dc57 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 14px 0 rgba(43, 108, 0, 0.39);
+}
+
+.landing-btn-primary:hover {
+  background: linear-gradient(135deg, #276400 0%, #2b6c00 100%);
+  box-shadow: 0 6px 20px rgba(43, 108, 0, 0.23);
+}
+
+.landing-nav-active {
+  color: #2b6c00 !important;
+  border-color: #2b6c00 !important;
+}
+
 .auth-page {
-  min-height: 100vh;
+  font-family: 'Hanken Grotesk', 'Geist', sans-serif;
+  color: #1a1c19;
+}
+
+.auth-page-signin {
   background: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
 }
 
-.auth-card {
-  position: relative;
-  width: 920px;
-  max-width: 100%;
-  height: min(92vh, 680px);
-  border-radius: 28px;
-  overflow: hidden;
-  box-shadow:
-    0 50px 120px rgba(0, 0, 0, 0.8),
-    0 0 0 1px rgba(255, 255, 255, 0.07);
+.auth-page-signup {
+  background: #fafaf4;
 }
 
-.auth-panel-blue {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 48%;
-  height: 100%;
-  transition: transform 400ms cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: transform;
+.auth-vivid-gradient {
+  background: linear-gradient(135deg, #2b6c00 0%, #d8c680 100%);
 }
 
-.auth-panel-form {
-  position: absolute;
-  top: 0;
-  left: 48%;
-  width: 52%;
-  height: 100%;
-  background: #ffffff;
-  overflow-y: auto;
-  scrollbar-width: none;
-  transition: transform 400ms cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: transform;
+.auth-gradient-brand {
+  background: linear-gradient(135deg, #a0f970 0%, #f5e29a 100%);
 }
 
-.auth-panel-form::-webkit-scrollbar {
-  display: none;
+.auth-btn-glow {
+  box-shadow: 0 4px 14px 0 rgba(133, 220, 87, 0.39);
 }
 
-/* Swapped state */
-.auth-card.swapped .auth-panel-blue {
-  transform: translateX(calc(100% * 52 / 48));
+.auth-glass-panel {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.05);
 }
 
-.auth-card.swapped .auth-panel-form {
-  transform: translateX(calc(-100% * 48 / 52));
-}
-
-/* Form fade-in */
 @keyframes authFormFadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-.form-content-animated {
-  animation: authFormFadeIn 220ms ease-out 160ms both;
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 2.75rem 2.5rem;
+.auth-form-enter {
+  animation: authFormFadeIn 280ms ease-out both;
 }
 
-/* Spinner */
 @keyframes authSpin {
   to { transform: rotate(360deg); }
 }
@@ -154,50 +138,137 @@ body {
   flex-shrink: 0;
 }
 
-/* Mobile */
-@media (max-width: 640px) {
-  .auth-page {
-    padding: 0;
-    align-items: stretch;
-    background: #ffffff;
-  }
+.auth-spinner-dark {
+  border-color: rgba(26, 28, 25, 0.15);
+  border-top-color: #1a1c19;
+}
 
-  .auth-card {
-    width: 100%;
-    height: auto;
-    min-height: 100vh;
-    border-radius: 0;
-    display: flex;
-    flex-direction: column;
-    box-shadow: none;
+@media (max-width: 1023px) {
+  .auth-signup-shell {
+    min-height: auto;
   }
+}
 
-  .auth-panel-blue {
-    position: static;
-    width: 100%;
-    height: 90px;
-    transform: none !important;
-    transition: none !important;
-  }
+/* ── Student Dashboard ─────────────────────────────────────────────────── */
+.student-dashboard {
+  font-family: 'Hanken Grotesk', 'Geist', sans-serif;
+  background-color: #f8f9fa;
+  color: #1a1c19;
+}
 
-  .auth-panel-form {
-    position: static;
-    left: 0;
-    width: 100%;
-    height: auto;
-    overflow-y: visible;
-    transform: none !important;
-    transition: none !important;
-    flex: 1;
-  }
+.student-glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
 
-  .auth-card.swapped .auth-panel-blue,
-  .auth-card.swapped .auth-panel-form {
-    transform: none !important;
-  }
+.student-hero-gradient {
+  background: linear-gradient(135deg, #2b6c00 0%, #6b5e23 100%);
+}
 
-  .form-content-animated {
-    padding: 2rem 1.5rem;
-    justify-content: flex-start;
-  }
+.student-circular-progress {
+  transform: rotate(-90deg);
+}
+
+.student-circular-progress circle {
+  transition: stroke-dashoffset 1s ease-in-out;
+}
+
+/* ── Lecturer Dashboard ─────────────────────────────────────────────────── */
+.lecturer-dashboard {
+  font-family: 'Hanken Grotesk', 'Geist', sans-serif;
+  background-color: #fafaf4;
+  color: #1a1c19;
+}
+
+.lecturer-gradient-brand {
+  background: linear-gradient(135deg, #a0f970 0%, #f5e29a 100%);
+}
+
+.pulse-live {
+  animation: pulseLive 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulseLive {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.lecturer-exams-bg {
+  background: linear-gradient(180deg, #fafaf4 0%, #f4f4ee 100%);
+}
+
+.lecturer-card-elevation {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.lecturer-custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.lecturer-custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.lecturer-custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #c0cab4;
+  border-radius: 20px;
+}
+
+.create-exam-bg {
+  background: linear-gradient(180deg, #fafaf4 0%, #eeeee9 100%);
+}
+
+.create-exam-ambient {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.4;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(140, 227, 93, 0.12) 0%, #fafaf4 50%, rgba(242, 223, 151, 0.15) 100%);
+}
+
+.create-exam-ambient::before,
+.create-exam-ambient::after {
+  content: '';
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(120px);
+}
+
+.create-exam-ambient::before {
+  top: -20%;
+  right: -10%;
+  width: 600px;
+  height: 600px;
+  background: rgba(43, 108, 0, 0.05);
+}
+
+.create-exam-ambient::after {
+  bottom: -10%;
+  left: -10%;
+  width: 500px;
+  height: 500px;
+  background: rgba(107, 94, 35, 0.05);
+  filter: blur(100px);
+}
+
+.proctoring-feed-scan::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  pointer-events: none;
+}
+
+.lecturer-ambient-glow {
+  box-shadow: 0 10px 30px rgba(43, 108, 0, 0.08);
 }
