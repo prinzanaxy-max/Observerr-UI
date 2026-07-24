@@ -229,6 +229,11 @@ body {
   background-attachment: fixed;
 }
 
+.student-profile-bg {
+  background: linear-gradient(135deg, #fafaf4 0%, #f4f4ee 50%, #eeeee9 100%);
+  background-attachment: fixed;
+}
+
 .student-brand-gradient {
   background: linear-gradient(135deg, #2b6c00 0%, #8ce35d 100%);
 }

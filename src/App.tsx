@@ -14,6 +14,7 @@ import StudentResultsPage from './pages/StudentResultsPage';
 import StudentResultDetailPage from './pages/StudentResultDetailPage';
 import StudentNotificationsPage from './pages/StudentNotificationsPage';
 import StudentSettingsPage from './pages/StudentSettingsPage';
+import StudentProfilePage from './pages/StudentProfilePage';
 import LecturerDashboard from './pages/LecturerDashboard';
 import LecturerExamsPage from './pages/LecturerExamsPage';
 import LecturerLiveMonitoringPage from './pages/LecturerLiveMonitoringPage';
@@ -60,6 +61,7 @@ function App() {
           <Route path="/student/results/:resultId" element={<StudentResultDetailPage />} />
           <Route path="/student/notifications" element={<StudentNotificationsPage />} />
           <Route path="/student/settings" element={<StudentSettingsPage />} />
+          <Route path="/student/profile" element={<StudentProfilePage />} />
         </Route>
 
         {/* Role-protected — LECTURER only */}
