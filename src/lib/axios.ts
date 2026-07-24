@@ -2,6 +2,7 @@ import axios, { AxiosError } from 'axios';
 import type { InternalAxiosRequestConfig } from 'axios';
 import { API_URL } from './apiConfig';
 import useAuthStore from '../store/authStore';
+import type { AuthResponse } from '../types/auth';
 
 const apiClient = axios.create({
   baseURL: API_URL,
@@ -77,18 +78,16 @@ apiClient.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      const { data } = await axios.post(
+      const { data } = await axios.post<AuthResponse>(
         `${API_URL}/api/auth/refresh`,
         {},
         { withCredentials: true },
       );
 
-      const { accessToken } = data as { accessToken: string };
+      useAuthStore.getState().setSession(data);
+      originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
 
-      useAuthStore.getState().setAccessToken(accessToken);
-      originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-
-      processQueue(null, accessToken);
+      processQueue(null, data.accessToken);
       isRefreshing = false;
 
       return apiClient(originalRequest);

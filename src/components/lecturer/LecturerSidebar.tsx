@@ -7,7 +7,8 @@ import { LECTURER_NAV } from '../../data/lecturerDashboardData';
 type LecturerSidebarProps = {
   activeNav: string;
   onNavChange: (id: string) => void;
-  fullName: string;
+  institutionalId: string;
+  email?: string;
   title: string;
   initials: string;
   onLogout: () => void;
@@ -16,7 +17,8 @@ type LecturerSidebarProps = {
 const LecturerSidebar = memo(({
   activeNav,
   onNavChange,
-  fullName,
+  institutionalId,
+  email,
   title,
   initials,
   onLogout,
@@ -72,8 +74,8 @@ const LecturerSidebar = memo(({
             {initials}
           </div>
           <div className="min-w-0">
-            <p className="text-student-body-md font-student font-bold text-student-on-surface truncate">{fullName}</p>
-            <p className="text-student-label-md font-student text-student-on-surface-variant truncate">{title}</p>
+            <p className="text-student-body-md font-student font-bold text-student-on-surface truncate">{institutionalId}</p>
+            <p className="text-student-label-md font-student text-student-on-surface-variant truncate">{email || title}</p>
           </div>
         </div>
         <button

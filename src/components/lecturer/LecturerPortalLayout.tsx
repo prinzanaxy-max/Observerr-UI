@@ -7,7 +7,8 @@ import LecturerPortalMobileNav from './LecturerPortalMobileNav';
 type LecturerPortalLayoutProps = {
   children: ReactNode;
   header?: ReactNode;
-  fullName: string;
+  institutionalId: string;
+  email?: string;
   initials: string;
   onNewExam?: () => void;
   contentClassName?: string;
@@ -16,13 +17,14 @@ type LecturerPortalLayoutProps = {
 const LecturerPortalLayout = memo(({
   children,
   header,
-  fullName,
+  institutionalId,
+  email,
   initials,
   onNewExam,
   contentClassName = '',
 }: LecturerPortalLayoutProps) => (
   <div className="lecturer-dashboard h-dvh flex overflow-hidden antialiased">
-    <LecturerPortalSidebar fullName={fullName} initials={initials} onNewExam={onNewExam} />
+    <LecturerPortalSidebar institutionalId={institutionalId} email={email} initials={initials} onNewExam={onNewExam} />
 
     <div className="flex-1 flex flex-col min-w-0 min-h-0">
       <div className="md:hidden shrink-0 h-16 flex items-center justify-between px-4 border-b border-student-outline-variant/50 bg-student-surface">

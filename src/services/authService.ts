@@ -4,6 +4,8 @@ import { API_URL } from '../lib/apiConfig';
 import type {
   AuthResponse,
   CurrentUser,
+  LoginRequest,
+  RegisterRequest,
   ApiError,
   LogoutResponse,
 } from '../types/auth';
@@ -28,12 +30,7 @@ const toApiError = (error: unknown): ApiError => {
   };
 };
 
-export const register = async (data: {
-  fullName: string;
-  email: string;
-  password: string;
-  role: string;
-}): Promise<AuthResponse> => {
+export const register = async (data: RegisterRequest): Promise<AuthResponse> => {
   try {
     const { data: body } = await apiClient.post<AuthResponse>('/api/auth/register', data);
     return body;
@@ -42,10 +39,7 @@ export const register = async (data: {
   }
 };
 
-export const login = async (data: {
-  email: string;
-  password: string;
-}): Promise<AuthResponse> => {
+export const login = async (data: LoginRequest): Promise<AuthResponse> => {
   try {
     const { data: body } = await apiClient.post<AuthResponse>('/api/auth/login', data);
     return body;

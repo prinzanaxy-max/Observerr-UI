@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import useAuthStore from '../store/authStore';
+import { useAuthProfile } from '../hooks/useAuthProfile';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
 import ProctoringPageHeader from '../components/lecturer/ProctoringPageHeader';
 import ProctoringMainFeed from '../components/lecturer/ProctoringMainFeed';
@@ -13,28 +13,16 @@ import {
 } from '../data/proctoringData';
 import { CREATE_EXAM_PATH } from '../data/createExamData';
 
-const getInitials = (name: string) =>
-  name
-    .split(' ')
-    .filter(Boolean)
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-
 const LecturerProctoringPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const user = useAuthStore((s) => s.user);
+  const { institutionalId, email, initials } = useAuthProfile();
 
   const initialStudentId = searchParams.get('student') ?? PROCTORING_FEEDS[0]?.id ?? '';
   const [selectedExamId, setSelectedExamId] = useState(PROCTORING_EXAMS[0]?.id ?? 1);
   const [selectedFeedId, setSelectedFeedId] = useState(initialStudentId);
   const [searchQuery, setSearchQuery] = useState('');
   const [audioMuted, setAudioMuted] = useState(false);
-
-  const fullName = user?.fullName ?? 'Lecturer';
-  const initials = useMemo(() => getInitials(fullName), [fullName]);
 
   useEffect(() => {
     document.title = 'Live Proctoring — Observerr Lecturer';
@@ -86,7 +74,8 @@ const LecturerProctoringPage = () => {
   if (PROCTORING_EXAMS.length === 0) {
     return (
       <LecturerPortalLayout
-        fullName={fullName}
+        institutionalId={institutionalId}
+        email={email}
         initials={initials}
         onNewExam={() => navigate(CREATE_EXAM_PATH)}
         contentClassName="lecturer-exams-bg"
@@ -110,7 +99,8 @@ const LecturerProctoringPage = () => {
 
   return (
     <LecturerPortalLayout
-      fullName={fullName}
+      institutionalId={institutionalId}
+      email={email}
       initials={initials}
       onNewExam={() => navigate(CREATE_EXAM_PATH)}
       contentClassName="lecturer-exams-bg"

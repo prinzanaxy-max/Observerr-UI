@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import useAuthStore from '../store/authStore';
+import { useAuthProfile } from '../hooks/useAuthProfile';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
 import LiveMonitoringHeader from '../components/lecturer/LiveMonitoringHeader';
 import MonitoringStatsCards from '../components/lecturer/MonitoringStatsCards';
@@ -16,19 +16,10 @@ import {
 import { getExamById } from '../data/lecturerExamsData';
 import { CREATE_EXAM_PATH } from '../data/createExamData';
 
-const getInitials = (name: string) =>
-  name
-    .split(' ')
-    .filter(Boolean)
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-
 const LecturerLiveMonitoringPage = () => {
   const { examId } = useParams<{ examId: string }>();
   const navigate = useNavigate();
-  const user = useAuthStore((s) => s.user);
+  const { institutionalId, email, initials } = useAuthProfile();
 
   const [riskFilter, setRiskFilter] = useState<RiskFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,9 +30,6 @@ const LecturerLiveMonitoringPage = () => {
     if (Number.isNaN(id)) return undefined;
     return getExamById(id);
   }, [examId]);
-
-  const fullName = user?.fullName ?? 'Lecturer';
-  const initials = useMemo(() => getInitials(fullName), [fullName]);
 
   const examTitle = exam ? `${exam.courseCode} — ${exam.title}` : 'Live Exam';
 
@@ -85,7 +73,8 @@ const LecturerLiveMonitoringPage = () => {
 
   return (
     <LecturerPortalLayout
-      fullName={fullName}
+      institutionalId={institutionalId}
+      email={email}
       initials={initials}
       onNewExam={() => navigate(CREATE_EXAM_PATH)}
       contentClassName="lecturer-exams-bg"

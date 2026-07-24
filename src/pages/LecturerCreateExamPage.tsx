@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useAuthStore from '../store/authStore';
+import { useAuthProfile } from '../hooks/useAuthProfile';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
 import CreateExamPageHeader from '../components/lecturer/CreateExamPageHeader';
 import ExamDetailsForm from '../components/lecturer/ExamDetailsForm';
@@ -13,15 +13,6 @@ import {
   type SecuritySettingKey,
 } from '../data/createExamData';
 
-const getInitials = (name: string) =>
-  name
-    .split(' ')
-    .filter(Boolean)
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-
 const formatDraftLabel = (savedAt: Date | null) => {
   if (!savedAt) return 'Draft not saved yet';
   const mins = Math.max(1, Math.round((Date.now() - savedAt.getTime()) / 60000));
@@ -30,14 +21,11 @@ const formatDraftLabel = (savedAt: Date | null) => {
 
 const LecturerCreateExamPage = () => {
   const navigate = useNavigate();
-  const user = useAuthStore((s) => s.user);
+  const { institutionalId, email, initials } = useAuthProfile();
 
   const [form, setForm] = useState<CreateExamFormState>(DEFAULT_FORM_STATE);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [, setTick] = useState(0);
-
-  const fullName = user?.fullName ?? 'Lecturer';
-  const initials = useMemo(() => getInitials(fullName), [fullName]);
 
   useEffect(() => {
     document.title = 'Create New Exam — Observerr Lecturer';
@@ -81,7 +69,8 @@ const LecturerCreateExamPage = () => {
 
   return (
     <LecturerPortalLayout
-      fullName={fullName}
+      institutionalId={institutionalId}
+      email={email}
       initials={initials}
       onNewExam={() => navigate(CREATE_EXAM_PATH)}
       contentClassName="create-exam-bg relative"

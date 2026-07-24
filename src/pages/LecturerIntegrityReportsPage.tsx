@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useAuthStore from '../store/authStore';
+import { useAuthProfile } from '../hooks/useAuthProfile';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
 import IntegrityReportsPageHeader from '../components/lecturer/IntegrityReportsPageHeader';
 import AnalyticsDateRangeFilter from '../components/lecturer/AnalyticsDateRangeFilter';
@@ -10,23 +10,11 @@ import IntegrityFlaggedBehaviorsCard from '../components/lecturer/IntegrityFlagg
 import { INTEGRITY_REPORTS, type DateRangeKey } from '../data/integrityReportsData';
 import { CREATE_EXAM_PATH } from '../data/createExamData';
 
-const getInitials = (name: string) =>
-  name
-    .split(' ')
-    .filter(Boolean)
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-
 const LecturerIntegrityReportsPage = () => {
   const navigate = useNavigate();
-  const user = useAuthStore((s) => s.user);
+  const { institutionalId, email, initials } = useAuthProfile();
 
   const [dateRange, setDateRange] = useState<DateRangeKey>('30d');
-
-  const fullName = user?.fullName ?? 'Lecturer';
-  const initials = useMemo(() => getInitials(fullName), [fullName]);
 
   const report = useMemo(() => INTEGRITY_REPORTS[dateRange], [dateRange]);
 
@@ -43,7 +31,8 @@ const LecturerIntegrityReportsPage = () => {
 
   return (
     <LecturerPortalLayout
-      fullName={fullName}
+      institutionalId={institutionalId}
+      email={email}
       initials={initials}
       onNewExam={handleNewExam}
       contentClassName="lecturer-exams-bg"

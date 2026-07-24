@@ -8,14 +8,16 @@ import { NAV_ITEMS } from '../../data/studentDashboardData';
 type StudentSidebarProps = {
   activeNav: string;
   onNavChange: (id: string) => void;
-  fullName: string;
+  institutionalId: string;
+  email?: string;
   initials: string;
 };
 
 const StudentSidebar = memo(({
   activeNav,
   onNavChange,
-  fullName,
+  institutionalId,
+  email,
   initials,
 }: StudentSidebarProps) => {
   const handleNav = useCallback(
@@ -70,8 +72,8 @@ const StudentSidebar = memo(({
             {initials}
           </div>
           <div className="min-w-0">
-            <p className="text-student-label-md font-student text-student-on-surface truncate">{fullName}</p>
-            <p className="text-[11px] text-student-on-surface-variant">Student Account</p>
+            <p className="text-student-label-md font-student text-student-on-surface truncate">{institutionalId}</p>
+            <p className="text-[11px] text-student-on-surface-variant truncate">{email || 'Student Account'}</p>
           </div>
         </div>
         <LogoutActions compact className="mt-1" />

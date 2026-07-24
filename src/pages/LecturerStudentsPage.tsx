@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useAuthStore from '../store/authStore';
+import { useAuthProfile } from '../hooks/useAuthProfile';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
 import StudentsPageHeader from '../components/lecturer/StudentsPageHeader';
 import StudentsTable from '../components/lecturer/StudentsTable';
@@ -9,25 +9,13 @@ import { CREATE_EXAM_PATH } from '../data/createExamData';
 
 const PAGE_SIZE = 10;
 
-const getInitials = (name: string) =>
-  name
-    .split(' ')
-    .filter(Boolean)
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-
 const LecturerStudentsPage = () => {
   const navigate = useNavigate();
-  const user = useAuthStore((s) => s.user);
+  const { institutionalId, email, initials } = useAuthProfile();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [courseFilter, setCourseFilter] = useState('all');
   const [page, setPage] = useState(1);
-
-  const fullName = user?.fullName ?? 'Lecturer';
-  const initials = useMemo(() => getInitials(fullName), [fullName]);
 
   useEffect(() => {
     document.title = 'Students — Observerr Lecturer';
@@ -62,7 +50,8 @@ const LecturerStudentsPage = () => {
 
   return (
     <LecturerPortalLayout
-      fullName={fullName}
+      institutionalId={institutionalId}
+      email={email}
       initials={initials}
       onNewExam={() => navigate(CREATE_EXAM_PATH)}
       contentClassName="bg-gradient-to-b from-student-surface-container to-student-background"

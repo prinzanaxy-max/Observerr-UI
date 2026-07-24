@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import useAuthStore from '../store/authStore';
+import { useAuthProfile } from '../hooks/useAuthProfile';
 import ObserverrLogo from '../components/ObserverrLogo';
 import StudentSidebar from '../components/student/StudentSidebar';
 import StudentTopBar from '../components/student/StudentTopBar';
@@ -18,23 +18,11 @@ import {
   type UpcomingExam,
 } from '../data/studentDashboardData';
 
-const getInitials = (name: string) =>
-  name
-    .split(' ')
-    .filter(Boolean)
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-
 const StudentDashboard = () => {
-  const user = useAuthStore((s) => s.user);
+  const { institutionalId, email, initials } = useAuthProfile();
 
   const [activeNav, setActiveNav] = useState('home');
   const [searchQuery, setSearchQuery] = useState('');
-
-  const fullName = user?.fullName ?? 'Student';
-  const initials = useMemo(() => getInitials(fullName), [fullName]);
 
   useEffect(() => {
     document.title = 'Dashboard — Observerr';
@@ -78,7 +66,8 @@ const StudentDashboard = () => {
       <StudentSidebar
         activeNav={activeNav}
         onNavChange={handleNavChange}
-        fullName={fullName}
+        institutionalId={institutionalId}
+        email={email}
         initials={initials}
       />
 

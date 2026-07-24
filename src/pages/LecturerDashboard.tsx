@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useAuthStore from '../store/authStore';
+import { useAuthProfile } from '../hooks/useAuthProfile';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
 import LecturerTopBar from '../components/lecturer/LecturerTopBar';
 import LiveExamCard from '../components/lecturer/LiveExamCard';
@@ -18,25 +18,13 @@ import {
 } from '../data/lecturerDashboardData';
 import { CREATE_EXAM_PATH } from '../data/createExamData';
 
-const getInitials = (name: string) =>
-  name
-    .split(' ')
-    .filter(Boolean)
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-
 const LecturerDashboard = () => {
   const navigate = useNavigate();
-  const user = useAuthStore((s) => s.user);
+  const { institutionalId, email, initials } = useAuthProfile();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [examTab, setExamTab] = useState<ExamTab>('live');
   const [selectedStudent, setSelectedStudent] = useState<ReviewStudent | null>(null);
-
-  const fullName = user?.fullName ?? 'Lecturer';
-  const initials = useMemo(() => getInitials(fullName), [fullName]);
 
   useEffect(() => {
     document.title = 'Dashboard — Observerr Lecturer';
@@ -75,7 +63,8 @@ const LecturerDashboard = () => {
 
   return (
     <LecturerPortalLayout
-      fullName={fullName}
+      institutionalId={institutionalId}
+      email={email}
       initials={initials}
       onNewExam={handleNewExam}
       header={

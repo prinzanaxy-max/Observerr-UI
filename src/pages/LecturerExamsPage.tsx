@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useAuthStore from '../store/authStore';
+import { useAuthProfile } from '../hooks/useAuthProfile';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
 import ExamsPageHeader from '../components/lecturer/ExamsPageHeader';
 import ExamsFilterBar from '../components/lecturer/ExamsFilterBar';
@@ -12,24 +12,12 @@ import {
 } from '../data/lecturerExamsData';
 import { CREATE_EXAM_PATH } from '../data/createExamData';
 
-const getInitials = (name: string) =>
-  name
-    .split(' ')
-    .filter(Boolean)
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-
 const LecturerExamsPage = () => {
   const navigate = useNavigate();
-  const user = useAuthStore((s) => s.user);
+  const { institutionalId, email, initials } = useAuthProfile();
 
   const [activeTab, setActiveTab] = useState<ExamFilterTab>('live');
   const [searchQuery, setSearchQuery] = useState('');
-
-  const fullName = user?.fullName ?? 'Lecturer';
-  const initials = useMemo(() => getInitials(fullName), [fullName]);
 
   useEffect(() => {
     document.title = 'Exams — Observerr Lecturer';
@@ -77,7 +65,8 @@ const LecturerExamsPage = () => {
 
   return (
     <LecturerPortalLayout
-      fullName={fullName}
+      institutionalId={institutionalId}
+      email={email}
       initials={initials}
       onNewExam={handleNewExam}
       contentClassName="lecturer-exams-bg"

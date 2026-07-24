@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
+import { useAuthProfile } from '../hooks/useAuthProfile';
 import apiClient from '../lib/axios';
 import LogoutActions from '../components/auth/LogoutActions';
 
@@ -61,8 +62,8 @@ const HelloCard = ({ role }: { role: string }) => {
 
 /* ─── Dashboard page ─────────────────────────────────────────────────────── */
 const DashboardPage = () => {
-  const { user, role, isAuthenticated } = useAuthStore();
-  const fullName = user?.fullName ?? 'User';
+  const { role, isAuthenticated } = useAuthStore();
+  const { institutionalId, email } = useAuthProfile();
   const storedRole = role;
 
   // Redirect to role-specific dashboard
@@ -78,8 +79,11 @@ const DashboardPage = () => {
         {/* Header */}
         <div className="mb-10">
           <h1 className="font-headline-section text-headline-section text-primary mb-2">
-            Welcome, {fullName} 👋
+            Welcome, {institutionalId} 👋
           </h1>
+          {email && (
+            <p className="text-[#475569] text-[14px] mb-2">{email}</p>
+          )}
           <span className="inline-flex items-center gap-1.5 bg-[#EFF6FF] text-[#2563EB] text-[12px]
                            font-bold px-3 py-1 rounded-full uppercase tracking-wider">
             <Icon name="admin_panel_settings" />

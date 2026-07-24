@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
-import useAuthStore from '../store/authStore';
+import { useAuthProfile } from '../hooks/useAuthProfile';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
 import StudentTimelineTopBar from '../components/lecturer/StudentTimelineTopBar';
 import StudentProfileHeader from '../components/lecturer/StudentProfileHeader';
@@ -12,19 +12,10 @@ import { getExamById } from '../data/lecturerExamsData';
 import { getStudentTimeline } from '../data/studentTimelineData';
 import { CREATE_EXAM_PATH } from '../data/createExamData';
 
-const getInitials = (name: string) =>
-  name
-    .split(' ')
-    .filter(Boolean)
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-
 const LecturerStudentTimelinePage = () => {
   const { examId, studentId } = useParams<{ examId?: string; studentId: string }>();
   const navigate = useNavigate();
-  const user = useAuthStore((s) => s.user);
+  const { institutionalId, email, initials } = useAuthProfile();
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -39,9 +30,6 @@ const LecturerStudentTimelinePage = () => {
     if (Number.isNaN(id)) return undefined;
     return getExamById(id);
   }, [examId]);
-
-  const fullName = user?.fullName ?? 'Lecturer';
-  const lecturerInitials = useMemo(() => getInitials(fullName), [fullName]);
 
   const fromLiveMonitoring = Boolean(examId && !Number.isNaN(Number(examId)));
   const backTo = fromLiveMonitoring ? `/lecturer/exams/${examId}/live` : '/lecturer/students';
@@ -66,13 +54,14 @@ const LecturerStudentTimelinePage = () => {
 
   return (
     <LecturerPortalLayout
-      fullName={fullName}
-      initials={lecturerInitials}
+      institutionalId={institutionalId}
+      email={email}
+      initials={initials}
       onNewExam={() => navigate(CREATE_EXAM_PATH)}
       contentClassName="bg-gradient-to-b from-student-surface-container to-student-background"
       header={
         <StudentTimelineTopBar
-          initials={lecturerInitials}
+          initials={initials}
           searchQuery={searchQuery}
           onSearchChange={handleSearchChange}
         />

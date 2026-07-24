@@ -5,7 +5,8 @@ import LogoutActions from '../auth/LogoutActions';
 import { PORTAL_FOOTER_NAV, PORTAL_NAV } from '../../data/lecturerPortalNav';
 
 type LecturerPortalSidebarProps = {
-  fullName: string;
+  institutionalId: string;
+  email?: string;
   initials: string;
   onNewExam?: () => void;
 };
@@ -13,7 +14,7 @@ type LecturerPortalSidebarProps = {
 const isActivePath = (pathname: string, path: string) =>
   path === '/lecturer' ? pathname === '/lecturer' : pathname.startsWith(path);
 
-const LecturerPortalSidebar = memo(({ fullName, initials, onNewExam }: LecturerPortalSidebarProps) => {
+const LecturerPortalSidebar = memo(({ institutionalId, email, initials, onNewExam }: LecturerPortalSidebarProps) => {
   const { pathname } = useLocation();
 
   return (
@@ -88,7 +89,12 @@ const LecturerPortalSidebar = memo(({ fullName, initials, onNewExam }: LecturerP
           <div className="w-8 h-8 rounded-full shrink-0 bg-student-primary-container flex items-center justify-center text-student-on-primary-container text-xs font-bold border-2 border-student-surface-variant">
             {initials}
           </div>
-          <span className="text-student-body-md font-student font-medium text-student-on-surface truncate">{fullName}</span>
+          <div className="min-w-0">
+            <span className="block text-student-body-md font-student font-medium text-student-on-surface truncate">{institutionalId}</span>
+            {email && (
+              <span className="block text-student-label-md font-student text-student-on-surface-variant truncate">{email}</span>
+            )}
+          </div>
         </div>
 
         <div className="px-2 pb-2">

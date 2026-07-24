@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
-import type { ApiError } from '../types/auth';
+import type { ApiError, UserRole } from '../types/auth';
 import AuthBrandMark, { AuthField } from '../components/auth/AuthBrandMark';
 import AuthImagePanel, { PasswordToggle } from '../components/auth/AuthImagePanel';
 import AuthRoleSelector from '../components/auth/AuthRoleSelector';
-import GoogleIcon from '../components/auth/GoogleIcon';
 import Icon from '../components/student/Icon';
 
 const AuthSubmitButton = ({
@@ -39,15 +38,16 @@ const AuthSubmitButton = ({
   </button>
 );
 
-const AuthDivider = () => (
-  <div className="flex items-center">
-    <div className="flex-grow border-t border-student-surface-variant" />
-    <span className="flex-shrink-0 mx-4 text-student-label-md font-student text-student-on-surface-variant uppercase">
-      OR
-    </span>
-    <div className="flex-grow border-t border-student-surface-variant" />
-  </div>
-);
+const mapConflictError = (message: string): Record<string, string> => {
+  const lower = message.toLowerCase();
+  if (lower.includes('institutional id')) {
+    return { institutionalId: 'Institutional ID already registered' };
+  }
+  if (lower.includes('email')) {
+    return { email: 'Email already registered' };
+  }
+  return { institutionalId: message };
+};
 
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -57,13 +57,13 @@ const AuthPage = () => {
   const [isSignUp, setIsSignUp] = useState(searchParams.get('mode') === 'signup');
   const [formKey, setFormKey] = useState(0);
 
-  const [siEmail, setSiEmail] = useState('');
+  const [siInstitutionalId, setSiInstitutionalId] = useState('');
   const [siPassword, setSiPassword] = useState('');
   const [siShowPw, setSiShowPw] = useState(false);
   const [siErrors, setSiErrors] = useState<Record<string, string>>({});
   const [siLoading, setSiLoading] = useState(false);
 
-  const [suName, setSuName] = useState('');
+  const [suInstitutionalId, setSuInstitutionalId] = useState('');
   const [suEmail, setSuEmail] = useState('');
   const [suPassword, setSuPassword] = useState('');
   const [suRole, setSuRole] = useState<'student' | 'lecturer' | null>(null);
@@ -98,16 +98,18 @@ const AuthPage = () => {
   const handleSignIn = async (e: FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
-    if (!siEmail.trim()) errs.email = 'Email is required';
-    else if (!isValidEmail(siEmail)) errs.email = 'Enter a valid email address';
+    if (!siInstitutionalId.trim()) errs.institutionalId = 'Institutional ID is required';
     if (!siPassword) errs.password = 'Password is required';
-    else if (siPassword.length < 6) errs.password = 'Password must be at least 6 characters';
+    else if (siPassword.length < 8) errs.password = 'Password must be at least 8 characters';
     setSiErrors(errs);
     if (Object.keys(errs).length) return;
 
     setSiLoading(true);
     try {
-      await login({ email: siEmail.trim(), password: siPassword });
+      await login({
+        institutionalId: siInstitutionalId.trim(),
+        password: siPassword,
+      });
       const role = useAuthStore.getState().role;
       navigate(
         role === 'STUDENT' ? '/student' : role === 'LECTURER' ? '/lecturer' : '/dashboard',
@@ -116,11 +118,16 @@ const AuthPage = () => {
     } catch (err) {
       const apiErr = err as ApiError;
       if (apiErr.error === 'UNAUTHORIZED') {
-        setSiErrors({ password: 'Invalid email or password.' });
+        setSiErrors({ password: 'Invalid credentials' });
       } else if (apiErr.error === 'NETWORK_ERROR') {
-        setSiErrors({ email: apiErr.message });
+        setSiErrors({ institutionalId: apiErr.message });
+      } else if (apiErr.error === 'VALIDATION_FAILED' && apiErr.errors) {
+        setSiErrors({
+          ...(apiErr.errors.institutionalId ? { institutionalId: apiErr.errors.institutionalId } : {}),
+          ...(apiErr.errors.password ? { password: apiErr.errors.password } : {}),
+        });
       } else {
-        setSiErrors({ email: apiErr.message || 'Something went wrong. Please try again.' });
+        setSiErrors({ institutionalId: apiErr.message || 'Something went wrong. Please try again.' });
       }
     } finally {
       setSiLoading(false);
@@ -130,7 +137,7 @@ const AuthPage = () => {
   const handleSignUp = async (e: FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
-    if (!suName.trim() || suName.trim().length < 2) errs.name = 'Enter your full name (min 2 characters)';
+    if (!suInstitutionalId.trim()) errs.institutionalId = 'Institutional ID is required';
     if (!suEmail.trim()) errs.email = 'Email is required';
     else if (!isValidEmail(suEmail)) errs.email = 'Enter a valid email address';
     if (!suRole) errs.role = 'Please select your role';
@@ -142,10 +149,10 @@ const AuthPage = () => {
     setSuLoading(true);
     try {
       await register({
-        fullName: suName.trim(),
+        institutionalId: suInstitutionalId.trim(),
         email: suEmail.trim(),
         password: suPassword,
-        role: suRole!.toUpperCase(),
+        role: suRole!.toUpperCase() as UserRole,
       });
       const role = useAuthStore.getState().role;
       navigate(
@@ -155,18 +162,18 @@ const AuthPage = () => {
     } catch (err) {
       const apiErr = err as ApiError;
       if (apiErr.error === 'CONFLICT') {
-        setSuErrors({ email: 'This email is already registered.' });
+        setSuErrors(mapConflictError(apiErr.message));
       } else if (apiErr.error === 'VALIDATION_FAILED' && apiErr.errors) {
         setSuErrors({
-          ...(apiErr.errors.fullName ? { name: apiErr.errors.fullName } : {}),
+          ...(apiErr.errors.institutionalId ? { institutionalId: apiErr.errors.institutionalId } : {}),
           ...(apiErr.errors.email ? { email: apiErr.errors.email } : {}),
           ...(apiErr.errors.password ? { password: apiErr.errors.password } : {}),
           ...(apiErr.errors.role ? { role: apiErr.errors.role } : {}),
         });
       } else if (apiErr.error === 'NETWORK_ERROR') {
-        setSuErrors({ name: apiErr.message });
+        setSuErrors({ institutionalId: apiErr.message });
       } else {
-        setSuErrors({ name: apiErr.message || 'Something went wrong. Please try again.' });
+        setSuErrors({ institutionalId: apiErr.message || 'Something went wrong. Please try again.' });
       }
     } finally {
       setSuLoading(false);
@@ -179,21 +186,26 @@ const AuthPage = () => {
 
       <h1 className="text-student-display-lg font-student text-student-on-surface mb-2">Sign In</h1>
       <p className="text-student-body-md font-student text-student-on-surface-variant mb-10">
-        Welcome back! Please enter your details.
+        Sign in with your university-assigned institutional ID.
       </p>
 
       <form onSubmit={handleSignIn} noValidate className="space-y-5">
-        <AuthField
-          id="signin-email"
-          label="Institutional Email"
-          icon="mail"
-          type="email"
-          placeholder="student@university.edu"
-          value={siEmail}
-          autoComplete="email"
-          onChange={(v) => { setSiEmail(v); setSiErrors((e) => ({ ...e, email: '' })); }}
-          error={siErrors.email}
-        />
+        <div>
+          <AuthField
+            id="signin-institutional-id"
+            label="Institutional ID"
+            icon="badge"
+            type="text"
+            placeholder="e.g. STU-2024-001"
+            value={siInstitutionalId}
+            autoComplete="username"
+            onChange={(v) => { setSiInstitutionalId(v); setSiErrors((e) => ({ ...e, institutionalId: '' })); }}
+            error={siErrors.institutionalId}
+          />
+          <p className="mt-1.5 text-student-label-md font-student text-student-on-surface-variant">
+            Your university-assigned ID used to sign in
+          </p>
+        </div>
 
         <div>
           <div className="flex items-center justify-between mb-1">
@@ -223,20 +235,6 @@ const AuthPage = () => {
         </div>
       </form>
 
-      <div className="mt-8">
-        <AuthDivider />
-      </div>
-
-      <div className="mt-8">
-        <button
-          type="button"
-          className="w-full flex items-center justify-center gap-3 rounded-full py-3 px-4 border-[1.5px] border-student-primary text-student-primary bg-student-surface-container-lowest hover:bg-student-primary/5 transition-colors font-student text-student-headline-sm font-semibold group"
-        >
-          <GoogleIcon className="w-5 h-5 group-hover:scale-110 transition-transform" />
-          Sign in with Google
-        </button>
-      </div>
-
       <p className="mt-10 text-center font-student text-student-body-md text-student-on-surface-variant">
         Don&apos;t have an account?{' '}
         <button
@@ -259,17 +257,22 @@ const AuthPage = () => {
       </p>
 
       <form onSubmit={handleSignUp} noValidate className="space-y-6">
-        <AuthField
-          id="signup-name"
-          label="Full Name"
-          icon="person"
-          type="text"
-          placeholder="Jane Doe"
-          value={suName}
-          autoComplete="name"
-          onChange={(v) => { setSuName(v); setSuErrors((e) => ({ ...e, name: '' })); }}
-          error={suErrors.name}
-        />
+        <div>
+          <AuthField
+            id="signup-institutional-id"
+            label="Institutional ID"
+            icon="badge"
+            type="text"
+            placeholder="e.g. STU-2024-001"
+            value={suInstitutionalId}
+            autoComplete="username"
+            onChange={(v) => { setSuInstitutionalId(v); setSuErrors((e) => ({ ...e, institutionalId: '' })); }}
+            error={suErrors.institutionalId}
+          />
+          <p className="mt-1.5 text-student-label-md font-student text-student-on-surface-variant">
+            Your university-assigned ID used to sign in
+          </p>
+        </div>
 
         <AuthField
           id="signup-email"
@@ -302,25 +305,13 @@ const AuthPage = () => {
           rightSlot={<PasswordToggle show={suShowPw} onToggle={() => setSuShowPw((p) => !p)} />}
         />
 
-        <div className="pt-2 space-y-4">
+        <div className="pt-2">
           <AuthSubmitButton
             loading={suLoading}
             label="Create Account"
             loadingLabel="Creating account…"
             variant="brand"
           />
-
-          <AuthDivider />
-
-          <div className="flex justify-center pt-2">
-            <button
-              type="button"
-              className="flex items-center justify-center w-12 h-12 rounded-full border border-student-outline-variant bg-student-surface-container-lowest hover:bg-student-surface-container transition-colors"
-              aria-label="Sign up with Google"
-            >
-              <GoogleIcon />
-            </button>
-          </div>
         </div>
       </form>
 

@@ -1,6 +1,13 @@
 import { create } from 'zustand';
 import * as authService from '../services/authService';
-import type { CurrentUser, Role, ApiError } from '../types/auth';
+import type {
+  AuthResponse,
+  CurrentUser,
+  LoginRequest,
+  RegisterRequest,
+  UserRole,
+  ApiError,
+} from '../types/auth';
 
 const LEGACY_STORAGE_KEYS = ['accessToken', 'refreshToken', 'authRole', 'authFullName'] as const;
 
@@ -11,22 +18,19 @@ const clearLegacyStorage = () => {
 interface AuthState {
   user: CurrentUser | null;
   accessToken: string | null;
+  institutionalId: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   isInitializing: boolean;
-  role: Role | null;
+  role: UserRole | null;
 }
 
 interface AuthActions {
-  login: (credentials: { email: string; password: string }) => Promise<void>;
-  register: (data: {
-    fullName: string;
-    email: string;
-    password: string;
-    role: string;
-  }) => Promise<void>;
+  login: (credentials: LoginRequest) => Promise<void>;
+  register: (data: RegisterRequest) => Promise<void>;
   logout: (allDevices?: boolean) => Promise<void>;
   clear: () => void;
+  setSession: (auth: AuthResponse) => void;
   setAccessToken: (accessToken: string) => void;
   getAccessToken: () => string | null;
   bootstrapSession: () => Promise<void>;
@@ -36,6 +40,7 @@ interface AuthActions {
 const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
   user: null,
   accessToken: null,
+  institutionalId: null,
   isAuthenticated: false,
   isLoading: false,
   isInitializing: true,
@@ -46,12 +51,8 @@ const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
     try {
       const data = await authService.login(credentials);
       clearLegacyStorage();
-      set({
-        accessToken: data.accessToken,
-        isAuthenticated: true,
-        role: data.role,
-        isLoading: false,
-      });
+      get().setSession(data);
+      set({ isLoading: false });
       await get().fetchCurrentUser();
     } catch (err) {
       set({ isLoading: false });
@@ -64,12 +65,8 @@ const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
     try {
       const res = await authService.register(data);
       clearLegacyStorage();
-      set({
-        accessToken: res.accessToken,
-        isAuthenticated: true,
-        role: res.role,
-        isLoading: false,
-      });
+      get().setSession(res);
+      set({ isLoading: false });
       await get().fetchCurrentUser();
     } catch (err) {
       set({ isLoading: false });
@@ -93,9 +90,19 @@ const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
     set({
       user: null,
       accessToken: null,
+      institutionalId: null,
       isAuthenticated: false,
       role: null,
       isLoading: false,
+    });
+  },
+
+  setSession: (auth) => {
+    set({
+      accessToken: auth.accessToken,
+      role: auth.role,
+      institutionalId: auth.institutionalId,
+      isAuthenticated: true,
     });
   },
 
@@ -111,17 +118,14 @@ const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
 
     try {
       const data = await authService.refreshSession();
-      set({
-        accessToken: data.accessToken,
-        isAuthenticated: true,
-        role: data.role,
-      });
+      get().setSession(data);
       await get().fetchCurrentUser();
     } catch {
       set({
         isAuthenticated: false,
         user: null,
         accessToken: null,
+        institutionalId: null,
         role: null,
       });
     } finally {
@@ -132,7 +136,7 @@ const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
   fetchCurrentUser: async () => {
     try {
       const user = await authService.getMe();
-      set({ user, role: user.role });
+      set({ user, role: user.role, institutionalId: user.institutionalId });
     } catch {
       // Interceptor handles 401 / redirect
     }
