@@ -36,7 +36,7 @@ const LecturerCreateExamPage = () => {
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [, setTick] = useState(0);
 
-  const fullName = user?.fullName ?? localStorage.getItem('authFullName') ?? 'Dr. Ama Boateng';
+  const fullName = user?.fullName ?? 'Lecturer';
   const initials = useMemo(() => getInitials(fullName), [fullName]);
 
   useEffect(() => {

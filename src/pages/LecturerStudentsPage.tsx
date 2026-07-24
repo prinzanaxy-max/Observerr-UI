@@ -26,7 +26,7 @@ const LecturerStudentsPage = () => {
   const [courseFilter, setCourseFilter] = useState('all');
   const [page, setPage] = useState(1);
 
-  const fullName = user?.fullName ?? localStorage.getItem('authFullName') ?? 'Dr. Ama Boateng';
+  const fullName = user?.fullName ?? 'Lecturer';
   const initials = useMemo(() => getInitials(fullName), [fullName]);
 
   useEffect(() => {

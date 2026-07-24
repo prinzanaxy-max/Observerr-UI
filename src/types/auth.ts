@@ -23,3 +23,12 @@ export interface ApiError {
   timestamp: string;
   errors?: Record<string, string>;
 }
+
+export interface LogoutRequest {
+  allDevices?: boolean;
+}
+
+export interface LogoutResponse {
+  success: boolean;
+  message: string;
+}

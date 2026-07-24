@@ -7,10 +7,10 @@ interface Props {
 
 /* ─── Inline loading spinner ──────────────────────────────────────────────── */
 const Spinner = () => (
-  <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+  <div className="min-h-screen bg-student-surface-container-low flex items-center justify-center">
     <div className="flex flex-col items-center gap-4">
-      <div className="w-10 h-10 border-4 border-[#2563EB]/20 border-t-[#2563EB] rounded-full animate-spin" />
-      <p className="text-[#475569] text-[14px] font-medium">Loading…</p>
+      <div className="w-10 h-10 border-4 border-student-primary/20 border-t-student-primary rounded-full animate-spin" />
+      <p className="text-student-on-surface-variant text-[14px] font-medium">Loading…</p>
     </div>
   </div>
 );

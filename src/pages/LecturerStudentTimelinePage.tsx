@@ -40,7 +40,7 @@ const LecturerStudentTimelinePage = () => {
     return getExamById(id);
   }, [examId]);
 
-  const fullName = user?.fullName ?? localStorage.getItem('authFullName') ?? 'Dr. Ama Boateng';
+  const fullName = user?.fullName ?? 'Lecturer';
   const lecturerInitials = useMemo(() => getInitials(fullName), [fullName]);
 
   const fromLiveMonitoring = Boolean(examId && !Number.isNaN(Number(examId)));

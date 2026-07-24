@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import apiClient from '../lib/axios';
-import { logout } from '../services/authService';
+import LogoutActions from '../components/auth/LogoutActions';
 
 const Icon = ({ name }: { name: string }) => (
   <span className="material-symbols-outlined"
@@ -62,8 +62,8 @@ const HelloCard = ({ role }: { role: string }) => {
 /* ─── Dashboard page ─────────────────────────────────────────────────────── */
 const DashboardPage = () => {
   const { user, role, isAuthenticated } = useAuthStore();
-  const fullName = user?.fullName ?? localStorage.getItem('authFullName') ?? 'User';
-  const storedRole = role ?? (localStorage.getItem('authRole') as typeof role);
+  const fullName = user?.fullName ?? 'User';
+  const storedRole = role;
 
   // Redirect to role-specific dashboard
   if (storedRole === 'STUDENT')  return <Navigate to="/student"  replace />;
@@ -110,12 +110,7 @@ const DashboardPage = () => {
           </a>
         </div>
 
-        <button
-          onClick={logout}
-          className="mt-8 flex items-center gap-2 text-[#64748B] text-[13px] hover:text-[#0F172A] transition-colors"
-        >
-          <Icon name="logout" /> Sign out
-        </button>
+        <LogoutActions className="mt-8 max-w-xs" />
       </div>
     </div>
   );

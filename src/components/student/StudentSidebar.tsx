@@ -2,6 +2,7 @@ import { memo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import ObserverrLogo from '../ObserverrLogo';
 import Icon from './Icon';
+import LogoutActions from '../auth/LogoutActions';
 import { NAV_ITEMS } from '../../data/studentDashboardData';
 
 type StudentSidebarProps = {
@@ -9,7 +10,6 @@ type StudentSidebarProps = {
   onNavChange: (id: string) => void;
   fullName: string;
   initials: string;
-  onLogout: () => void;
 };
 
 const StudentSidebar = memo(({
@@ -17,7 +17,6 @@ const StudentSidebar = memo(({
   onNavChange,
   fullName,
   initials,
-  onLogout,
 }: StudentSidebarProps) => {
   const handleNav = useCallback(
     (id: string) => (e: React.MouseEvent) => {
@@ -75,14 +74,7 @@ const StudentSidebar = memo(({
             <p className="text-[11px] text-student-on-surface-variant">Student Account</p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onLogout}
-          className="flex items-center text-student-error hover:opacity-80 transition-opacity text-sm font-medium"
-        >
-          <Icon name="logout" className="mr-2 text-[18px]" />
-          Log Out
-        </button>
+        <LogoutActions compact className="mt-1" />
       </div>
     </aside>
   );

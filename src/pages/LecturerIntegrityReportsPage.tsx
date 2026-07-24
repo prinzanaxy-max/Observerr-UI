@@ -25,7 +25,7 @@ const LecturerIntegrityReportsPage = () => {
 
   const [dateRange, setDateRange] = useState<DateRangeKey>('30d');
 
-  const fullName = user?.fullName ?? localStorage.getItem('authFullName') ?? 'Dr. Ama Boateng';
+  const fullName = user?.fullName ?? 'Lecturer';
   const initials = useMemo(() => getInitials(fullName), [fullName]);
 
   const report = useMemo(() => INTEGRITY_REPORTS[dateRange], [dateRange]);

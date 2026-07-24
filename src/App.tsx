@@ -21,12 +21,11 @@ import ProtectedRoute    from './components/ProtectedRoute';
 import RoleProtectedRoute from './components/RoleProtectedRoute';
 
 function App() {
-  const loadFromStorage = useAuthStore((s) => s.loadFromStorage);
+  const bootstrapSession = useAuthStore((s) => s.bootstrapSession);
 
-  // Rehydrate auth state from localStorage on every hard reload
   useEffect(() => {
-    loadFromStorage();
-  }, [loadFromStorage]);
+    bootstrapSession();
+  }, [bootstrapSession]);
 
   return (
     <BrowserRouter>

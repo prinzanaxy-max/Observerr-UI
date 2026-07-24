@@ -28,7 +28,7 @@ const LecturerExamsPage = () => {
   const [activeTab, setActiveTab] = useState<ExamFilterTab>('live');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const fullName = user?.fullName ?? localStorage.getItem('authFullName') ?? 'Dr. Ama Boateng';
+  const fullName = user?.fullName ?? 'Lecturer';
   const initials = useMemo(() => getInitials(fullName), [fullName]);
 
   useEffect(() => {

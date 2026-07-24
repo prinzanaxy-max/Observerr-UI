@@ -40,7 +40,7 @@ const LecturerLiveMonitoringPage = () => {
     return getExamById(id);
   }, [examId]);
 
-  const fullName = user?.fullName ?? localStorage.getItem('authFullName') ?? 'Dr. Ama Boateng';
+  const fullName = user?.fullName ?? 'Lecturer';
   const initials = useMemo(() => getInitials(fullName), [fullName]);
 
   const examTitle = exam ? `${exam.courseCode} — ${exam.title}` : 'Live Exam';

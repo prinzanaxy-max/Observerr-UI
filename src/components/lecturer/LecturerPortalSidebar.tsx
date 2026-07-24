@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Icon from '../student/Icon';
+import LogoutActions from '../auth/LogoutActions';
 import { PORTAL_FOOTER_NAV, PORTAL_NAV } from '../../data/lecturerPortalNav';
 
 type LecturerPortalSidebarProps = {
@@ -88,6 +89,10 @@ const LecturerPortalSidebar = memo(({ fullName, initials, onNewExam }: LecturerP
             {initials}
           </div>
           <span className="text-student-body-md font-student font-medium text-student-on-surface truncate">{fullName}</span>
+        </div>
+
+        <div className="px-2 pb-2">
+          <LogoutActions compact />
         </div>
       </div>
     </aside>

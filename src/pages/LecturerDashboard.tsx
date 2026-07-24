@@ -35,7 +35,7 @@ const LecturerDashboard = () => {
   const [examTab, setExamTab] = useState<ExamTab>('live');
   const [selectedStudent, setSelectedStudent] = useState<ReviewStudent | null>(null);
 
-  const fullName = user?.fullName ?? localStorage.getItem('authFullName') ?? 'Dr. Ama Boateng';
+  const fullName = user?.fullName ?? 'Lecturer';
   const initials = useMemo(() => getInitials(fullName), [fullName]);
 
   useEffect(() => {

@@ -33,7 +33,7 @@ const LecturerProctoringPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [audioMuted, setAudioMuted] = useState(false);
 
-  const fullName = user?.fullName ?? localStorage.getItem('authFullName') ?? 'Dr. Ama Boateng';
+  const fullName = user?.fullName ?? 'Lecturer';
   const initials = useMemo(() => getInitials(fullName), [fullName]);
 
   useEffect(() => {

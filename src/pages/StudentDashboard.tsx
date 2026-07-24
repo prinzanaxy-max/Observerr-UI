@@ -28,13 +28,12 @@ const getInitials = (name: string) =>
     .toUpperCase();
 
 const StudentDashboard = () => {
-  const logout = useAuthStore((s) => s.logout);
   const user = useAuthStore((s) => s.user);
 
   const [activeNav, setActiveNav] = useState('home');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const fullName = user?.fullName ?? localStorage.getItem('authFullName') ?? 'Johan Mandela';
+  const fullName = user?.fullName ?? 'Student';
   const initials = useMemo(() => getInitials(fullName), [fullName]);
 
   useEffect(() => {
@@ -81,7 +80,6 @@ const StudentDashboard = () => {
         onNavChange={handleNavChange}
         fullName={fullName}
         initials={initials}
-        onLogout={logout}
       />
 
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
