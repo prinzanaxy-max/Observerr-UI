@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { Link } from 'react-router-dom';
 import Icon from './Icon';
 
 type StudentTopBarProps = {
@@ -34,13 +35,13 @@ const StudentTopBar = memo(({
       </div>
 
       <div className="flex items-center gap-2">
-        <button
-          type="button"
-          className="p-2 rounded-full text-student-on-surface-variant hover:bg-student-surface-container-highest/50 transition-colors"
+        <Link
+          to="/student/notifications"
+          className="p-2 rounded-full text-student-on-surface-variant hover:bg-student-surface-container-highest/50 transition-colors flex items-center justify-center"
           aria-label="Notifications"
         >
           <Icon name="notifications" className="text-[24px]" />
-        </button>
+        </Link>
         <button
           type="button"
           className="p-2 rounded-full text-student-on-surface-variant hover:bg-student-surface-container-highest/50 transition-colors"

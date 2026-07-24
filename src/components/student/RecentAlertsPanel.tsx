@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { Link } from 'react-router-dom';
 import Icon from './Icon';
 import type { AlertItem } from '../../data/studentDashboardData';
 
@@ -15,9 +16,12 @@ const RecentAlertsPanel = memo(({ alerts }: RecentAlertsPanelProps) => (
   <div className="student-glass-card p-6">
     <div className="flex justify-between items-center mb-6">
       <h3 className="text-student-headline-sm font-student text-student-on-surface">Recent Alerts</h3>
-      <button type="button" className="text-student-primary hover:text-student-primary-container text-student-label-md font-student transition-colors">
+      <Link
+        to="/student/notifications"
+        className="text-student-primary hover:text-student-primary-container text-student-label-md font-student transition-colors"
+      >
         See all
-      </button>
+      </Link>
     </div>
 
     <div className="space-y-4">

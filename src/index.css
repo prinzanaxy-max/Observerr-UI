@@ -219,6 +219,20 @@ body {
   box-shadow: inset 2px 0 0 #2b6c00;
 }
 
+.student-notifications-bg {
+  background: linear-gradient(135deg, #fafaf4 0%, #f4f4ee 100%);
+  background-attachment: fixed;
+}
+
+.student-settings-bg {
+  background: linear-gradient(135deg, #f4f4ee 0%, #e3e3de 100%);
+  background-attachment: fixed;
+}
+
+.student-brand-gradient {
+  background: linear-gradient(135deg, #2b6c00 0%, #8ce35d 100%);
+}
+
 /* ── Lecturer Dashboard ─────────────────────────────────────────────────── */
 .lecturer-dashboard {
   font-family: 'Hanken Grotesk', 'Geist', sans-serif;
