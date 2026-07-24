@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { Link } from 'react-router-dom';
 import type { ExamResult } from '../../data/studentDashboardData';
 
 const integrityColor = (score: number) =>
@@ -12,9 +13,12 @@ const RecentResultsSection = memo(({ results }: RecentResultsSectionProps) => (
   <section>
     <div className="flex justify-between items-center mb-6">
       <h3 className="text-student-headline-sm font-student text-student-on-background">Recent Results</h3>
-      <button type="button" className="text-student-primary hover:text-student-primary-container text-student-label-md font-student transition-colors">
+      <Link
+        to="/student/results"
+        className="text-student-primary hover:text-student-primary-container text-student-label-md font-student transition-colors"
+      >
         See all
-      </button>
+      </Link>
     </div>
 
     <div className="student-glass-card overflow-hidden">

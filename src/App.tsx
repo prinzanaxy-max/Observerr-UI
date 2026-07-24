@@ -10,6 +10,7 @@ import StudentDashboard  from './pages/StudentDashboard';
 import StudentExamsPage  from './pages/StudentExamsPage';
 import StudentExamPrePage from './pages/StudentExamPrePage';
 import StudentExamSessionPage from './pages/StudentExamSessionPage';
+import StudentResultsPage from './pages/StudentResultsPage';
 import LecturerDashboard from './pages/LecturerDashboard';
 import LecturerExamsPage from './pages/LecturerExamsPage';
 import LecturerLiveMonitoringPage from './pages/LecturerLiveMonitoringPage';
@@ -52,6 +53,7 @@ function App() {
           <Route path="/student/exams" element={<StudentExamsPage />} />
           <Route path="/student/exams/:examId" element={<StudentExamPrePage />} />
           <Route path="/student/exams/:examId/take" element={<StudentExamSessionPage />} />
+          <Route path="/student/results" element={<StudentResultsPage />} />
         </Route>
 
         {/* Role-protected — LECTURER only */}
