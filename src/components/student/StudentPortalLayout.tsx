@@ -9,20 +9,22 @@ import MobileBottomNav from './MobileBottomNav';
 
 type StudentPortalLayoutProps = {
   children: ReactNode;
-  title: string;
-  searchQuery: string;
-  onSearchChange: (value: string) => void;
+  title?: string;
+  searchQuery?: string;
+  onSearchChange?: (value: string) => void;
   searchPlaceholder?: string;
   contentClassName?: string;
+  header?: ReactNode;
 };
 
 const StudentPortalLayout = memo(({
   children,
-  title,
-  searchQuery,
+  title = '',
+  searchQuery = '',
   onSearchChange,
   searchPlaceholder = 'Search exams or results...',
   contentClassName = '',
+  header,
 }: StudentPortalLayoutProps) => {
   const { institutionalId, email, initials } = useAuthProfile();
   const { pathname } = useLocation();
@@ -53,12 +55,14 @@ const StudentPortalLayout = memo(({
           </div>
         </div>
 
-        <StudentTopBar
-          title={title}
-          searchQuery={searchQuery}
-          onSearchChange={onSearchChange}
-          searchPlaceholder={searchPlaceholder}
-        />
+        {header ?? (
+          <StudentTopBar
+            title={title}
+            searchQuery={searchQuery}
+            onSearchChange={onSearchChange ?? (() => {})}
+            searchPlaceholder={searchPlaceholder}
+          />
+        )}
 
         <main className={`flex-1 min-h-0 overflow-y-auto overscroll-contain student-hide-scrollbar ${contentClassName}`}>
           {children}

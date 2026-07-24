@@ -50,9 +50,7 @@ const StudentResultsPage = () => {
   }, [totalPages]);
 
   const handleSelect = useCallback((result: StudentResult) => {
-    if (result.examId) {
-      navigate(`/student/exams/${result.examId}`);
-    }
+    navigate(`/student/results/${result.id}`);
   }, [navigate]);
 
   return (
