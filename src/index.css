@@ -176,6 +176,28 @@ body {
   transition: stroke-dashoffset 1s ease-in-out;
 }
 
+.student-portal {
+  background: linear-gradient(135deg, #e8e8e3 0%, #fafaf4 100%);
+}
+
+.student-exams-bg {
+  background: transparent;
+}
+
+.student-exam-btn-primary {
+  background: linear-gradient(90deg, #2b6c00 0%, #6b5e23 100%);
+  box-shadow: 0 4px 15px rgba(43, 108, 0, 0.2);
+}
+
+.student-hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.student-hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* ── Lecturer Dashboard ─────────────────────────────────────────────────── */
 .lecturer-dashboard {
   font-family: 'Hanken Grotesk', 'Geist', sans-serif;

@@ -1,10 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useAuthProfile } from '../hooks/useAuthProfile';
-import ObserverrLogo from '../components/ObserverrLogo';
-import StudentSidebar from '../components/student/StudentSidebar';
-import StudentTopBar from '../components/student/StudentTopBar';
-import MobileBottomNav from '../components/student/MobileBottomNav';
+import StudentPortalLayout from '../components/student/StudentPortalLayout';
 import IntegrityScoreCard from '../components/student/IntegrityScoreCard';
 import UpcomingExamsSection from '../components/student/UpcomingExamsSection';
 import RecentResultsSection from '../components/student/RecentResultsSection';
@@ -19,9 +14,6 @@ import {
 } from '../data/studentDashboardData';
 
 const StudentDashboard = () => {
-  const { institutionalId, email, initials } = useAuthProfile();
-
-  const [activeNav, setActiveNav] = useState('home');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -53,58 +45,32 @@ const StudentDashboard = () => {
     // Exam room entry will be wired to the API in a follow-up
   }, []);
 
-  const handleNavChange = useCallback((id: string) => {
-    setActiveNav(id);
-  }, []);
-
   const handleSearchChange = useCallback((value: string) => {
     setSearchQuery(value);
   }, []);
 
   return (
-    <div className="student-dashboard h-dvh flex overflow-hidden antialiased">
-      <StudentSidebar
-        activeNav={activeNav}
-        onNavChange={handleNavChange}
-        institutionalId={institutionalId}
-        email={email}
-        initials={initials}
-      />
-
-      <div className="flex-1 flex flex-col min-w-0 min-h-0">
-        {/* Mobile brand bar */}
-        <div className="md:hidden shrink-0 h-16 flex items-center px-4 border-b border-student-surface-variant/50 bg-student-surface-container-lowest">
-          <Link to="/" className="flex items-center gap-2.5 min-w-0">
-            <ObserverrLogo className="h-7 w-7 shrink-0" />
-            <span className="text-student-headline-sm font-student text-student-primary tracking-tight truncate">
-              OBSERVERR
-            </span>
-          </Link>
-        </div>
-
-        <StudentTopBar searchQuery={searchQuery} onSearchChange={handleSearchChange} />
-
-        <main className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
-          <div className="p-4 sm:p-8 max-w-[1200px] mx-auto w-full pb-8">
-            <div className="flex flex-col lg:flex-row gap-8">
-              <div className="lg:w-[65%] space-y-8">
-                <IntegrityScoreCard />
-                <UpcomingExamsSection exams={filteredExams} onExamSelect={handleExamSelect} />
-                <RecentResultsSection results={filteredResults} />
-              </div>
-
-              <div className="lg:w-[35%] space-y-8">
-                <QuickStatsPanel />
-                <ScoreTrendChart />
-                <RecentAlertsPanel alerts={RECENT_ALERTS} />
-              </div>
-            </div>
+    <StudentPortalLayout
+      title="Dashboard"
+      searchQuery={searchQuery}
+      onSearchChange={handleSearchChange}
+    >
+      <div className="p-4 sm:p-8 max-w-[1200px] mx-auto w-full pb-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          <div className="lg:w-[65%] space-y-8">
+            <IntegrityScoreCard />
+            <UpcomingExamsSection exams={filteredExams} onExamSelect={handleExamSelect} />
+            <RecentResultsSection results={filteredResults} />
           </div>
-        </main>
 
-        <MobileBottomNav activeNav={activeNav} onNavChange={handleNavChange} />
+          <div className="lg:w-[35%] space-y-8">
+            <QuickStatsPanel />
+            <ScoreTrendChart />
+            <RecentAlertsPanel alerts={RECENT_ALERTS} />
+          </div>
+        </div>
       </div>
-    </div>
+    </StudentPortalLayout>
   );
 };
 

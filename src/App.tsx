@@ -7,6 +7,7 @@ import LandingPage       from './pages/LandingPage';
 import AuthPage          from './pages/AuthPage';
 import DashboardPage     from './pages/DashboardPage';
 import StudentDashboard  from './pages/StudentDashboard';
+import StudentExamsPage  from './pages/StudentExamsPage';
 import LecturerDashboard from './pages/LecturerDashboard';
 import LecturerExamsPage from './pages/LecturerExamsPage';
 import LecturerLiveMonitoringPage from './pages/LecturerLiveMonitoringPage';
@@ -46,6 +47,7 @@ function App() {
         {/* Role-protected — STUDENT only */}
         <Route element={<RoleProtectedRoute roles={['STUDENT']} />}>
           <Route path="/student" element={<StudentDashboard />} />
+          <Route path="/student/exams" element={<StudentExamsPage />} />
         </Route>
 
         {/* Role-protected — LECTURER only */}

@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { Link } from 'react-router-dom';
 import Icon from './Icon';
 import type { UpcomingExam } from '../../data/studentDashboardData';
 
@@ -58,9 +59,12 @@ const UpcomingExamsSection = memo(({ exams, onExamSelect }: UpcomingExamsSection
   <section>
     <div className="flex justify-between items-center mb-6">
       <h3 className="text-student-headline-sm font-student text-student-on-background">Upcoming Exams</h3>
-      <button type="button" className="text-student-primary hover:text-student-primary-container text-student-label-md font-student transition-colors">
+      <Link
+        to="/student/exams"
+        className="text-student-primary hover:text-student-primary-container text-student-label-md font-student transition-colors"
+      >
         See all
-      </button>
+      </Link>
     </div>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {exams.map((exam) => (

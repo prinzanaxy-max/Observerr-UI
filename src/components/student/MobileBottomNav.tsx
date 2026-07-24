@@ -1,44 +1,33 @@
-import { memo, useCallback } from 'react';
+import { memo } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import Icon from './Icon';
-import { NAV_ITEMS } from '../../data/studentDashboardData';
+import { STUDENT_MOBILE_NAV } from '../../data/studentPortalNav';
 
 type MobileBottomNavProps = {
   activeNav: string;
-  onNavChange: (id: string) => void;
 };
 
-const MOBILE_NAV = NAV_ITEMS.filter((item) =>
-  ['home', 'exams', 'results', 'notifications', 'profile'].includes(item.id),
-);
-
-const MobileBottomNav = memo(({ activeNav, onNavChange }: MobileBottomNavProps) => {
-  const handleNav = useCallback(
-    (id: string) => (e: React.MouseEvent) => {
-      e.preventDefault();
-      onNavChange(id);
-    },
-    [onNavChange],
-  );
+const MobileBottomNav = memo(({ activeNav }: MobileBottomNavProps) => {
+  const { pathname } = useLocation();
 
   return (
     <nav
-      className="md:hidden shrink-0 border-t border-student-surface-variant/50 bg-student-surface-container-lowest px-2 py-2 grid grid-cols-5 gap-1 z-20"
+      className="md:hidden shrink-0 border-t border-student-surface-variant/50 bg-student-surface/90 backdrop-blur-md px-2 py-2 grid grid-cols-4 gap-1 z-20 shadow-[0px_-5px_20px_rgba(0,0,0,0.05)]"
       aria-label="Mobile navigation"
     >
-      {MOBILE_NAV.map((item) => {
-        const isActive = activeNav === item.id;
+      {STUDENT_MOBILE_NAV.map((item) => {
+        const isActive = activeNav === item.id || (item.path === '/student' ? pathname === '/student' : pathname.startsWith(item.path));
         return (
-          <a
+          <Link
             key={item.id}
-            href={`#${item.id}`}
-            onClick={handleNav(item.id)}
-            className={`flex flex-col items-center gap-0.5 py-2 rounded-xl text-[10px] font-medium transition-colors ${
-              isActive ? 'text-student-primary' : 'text-student-on-surface-variant'
+            to={item.path}
+            className={`flex flex-col items-center gap-0.5 py-2 rounded-xl text-[10px] font-student font-medium transition-colors ${
+              isActive ? 'text-student-primary font-bold' : 'text-student-on-surface-variant'
             }`}
           >
             <Icon name={item.icon} filled={isActive} className="text-[20px]" />
             <span className="truncate max-w-full px-1">{item.label}</span>
-          </a>
+          </Link>
         );
       })}
     </nav>
