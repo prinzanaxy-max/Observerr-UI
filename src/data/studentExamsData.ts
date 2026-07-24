@@ -52,7 +52,7 @@ export const UPCOMING_STUDENT_EXAMS: StudentExam[] = [
   },
   {
     id: 3,
-    title: 'Advanced Calculus',
+    title: 'Advanced Calculus III',
     professor: 'Prof. Isaac Newton',
     date: 'Nov 02, 2023',
     timeRange: '9:00 AM - 11:30 AM',

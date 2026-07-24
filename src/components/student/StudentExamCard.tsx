@@ -14,10 +14,11 @@ const iconToneClasses = {
 };
 
 const StudentExamCard = memo(({ exam, onAction }: StudentExamCardProps) => {
-  const isDisabled = exam.action.type === 'disabled';
+  const isLocked = exam.action.type === 'disabled';
   const isPrimary = exam.action.type === 'waiting-room';
   const isOutline = exam.action.type === 'guidelines';
   const isResults = exam.action.type === 'view-results';
+  const actionLabel = isLocked ? 'View Details' : exam.action.label;
 
   return (
     <article
@@ -66,21 +67,18 @@ const StudentExamCard = memo(({ exam, onAction }: StudentExamCardProps) => {
 
         <button
           type="button"
-          disabled={isDisabled}
-          onClick={() => !isDisabled && onAction?.(exam)}
+          onClick={() => onAction?.(exam)}
           className={`mt-4 w-full py-3 rounded-full font-student text-student-label-md font-bold transition-all flex justify-center items-center gap-2 ${
-            isDisabled
-              ? 'border border-student-outline text-student-on-surface-variant opacity-50 cursor-not-allowed'
+            isLocked
+              ? 'border border-student-outline text-student-on-surface-variant hover:bg-student-surface-container-high'
               : isPrimary
                 ? 'student-exam-btn-primary text-student-on-primary hover:opacity-90'
-                : isOutline
+                : isOutline || isResults
                   ? 'border-2 border-student-primary text-student-primary hover:bg-student-primary/5'
-                  : isResults
-                    ? 'border-2 border-student-primary text-student-primary hover:bg-student-primary/5'
-                    : 'border border-student-outline text-student-on-surface-variant'
+                  : 'border border-student-outline text-student-on-surface-variant'
           }`}
         >
-          {exam.action.label}
+          {actionLabel}
           {isPrimary && <Icon name="arrow_forward" className="text-sm" />}
         </button>
       </div>

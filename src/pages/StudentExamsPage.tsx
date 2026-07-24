@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import StudentPortalLayout from '../components/student/StudentPortalLayout';
 import ExamsTabControl from '../components/student/ExamsTabControl';
 import StudentExamCard from '../components/student/StudentExamCard';
@@ -10,6 +11,7 @@ import {
 } from '../data/studentExamsData';
 
 const StudentExamsPage = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<ExamListTab>('upcoming');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -32,9 +34,9 @@ const StudentExamsPage = () => {
 
   const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
   const handleTabChange = useCallback((tab: ExamListTab) => setActiveTab(tab), []);
-  const handleExamAction = useCallback((_exam: StudentExam) => {
-    // Waiting room / guidelines / results will connect to API routes later
-  }, []);
+  const handleExamAction = useCallback((exam: StudentExam) => {
+    navigate(`/student/exams/${exam.id}`);
+  }, [navigate]);
 
   return (
     <StudentPortalLayout

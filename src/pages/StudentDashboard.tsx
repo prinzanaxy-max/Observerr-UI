@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import StudentPortalLayout from '../components/student/StudentPortalLayout';
 import IntegrityScoreCard from '../components/student/IntegrityScoreCard';
 import UpcomingExamsSection from '../components/student/UpcomingExamsSection';
@@ -14,6 +15,7 @@ import {
 } from '../data/studentDashboardData';
 
 const StudentDashboard = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -41,9 +43,9 @@ const StudentDashboard = () => {
     );
   }, [searchQuery]);
 
-  const handleExamSelect = useCallback((_exam: UpcomingExam) => {
-    // Exam room entry will be wired to the API in a follow-up
-  }, []);
+  const handleExamSelect = useCallback((exam: UpcomingExam) => {
+    navigate(`/student/exams/${exam.id}`);
+  }, [navigate]);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchQuery(value);

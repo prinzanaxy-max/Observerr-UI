@@ -8,6 +8,8 @@ import AuthPage          from './pages/AuthPage';
 import DashboardPage     from './pages/DashboardPage';
 import StudentDashboard  from './pages/StudentDashboard';
 import StudentExamsPage  from './pages/StudentExamsPage';
+import StudentExamPrePage from './pages/StudentExamPrePage';
+import StudentExamSessionPage from './pages/StudentExamSessionPage';
 import LecturerDashboard from './pages/LecturerDashboard';
 import LecturerExamsPage from './pages/LecturerExamsPage';
 import LecturerLiveMonitoringPage from './pages/LecturerLiveMonitoringPage';
@@ -48,6 +50,8 @@ function App() {
         <Route element={<RoleProtectedRoute roles={['STUDENT']} />}>
           <Route path="/student" element={<StudentDashboard />} />
           <Route path="/student/exams" element={<StudentExamsPage />} />
+          <Route path="/student/exams/:examId" element={<StudentExamPrePage />} />
+          <Route path="/student/exams/:examId/take" element={<StudentExamSessionPage />} />
         </Route>
 
         {/* Role-protected — LECTURER only */}
