@@ -16,6 +16,7 @@ type ExamOverviewCardProps = {
 
 const ExamOverviewCard = memo(({ exam, onPrimaryAction, onSelect }: ExamOverviewCardProps) => {
   const isLive = exam.status === 'live';
+  const isUpcoming = exam.status === 'upcoming';
 
   return (
     <article
@@ -99,6 +100,14 @@ const ExamOverviewCard = memo(({ exam, onPrimaryAction, onSelect }: ExamOverview
           >
             Proctor Now
           </button>
+        ) : isUpcoming ? (
+          <button
+            type="button"
+            disabled
+            className="flex-1 bg-student-surface-container-high text-student-on-surface-variant py-2.5 rounded-full text-student-body-md font-student font-semibold opacity-50 cursor-not-allowed"
+          >
+            Not available yet
+          </button>
         ) : (
           <button
             type="button"
@@ -108,7 +117,7 @@ const ExamOverviewCard = memo(({ exam, onPrimaryAction, onSelect }: ExamOverview
             }}
             className="flex-1 bg-student-surface-container-high text-student-on-surface py-2.5 rounded-full text-student-body-md font-student font-semibold hover:bg-student-surface-variant transition-colors"
           >
-            {exam.status === 'completed' ? 'View Results' : 'Manage'}
+            View Results
           </button>
         )}
         <button
