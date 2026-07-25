@@ -32,5 +32,6 @@ export const getStudentActiveNav = (pathname: string): string => {
   if (pathname.startsWith('/student/notifications')) return 'notifications';
   if (pathname.startsWith('/student/profile')) return 'profile';
   if (pathname.startsWith('/student/settings')) return 'settings';
+  if (pathname.startsWith('/student/documentation')) return 'settings';
   return 'home';
 };

@@ -1,6 +1,8 @@
 import { memo, useCallback, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Icon from '../Icon';
 import { SUPPORT_FAQ } from '../../../data/studentSettingsData';
+import { GMAIL_COMPOSE_URL, SUPPORT_EMAIL } from '../../../data/studentDocumentationData';
 
 const SupportPanel = memo(() => {
   const [openId, setOpenId] = useState<number | null>(SUPPORT_FAQ[0]?.id ?? null);
@@ -21,7 +23,9 @@ const SupportPanel = memo(() => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
           <a
-            href="mailto:support@observerr.app"
+            href={GMAIL_COMPOSE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
             className="flex items-center gap-3 p-4 rounded-xl border border-student-outline-variant/30 bg-student-surface-container-lowest hover:border-student-primary/40 transition-colors"
           >
             <div className="w-10 h-10 rounded-full bg-student-primary-container/20 flex items-center justify-center text-student-primary shrink-0">
@@ -29,14 +33,12 @@ const SupportPanel = memo(() => {
             </div>
             <div>
               <p className="text-student-body-lg font-student font-medium text-student-on-surface">Email Support</p>
-              <p className="text-student-body-md font-student text-student-on-surface-variant">support@observerr.app</p>
+              <p className="text-student-body-md font-student text-student-on-surface-variant">{SUPPORT_EMAIL}</p>
             </div>
           </a>
 
-          <a
-            href="https://docs.observerr.app"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            to="/student/documentation"
             className="flex items-center gap-3 p-4 rounded-xl border border-student-outline-variant/30 bg-student-surface-container-lowest hover:border-student-primary/40 transition-colors"
           >
             <div className="w-10 h-10 rounded-full bg-student-primary-container/20 flex items-center justify-center text-student-primary shrink-0">
@@ -44,9 +46,9 @@ const SupportPanel = memo(() => {
             </div>
             <div>
               <p className="text-student-body-lg font-student font-medium text-student-on-surface">Documentation</p>
-              <p className="text-student-body-md font-student text-student-on-surface-variant">Student setup guides</p>
+              <p className="text-student-body-md font-student text-student-on-surface-variant">Observerr student guides</p>
             </div>
-          </a>
+          </Link>
         </div>
       </section>
 
