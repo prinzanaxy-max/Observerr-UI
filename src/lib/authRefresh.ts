@@ -27,8 +27,8 @@ export async function refreshAuthSession(): Promise<AuthResponse> {
       },
     )
     .then(({ data }) => {
-      useAuthStore.getState().setSession(data);
       persistAuthSession(data);
+      useAuthStore.getState().setSession(data);
       return data;
     })
     .finally(() => {

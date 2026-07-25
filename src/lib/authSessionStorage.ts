@@ -9,6 +9,8 @@ export const persistAuthSession = (auth: AuthResponse) => {
   sessionStorage.setItem(ACCESS_TOKEN_KEY, auth.accessToken);
   if (auth.refreshToken) {
     sessionStorage.setItem(REFRESH_TOKEN_KEY, auth.refreshToken);
+    // Keep refresh token in localStorage so it survives tab close / cross-origin cookie limits.
+    localStorage.setItem('refreshToken', auth.refreshToken);
   }
 };
 

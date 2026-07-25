@@ -25,7 +25,10 @@ const processQueue = (error: unknown, token: string | null = null) => {
 };
 
 const clearAuthAndRedirect = () => {
-  useAuthStore.getState().clear();
+  const { clear, isInitializing } = useAuthStore.getState();
+  clear();
+  // During bootstrap, ProtectedRoute handles navigation — avoid a hard redirect race.
+  if (isInitializing) return;
   const path = window.location.pathname;
   if (path !== '/auth' && path !== '/login' && path !== '/register' && path !== '/') {
     window.location.href = '/auth';

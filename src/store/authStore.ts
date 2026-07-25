@@ -31,7 +31,7 @@ interface AuthActions {
   updateProfilePicture: (profilePictureUrl: string | null) => void;
   getAccessToken: () => string | null;
   bootstrapSession: () => Promise<void>;
-  fetchCurrentUser: () => Promise<void>;
+  fetchCurrentUser: () => Promise<boolean>;
 }
 
 const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
@@ -126,8 +126,18 @@ const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
     }
 
     try {
+      // Prefer validating the stored access token before forcing a refresh.
+      // Refresh often fails cross-origin (no cookie) even when the access token is still valid.
+      if (storedAccess) {
+        const restored = await get().fetchCurrentUser();
+        if (restored) return;
+      }
+
       await refreshAuthSession();
-      await get().fetchCurrentUser();
+      const restored = await get().fetchCurrentUser();
+      if (!restored) {
+        get().clear();
+      }
     } catch {
       get().clear();
     } finally {
@@ -138,9 +148,15 @@ const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
   fetchCurrentUser: async () => {
     try {
       const user = await authService.getMe();
-      set({ user, role: user.role, institutionalId: user.institutionalId });
+      set({
+        user,
+        role: user.role,
+        institutionalId: user.institutionalId,
+        isAuthenticated: true,
+      });
+      return true;
     } catch {
-      // Interceptor handles 401 / refresh; avoid clearing session here
+      return false;
     }
   },
 }));
