@@ -1,5 +1,6 @@
 import { AxiosError } from 'axios';
 import apiClient from '../lib/axios';
+import { refreshAuthSession } from '../lib/authRefresh';
 import { API_URL } from '../lib/apiConfig';
 import type {
   AuthResponse,
@@ -50,8 +51,7 @@ export const login = async (data: LoginRequest): Promise<AuthResponse> => {
 
 export const refreshSession = async (): Promise<AuthResponse> => {
   try {
-    const { data: body } = await apiClient.post<AuthResponse>('/api/auth/refresh');
-    return body;
+    return await refreshAuthSession();
   } catch (err) {
     throw toApiError(err);
   }

@@ -1,8 +1,8 @@
 import axios, { AxiosError } from 'axios';
 import type { InternalAxiosRequestConfig } from 'axios';
 import { API_URL } from './apiConfig';
+import { refreshAuthSession } from './authRefresh';
 import useAuthStore from '../store/authStore';
-import type { AuthResponse } from '../types/auth';
 
 const apiClient = axios.create({
   baseURL: API_URL,
@@ -26,7 +26,10 @@ const processQueue = (error: unknown, token: string | null = null) => {
 
 const clearAuthAndRedirect = () => {
   useAuthStore.getState().clear();
-  window.location.href = '/login';
+  const path = window.location.pathname;
+  if (path !== '/auth' && path !== '/login' && path !== '/register' && path !== '/') {
+    window.location.href = '/auth';
+  }
 };
 
 const AUTH_SKIP_REFRESH = [
@@ -78,13 +81,7 @@ apiClient.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      const { data } = await axios.post<AuthResponse>(
-        `${API_URL}/api/auth/refresh`,
-        {},
-        { withCredentials: true },
-      );
-
-      useAuthStore.getState().setSession(data);
+      const data = await refreshAuthSession();
       originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
 
       processQueue(null, data.accessToken);

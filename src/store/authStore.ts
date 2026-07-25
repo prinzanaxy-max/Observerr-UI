@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import * as authService from '../services/authService';
+import { clearAuthSession, getStoredAccessToken, persistAuthSession, setStoredAccessToken } from '../lib/authSessionStorage';
+import { refreshAuthSession } from '../lib/authRefresh';
 import type {
   AuthResponse,
   CurrentUser,
@@ -8,12 +10,6 @@ import type {
   UserRole,
   ApiError,
 } from '../types/auth';
-
-const LEGACY_STORAGE_KEYS = ['accessToken', 'refreshToken', 'authRole', 'authFullName'] as const;
-
-const clearLegacyStorage = () => {
-  LEGACY_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
-};
 
 interface AuthState {
   user: CurrentUser | null;
@@ -51,7 +47,7 @@ const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
     set({ isLoading: true });
     try {
       const data = await authService.login(credentials);
-      clearLegacyStorage();
+      clearAuthSession();
       get().setSession(data);
       set({ isLoading: false });
       await get().fetchCurrentUser();
@@ -65,7 +61,7 @@ const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
     set({ isLoading: true });
     try {
       const res = await authService.register(data);
-      clearLegacyStorage();
+      clearAuthSession();
       get().setSession(res);
       set({ isLoading: false });
       await get().fetchCurrentUser();
@@ -83,11 +79,11 @@ const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
       // Logout is idempotent — always proceed to login
     }
     get().clear();
-    window.location.href = '/login';
+    window.location.href = '/auth';
   },
 
   clear: () => {
-    clearLegacyStorage();
+    clearAuthSession();
     set({
       user: null,
       accessToken: null,
@@ -99,6 +95,7 @@ const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
   },
 
   setSession: (auth) => {
+    persistAuthSession(auth);
     set({
       accessToken: auth.accessToken,
       role: auth.role,
@@ -108,6 +105,7 @@ const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
   },
 
   setAccessToken: (accessToken) => {
+    setStoredAccessToken(accessToken);
     set({ accessToken, isAuthenticated: true });
   },
 
@@ -121,20 +119,17 @@ const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
 
   bootstrapSession: async () => {
     set({ isInitializing: true });
-    clearLegacyStorage();
+
+    const storedAccess = getStoredAccessToken();
+    if (storedAccess) {
+      set({ accessToken: storedAccess, isAuthenticated: true });
+    }
 
     try {
-      const data = await authService.refreshSession();
-      get().setSession(data);
+      await refreshAuthSession();
       await get().fetchCurrentUser();
     } catch {
-      set({
-        isAuthenticated: false,
-        user: null,
-        accessToken: null,
-        institutionalId: null,
-        role: null,
-      });
+      get().clear();
     } finally {
       set({ isInitializing: false });
     }
@@ -145,7 +140,7 @@ const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
       const user = await authService.getMe();
       set({ user, role: user.role, institutionalId: user.institutionalId });
     } catch {
-      // Interceptor handles 401 / redirect
+      // Interceptor handles 401 / refresh; avoid clearing session here
     }
   },
 }));
