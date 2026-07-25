@@ -8,24 +8,28 @@ import PrivacyMonitoringPanel from '../components/student/settings/PrivacyMonito
 import SupportPanel from '../components/student/settings/SupportPanel';
 import Icon from '../components/student/Icon';
 import { filterSettingsTabs, type SettingsTab } from '../data/studentSettingsData';
+import { useAccountSettings } from '../hooks/useAccountSettings';
 import { useStudentSettings } from '../hooks/useStudentSettings';
 
 const StudentSettingsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<SettingsTab>('account');
-  const [saving, setSaving] = useState(false);
+  const [savingNotifications, setSavingNotifications] = useState(false);
+
+  const accountSettings = useAccountSettings();
 
   const {
-    email,
-    institutionalId,
     settings,
-    saveStatus,
-    saveMessage,
-    clearStatus,
-    saveProfile,
+    saveStatus: notificationSaveStatus,
+    saveMessage: notificationSaveMessage,
+    clearStatus: clearNotificationStatus,
     updateNotificationPref,
     saveAllNotifications,
   } = useStudentSettings();
+
+  const alertStatus = activeTab === 'account' ? accountSettings.saveStatus : notificationSaveStatus;
+  const alertMessage = activeTab === 'account' ? accountSettings.saveMessage : notificationSaveMessage;
+  const clearAlert = activeTab === 'account' ? accountSettings.clearStatus : clearNotificationStatus;
 
   useEffect(() => {
     document.title = 'Settings — Observerr';
@@ -41,21 +45,12 @@ const StudentSettingsPage = () => {
 
   const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
 
-  const handleSaveProfile = useCallback(async (...args: Parameters<typeof saveProfile>) => {
-    setSaving(true);
-    try {
-      return await saveProfile(...args);
-    } finally {
-      setSaving(false);
-    }
-  }, [saveProfile]);
-
   const handleSaveNotifications = useCallback(async (...args: Parameters<typeof saveAllNotifications>) => {
-    setSaving(true);
+    setSavingNotifications(true);
     try {
       return await saveAllNotifications(...args);
     } finally {
-      setSaving(false);
+      setSavingNotifications(false);
     }
   }, [saveAllNotifications]);
 
@@ -65,12 +60,21 @@ const StudentSettingsPage = () => {
         return (
           <>
             <AccountSettingsForm
-              key={`${settings.profile.firstName}-${settings.profile.lastName}`}
-              profile={settings.profile}
-              email={email}
-              institutionalId={institutionalId}
-              saving={saving}
-              onSave={handleSaveProfile}
+              account={accountSettings.account}
+              loading={accountSettings.loading}
+              loadError={accountSettings.loadError}
+              accountForm={accountSettings.accountForm}
+              passwordForm={accountSettings.passwordForm}
+              accountErrors={accountSettings.accountErrors}
+              passwordErrors={accountSettings.passwordErrors}
+              savingAccount={accountSettings.savingAccount}
+              savingPassword={accountSettings.savingPassword}
+              passwordRateLimited={accountSettings.passwordRateLimited}
+              onAccountFieldChange={accountSettings.updateAccountField}
+              onPasswordFieldChange={accountSettings.updatePasswordField}
+              onSaveAccount={accountSettings.handleSaveAccount}
+              onChangePassword={accountSettings.handleChangePassword}
+              onRetryLoad={() => void accountSettings.reloadAccount()}
             />
             <PrivacyMonitoringPanel />
           </>
@@ -79,7 +83,7 @@ const StudentSettingsPage = () => {
         return (
           <NotificationSettingsPanel
             preferences={settings.notifications}
-            saving={saving}
+            saving={savingNotifications}
             onToggle={updateNotificationPref}
             onSaveAll={handleSaveNotifications}
           />
@@ -107,7 +111,7 @@ const StudentSettingsPage = () => {
         </div>
 
         <div className="mb-6">
-          <SettingsAlert status={saveStatus} message={saveMessage} onDismiss={clearStatus} />
+          <SettingsAlert status={alertStatus} message={alertMessage} onDismiss={clearAlert} />
         </div>
 
         {visibleTabs.length === 0 ? (

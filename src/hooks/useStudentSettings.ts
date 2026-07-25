@@ -2,9 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   getDefaultSettings,
   type NotificationPreferences,
-  type PasswordChangeInput,
   type StoredStudentSettings,
-  type StudentSettingsProfile,
 } from '../data/studentSettingsData';
 import { compressProfileImage } from '../lib/imageUtils';
 import { notifyStudentSettingsChanged, STUDENT_SETTINGS_CHANGED } from '../lib/studentSettingsEvents';
@@ -76,58 +74,6 @@ export function useStudentSettings() {
     setSaveStatus('error');
     setSaveMessage(message);
   }, []);
-
-  const saveProfile = useCallback(
-    async (profile: StudentSettingsProfile, password?: PasswordChangeInput) => {
-      clearStatus();
-
-      if (!profile.firstName.trim()) {
-        showError('First name is required.');
-        return false;
-      }
-
-      const hasPasswordInput =
-        password &&
-        (password.currentPassword || password.newPassword || password.confirmPassword);
-
-      if (hasPasswordInput && password) {
-        if (!password.currentPassword) {
-          showError('Enter your current password to change it.');
-          return false;
-        }
-        if (!password.newPassword) {
-          showError('Enter a new password.');
-          return false;
-        }
-        if (password.newPassword.length < 8) {
-          showError('New password must be at least 8 characters.');
-          return false;
-        }
-        if (password.newPassword !== password.confirmPassword) {
-          showError('New password and confirmation do not match.');
-          return false;
-        }
-      }
-
-      const next: StoredStudentSettings = {
-        ...settings,
-        profile: { ...settings.profile, ...profile },
-      };
-      writeStoredSettings(institutionalId, next);
-      setSettings(next);
-
-      await new Promise((resolve) => setTimeout(resolve, 400));
-
-      if (hasPasswordInput) {
-        showSuccess('Account updated and password change request submitted.');
-      } else {
-        showSuccess('Account information saved successfully.');
-      }
-
-      return true;
-    },
-    [clearStatus, institutionalId, settings, showError, showSuccess],
-  );
 
   const updateNotificationPref = useCallback(
     (key: keyof NotificationPreferences, value: boolean) => {
@@ -204,7 +150,6 @@ export function useStudentSettings() {
     saveStatus,
     saveMessage,
     clearStatus,
-    saveProfile,
     updateNotificationPref,
     saveAllNotifications,
     uploadAvatar,
