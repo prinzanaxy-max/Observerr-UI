@@ -13,6 +13,7 @@ type NotificationSettingsPanelProps = {
   pushErrorMessage: string;
   onEnablePush: () => Promise<boolean>;
   onDisablePush: () => void;
+  toggles?: typeof NOTIFICATION_TOGGLES;
 };
 
 const NotificationSettingsPanel = memo(({
@@ -25,6 +26,7 @@ const NotificationSettingsPanel = memo(({
   pushErrorMessage,
   onEnablePush,
   onDisablePush,
+  toggles = NOTIFICATION_TOGGLES,
 }: NotificationSettingsPanelProps) => {
   const [draft, setDraft] = useState(preferences);
 
@@ -60,7 +62,7 @@ const NotificationSettingsPanel = memo(({
           onDisable={onDisablePush}
         />
 
-        {NOTIFICATION_TOGGLES.map((item) => (
+        {toggles.map((item) => (
           <li
             key={item.key}
             className="flex items-start justify-between gap-4 p-4 rounded-xl border border-student-outline-variant/30 bg-student-surface-container-lowest"

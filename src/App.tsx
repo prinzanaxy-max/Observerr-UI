@@ -24,6 +24,8 @@ import LecturerStudentsPage from './pages/LecturerStudentsPage';
 import LecturerIntegrityReportsPage from './pages/LecturerIntegrityReportsPage';
 import LecturerProctoringPage from './pages/LecturerProctoringPage';
 import LecturerCreateExamPage from './pages/LecturerCreateExamPage';
+import LecturerSettingsPage from './pages/LecturerSettingsPage';
+import LecturerSupportPage from './pages/LecturerSupportPage';
 import AccessDeniedPage  from './pages/AccessDeniedPage';
 import NotFoundPage      from './pages/NotFoundPage';
 import ProtectedRoute    from './components/ProtectedRoute';
@@ -79,6 +81,8 @@ function App() {
           <Route path="/lecturer/students/:studentId/timeline" element={<LecturerStudentTimelinePage />} />
           <Route path="/lecturer/reports" element={<LecturerIntegrityReportsPage />} />
           <Route path="/lecturer/proctoring" element={<LecturerProctoringPage />} />
+          <Route path="/lecturer/settings" element={<LecturerSettingsPage />} />
+          <Route path="/lecturer/support" element={<LecturerSupportPage />} />
         </Route>
 
         {/* Error pages */}
