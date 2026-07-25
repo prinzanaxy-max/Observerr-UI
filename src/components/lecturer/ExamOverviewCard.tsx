@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import Icon from '../student/Icon';
-import type { ExamOverview } from '../../data/lecturerExamsData';
+import type { ExamOverview } from '../../types/lecturerExams';
 
 const detailTone = {
   error: 'text-student-error',

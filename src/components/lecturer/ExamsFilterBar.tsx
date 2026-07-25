@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import Icon from '../student/Icon';
-import type { ExamFilterTab } from '../../data/lecturerExamsData';
+import type { ExamFilterTab } from '../../types/lecturerExams';
 
 const TABS: { id: ExamFilterTab; label: string }[] = [
   { id: 'live', label: 'Live' },

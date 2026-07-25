@@ -6,12 +6,14 @@ import { SECURITY_SETTINGS } from '../../data/createExamData';
 type ExamSecuritySettingsPanelProps = {
   security: Record<SecuritySettingKey, boolean>;
   draftSavedLabel: string;
+  submitting?: boolean;
   onToggle: (key: SecuritySettingKey) => void;
 };
 
 const ExamSecuritySettingsPanel = memo(({
   security,
   draftSavedLabel,
+  submitting = false,
   onToggle,
 }: ExamSecuritySettingsPanelProps) => (
   <aside className="bg-student-surface rounded-2xl p-6 lecturer-card-elevation border border-student-surface-container/50 sticky top-6">
@@ -52,9 +54,10 @@ const ExamSecuritySettingsPanel = memo(({
     <div className="mt-8 pt-6 border-t border-student-surface-container">
       <button
         type="submit"
-        className="w-full py-4 bg-gradient-to-r from-student-primary to-student-primary-fixed text-student-on-primary rounded-xl font-student text-student-headline-sm font-bold shadow-[0_4px_16px_rgba(43,108,0,0.25)] hover:shadow-[0_8px_24px_rgba(43,108,0,0.35)] hover:-translate-y-0.5 transition-all flex justify-center items-center gap-2"
+        disabled={submitting}
+        className="w-full py-4 bg-gradient-to-r from-student-primary to-student-primary-fixed text-student-on-primary rounded-xl font-student text-student-headline-sm font-bold shadow-[0_4px_16px_rgba(43,108,0,0.25)] hover:shadow-[0_8px_24px_rgba(43,108,0,0.35)] hover:-translate-y-0.5 transition-all flex justify-center items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
       >
-        Publish Exam
+        {submitting ? 'Publishing…' : 'Publish Exam'}
         <Icon name="send" />
       </button>
       <p className="text-center font-student text-student-label-md text-student-on-surface-variant mt-4">

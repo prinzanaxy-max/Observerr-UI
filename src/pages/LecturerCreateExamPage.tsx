@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthProfile } from '../hooks/useAuthProfile';
+import { useCreateExam } from '../hooks/useCreateExam';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
 import CreateExamPageHeader from '../components/lecturer/CreateExamPageHeader';
 import ExamDetailsForm from '../components/lecturer/ExamDetailsForm';
 import ExamQuestionsPlaceholder from '../components/lecturer/ExamQuestionsPlaceholder';
 import ExamSecuritySettingsPanel from '../components/lecturer/ExamSecuritySettingsPanel';
+import Icon from '../components/student/Icon';
 import {
   CREATE_EXAM_PATH,
   DEFAULT_FORM_STATE,
@@ -22,6 +24,7 @@ const formatDraftLabel = (savedAt: Date | null) => {
 const LecturerCreateExamPage = () => {
   const navigate = useNavigate();
   const { institutionalId, email, initials } = useAuthProfile();
+  const { publishExam, submitting, error, forbidden, clearError } = useCreateExam();
 
   const [form, setForm] = useState<CreateExamFormState>(DEFAULT_FORM_STATE);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
@@ -29,7 +32,6 @@ const LecturerCreateExamPage = () => {
 
   useEffect(() => {
     document.title = 'Create New Exam — Observerr Lecturer';
-    setLastSavedAt(new Date(Date.now() - 2 * 60 * 1000));
   }, []);
 
   useEffect(() => {
@@ -40,9 +42,13 @@ const LecturerCreateExamPage = () => {
 
   const draftSavedLabel = useMemo(() => formatDraftLabel(lastSavedAt), [lastSavedAt]);
 
-  const handleFormChange = useCallback((updates: Partial<CreateExamFormState>) => {
-    setForm((prev) => ({ ...prev, ...updates }));
-  }, []);
+  const handleFormChange = useCallback(
+    (updates: Partial<CreateExamFormState>) => {
+      clearError();
+      setForm((prev) => ({ ...prev, ...updates }));
+    },
+    [clearError],
+  );
 
   const handleToggleSecurity = useCallback((key: SecuritySettingKey) => {
     setForm((prev) => ({
@@ -55,16 +61,12 @@ const LecturerCreateExamPage = () => {
     setLastSavedAt(new Date());
   }, []);
 
-  const handlePublish = useCallback(() => {
-    navigate('/lecturer/exams');
-  }, [navigate]);
-
   const handleSubmit = useCallback(
-    (e: FormEvent) => {
+    async (e: FormEvent) => {
       e.preventDefault();
-      handlePublish();
+      await publishExam(form);
     },
-    [handlePublish],
+    [form, publishExam],
   );
 
   return (
@@ -96,6 +98,13 @@ const LecturerCreateExamPage = () => {
           </button>
         </div>
 
+        {error && (
+          <div className="mb-6 p-4 rounded-xl bg-student-error-container/30 border border-student-error/30 flex items-start gap-3">
+            <Icon name={forbidden ? 'block' : 'error'} className="text-student-error shrink-0 mt-0.5" />
+            <p className="text-student-body-md font-student text-student-on-error-container">{error}</p>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-8 flex flex-col gap-6">
             <ExamDetailsForm form={form} onChange={handleFormChange} />
@@ -106,6 +115,7 @@ const LecturerCreateExamPage = () => {
             <ExamSecuritySettingsPanel
               security={form.security}
               draftSavedLabel={draftSavedLabel}
+              submitting={submitting}
               onToggle={handleToggleSecurity}
             />
           </div>

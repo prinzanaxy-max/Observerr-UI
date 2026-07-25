@@ -1,23 +1,24 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useAuthProfile } from '../hooks/useAuthProfile';
+import { useLecturerExam } from '../hooks/useLecturerExam';
+import { computeRemainingSeconds, formatExamTitle } from '../lib/lecturerExamsUtils';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
 import LiveMonitoringHeader from '../components/lecturer/LiveMonitoringHeader';
 import MonitoringStatsCards from '../components/lecturer/MonitoringStatsCards';
 import MonitoringFilterBar from '../components/lecturer/MonitoringFilterBar';
 import MonitoringStudentTable from '../components/lecturer/MonitoringStudentTable';
+import Icon from '../components/student/Icon';
 import {
-  LIVE_SESSION_INITIAL_SECONDS,
   LIVE_SESSION_STATS,
   MONITORED_STUDENTS,
   type MonitoredStudent,
   type RiskFilter,
 } from '../data/liveMonitoringData';
-import { getExamById } from '../data/lecturerExamsData';
 import { CREATE_EXAM_PATH } from '../data/createExamData';
 
 const LecturerLiveMonitoringPage = () => {
-  const { examId } = useParams<{ examId: string }>();
+  const { examId: examIdParam } = useParams<{ examId: string }>();
   const navigate = useNavigate();
   const { institutionalId, email, initials } = useAuthProfile();
 
@@ -25,13 +26,17 @@ const LecturerLiveMonitoringPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [endConfirm, setEndConfirm] = useState(false);
 
-  const exam = useMemo(() => {
-    const id = Number(examId);
-    if (Number.isNaN(id)) return undefined;
-    return getExamById(id);
-  }, [examId]);
+  const examId = useMemo(() => {
+    const parsed = Number(examIdParam);
+    return Number.isNaN(parsed) ? null : parsed;
+  }, [examIdParam]);
 
-  const examTitle = exam ? `${exam.courseCode} — ${exam.title}` : 'Live Exam';
+  const { exam, loading, error, forbidden, notFound, reload } = useLecturerExam(examId);
+
+  const examTitle = exam ? formatExamTitle(exam) : loading ? 'Loading exam…' : 'Live Exam';
+  const initialSeconds = exam
+    ? computeRemainingSeconds(exam.startAt, exam.durationMinutes)
+    : 0;
 
   useEffect(() => {
     document.title = `Live — ${examTitle} | Observerr`;
@@ -67,7 +72,7 @@ const LecturerLiveMonitoringPage = () => {
   const handleFilterChange = useCallback((filter: RiskFilter) => setRiskFilter(filter), []);
   const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
 
-  if (!examId || Number.isNaN(Number(examId))) {
+  if (!examIdParam || examId === null) {
     return <Navigate to="/lecturer/exams" replace />;
   }
 
@@ -79,26 +84,50 @@ const LecturerLiveMonitoringPage = () => {
       onNewExam={() => navigate(CREATE_EXAM_PATH)}
       contentClassName="lecturer-exams-bg"
       header={
-        <LiveMonitoringHeader
-          examTitle={examTitle}
-          initialSeconds={LIVE_SESSION_INITIAL_SECONDS}
-          onEndExam={handleEndExam}
-        />
+        !error && !notFound ? (
+          <LiveMonitoringHeader
+            examTitle={examTitle}
+            initialSeconds={initialSeconds}
+            loading={loading}
+            onEndExam={handleEndExam}
+          />
+        ) : undefined
       }
     >
       <div className="p-4 md:p-8 max-w-[1400px] mx-auto w-full pb-12 space-y-6">
-        <MonitoringStatsCards stats={LIVE_SESSION_STATS} />
-        <MonitoringFilterBar
-          activeFilter={riskFilter}
-          searchQuery={searchQuery}
-          onFilterChange={handleFilterChange}
-          onSearchChange={handleSearchChange}
-        />
-        <MonitoringStudentTable
-          students={filteredStudents}
-          onViewTimeline={handleViewTimeline}
-          onWatchFeed={handleWatchFeed}
-        />
+        {error ? (
+          <div className="bg-student-surface rounded-[24px] p-12 text-center lecturer-card-elevation">
+            <Icon name={forbidden ? 'block' : 'error'} className="text-[48px] text-student-outline mb-4 mx-auto" />
+            <h2 className="text-student-headline-sm font-student text-student-on-surface mb-2">
+              {forbidden ? 'Access denied' : notFound ? 'Exam not found' : 'Could not load exam'}
+            </h2>
+            <p className="text-student-body-md font-student text-student-on-surface-variant mb-4">{error}</p>
+            {!forbidden && !notFound && (
+              <button
+                type="button"
+                onClick={() => void reload()}
+                className="px-5 py-2 rounded-full border border-student-primary text-student-primary text-student-body-md font-student hover:bg-student-primary/5"
+              >
+                Retry
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            <MonitoringStatsCards stats={LIVE_SESSION_STATS} />
+            <MonitoringFilterBar
+              activeFilter={riskFilter}
+              searchQuery={searchQuery}
+              onFilterChange={handleFilterChange}
+              onSearchChange={handleSearchChange}
+            />
+            <MonitoringStudentTable
+              students={filteredStudents}
+              onViewTimeline={handleViewTimeline}
+              onWatchFeed={handleWatchFeed}
+            />
+          </>
+        )}
       </div>
 
       {endConfirm && (

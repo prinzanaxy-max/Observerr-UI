@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useAuthProfile } from '../hooks/useAuthProfile';
+import { useLecturerExam } from '../hooks/useLecturerExam';
+import { formatExamTitle } from '../lib/lecturerExamsUtils';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
 import StudentTimelineTopBar from '../components/lecturer/StudentTimelineTopBar';
 import StudentProfileHeader from '../components/lecturer/StudentProfileHeader';
@@ -8,7 +10,6 @@ import SessionEventTimeline from '../components/lecturer/SessionEventTimeline';
 import SessionStatisticsPanel from '../components/lecturer/SessionStatisticsPanel';
 import StudentReportActions from '../components/lecturer/StudentReportActions';
 import Icon from '../components/student/Icon';
-import { getExamById } from '../data/lecturerExamsData';
 import { getStudentTimeline } from '../data/studentTimelineData';
 import { mapLegacyTimelineEventToView } from '../lib/lecturerStudentsUtils';
 import { CREATE_EXAM_PATH } from '../data/createExamData';
@@ -25,17 +26,18 @@ const LecturerStudentTimelinePage = () => {
     [studentId],
   );
 
-  const exam = useMemo(() => {
-    if (!examId) return undefined;
+  const parsedExamId = useMemo(() => {
+    if (!examId) return null;
     const id = Number(examId);
-    if (Number.isNaN(id)) return undefined;
-    return getExamById(id);
+    return Number.isNaN(id) ? null : id;
   }, [examId]);
+
+  const { exam } = useLecturerExam(parsedExamId);
 
   const fromLiveMonitoring = Boolean(examId && !Number.isNaN(Number(examId)));
   const backTo = fromLiveMonitoring ? `/lecturer/exams/${examId}/live` : '/lecturer/students';
   const backLabel = fromLiveMonitoring ? 'Back to Live Monitoring' : 'Back to Students';
-  const examLabel = exam ? `${exam.courseCode} — ${exam.title}` : profile?.examLabel;
+  const examLabel = exam ? formatExamTitle(exam) : profile?.examLabel;
 
   useEffect(() => {
     if (profile) {

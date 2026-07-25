@@ -11,11 +11,16 @@ const formatTimer = (totalSeconds: number) => {
 type LiveMonitoringHeaderProps = {
   examTitle: string;
   initialSeconds: number;
+  loading?: boolean;
   onEndExam: () => void;
 };
 
-const LiveMonitoringHeader = memo(({ examTitle, initialSeconds, onEndExam }: LiveMonitoringHeaderProps) => {
+const LiveMonitoringHeader = memo(({ examTitle, initialSeconds, loading = false, onEndExam }: LiveMonitoringHeaderProps) => {
   const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
+
+  useEffect(() => {
+    setSecondsLeft(initialSeconds);
+  }, [initialSeconds]);
 
   useEffect(() => {
     const id = window.setInterval(() => {
@@ -32,7 +37,9 @@ const LiveMonitoringHeader = memo(({ examTitle, initialSeconds, onEndExam }: Liv
             <span className="w-2 h-2 rounded-full bg-student-error animate-pulse" />
             Live Monitoring
           </span>
-          <h1 className="text-student-headline-md font-student font-bold text-student-on-surface truncate">{examTitle}</h1>
+          <h1 className="text-student-headline-md font-student font-bold text-student-on-surface truncate">
+            {loading ? 'Loading exam…' : examTitle}
+          </h1>
         </div>
 
         <div className="flex items-center gap-3 sm:gap-4 shrink-0">
