@@ -10,6 +10,7 @@ import StudentReportActions from '../components/lecturer/StudentReportActions';
 import Icon from '../components/student/Icon';
 import { getExamById } from '../data/lecturerExamsData';
 import { getStudentTimeline } from '../data/studentTimelineData';
+import { mapLegacyTimelineEventToView } from '../lib/lecturerStudentsUtils';
 import { CREATE_EXAM_PATH } from '../data/createExamData';
 
 const LecturerStudentTimelinePage = () => {
@@ -44,13 +45,19 @@ const LecturerStudentTimelinePage = () => {
 
   const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
 
-  if (!studentId || !profile) {
+  const displayProfile = useMemo(() => {
+    if (!profile) return null;
+    return examLabel ? { ...profile, examLabel } : profile;
+  }, [examLabel, profile]);
+
+  const timelineEvents = useMemo(
+    () => profile?.events.map(mapLegacyTimelineEventToView) ?? [],
+    [profile?.events],
+  );
+
+  if (!studentId || !profile || !displayProfile) {
     return <Navigate to="/lecturer/students" replace />;
   }
-
-  const displayProfile = examLabel
-    ? { ...profile, examLabel }
-    : profile;
 
   return (
     <LecturerPortalLayout
@@ -79,7 +86,7 @@ const LecturerStudentTimelinePage = () => {
         <StudentProfileHeader profile={displayProfile} backTo={backTo} />
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-          <SessionEventTimeline events={profile.events} searchQuery={searchQuery} />
+          <SessionEventTimeline events={timelineEvents} searchQuery={searchQuery} />
 
           <div className="space-y-5">
             <SessionStatisticsPanel stats={profile.stats} />

@@ -1,51 +1,41 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthProfile } from '../hooks/useAuthProfile';
+import { useLecturerStudents } from '../hooks/useLecturerStudents';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
 import StudentsPageHeader from '../components/lecturer/StudentsPageHeader';
 import StudentsTable from '../components/lecturer/StudentsTable';
-import { STUDENT_ROSTER } from '../data/lecturerStudentsData';
+import Icon from '../components/student/Icon';
 import { CREATE_EXAM_PATH } from '../data/createExamData';
-
-const PAGE_SIZE = 10;
 
 const LecturerStudentsPage = () => {
   const navigate = useNavigate();
   const { institutionalId, email, initials } = useAuthProfile();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [courseFilter, setCourseFilter] = useState('all');
-  const [page, setPage] = useState(1);
+  const [courseFilter, setCourseFilter] = useState('ALL');
+
+  const {
+    students,
+    from,
+    to,
+    totalElements,
+    totalPages,
+    page,
+    courseOptions,
+    loading,
+    error,
+    forbidden,
+    setPage,
+    reload,
+  } = useLecturerStudents(searchQuery, courseFilter);
 
   useEffect(() => {
     document.title = 'Students — Observerr Lecturer';
   }, []);
 
-  const filteredStudents = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    return STUDENT_ROSTER.filter((student) => {
-      if (courseFilter !== 'all' && !student.course.startsWith(courseFilter)) return false;
-      if (!q) return true;
-      return (
-        student.name.toLowerCase().includes(q) ||
-        student.id.includes(q) ||
-        student.course.toLowerCase().includes(q)
-      );
-    });
-  }, [searchQuery, courseFilter]);
-
-  const paginatedStudents = useMemo(() => {
-    const start = (page - 1) * PAGE_SIZE;
-    return filteredStudents.slice(start, start + PAGE_SIZE);
-  }, [filteredStudents, page]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [searchQuery, courseFilter]);
-
   const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
   const handleCourseChange = useCallback((value: string) => setCourseFilter(value), []);
-  const handlePageChange = useCallback((p: number) => setPage(p), []);
   const handleGoLive = useCallback(() => navigate('/lecturer/exams'), []);
 
   return (
@@ -60,6 +50,7 @@ const LecturerStudentsPage = () => {
           initials={initials}
           searchQuery={searchQuery}
           courseFilter={courseFilter}
+          courseOptions={courseOptions}
           onSearchChange={handleSearchChange}
           onCourseChange={handleCourseChange}
           onGoLive={handleGoLive}
@@ -77,15 +68,47 @@ const LecturerStudentsPage = () => {
             placeholder="Search students..."
             aria-label="Search students"
           />
+          <select
+            value={courseFilter}
+            onChange={(e) => handleCourseChange(e.target.value)}
+            className="w-full px-4 py-2 bg-student-surface-container-lowest border border-student-outline-variant rounded-full text-student-body-md font-student"
+            aria-label="Filter by course"
+          >
+            {courseOptions.map((course) => (
+              <option key={course.value} value={course.value}>{course.label}</option>
+            ))}
+          </select>
         </div>
 
-        <StudentsTable
-          students={paginatedStudents}
-          page={page}
-          pageSize={PAGE_SIZE}
-          total={filteredStudents.length}
-          onPageChange={handlePageChange}
-        />
+        {error ? (
+          <div className="text-center py-16 px-6 rounded-[24px] student-glass-card">
+            <Icon name={forbidden ? 'block' : 'error'} className="text-[48px] text-student-outline mb-4 mx-auto" />
+            <h2 className="text-student-headline-sm font-student text-student-on-surface mb-2">
+              {forbidden ? 'Access denied' : 'Could not load students'}
+            </h2>
+            <p className="text-student-body-md font-student text-student-on-surface-variant mb-4">{error}</p>
+            {!forbidden && (
+              <button
+                type="button"
+                onClick={() => void reload()}
+                className="px-5 py-2 rounded-full border border-student-primary text-student-primary text-student-body-md font-student hover:bg-student-primary/5"
+              >
+                Retry
+              </button>
+            )}
+          </div>
+        ) : (
+          <StudentsTable
+            students={students}
+            page={page}
+            totalPages={totalPages}
+            from={from}
+            to={to}
+            totalElements={totalElements}
+            loading={loading}
+            onPageChange={setPage}
+          />
+        )}
       </div>
     </LecturerPortalLayout>
   );

@@ -1,10 +1,14 @@
 import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../student/Icon';
-import type { StudentTimelineProfile } from '../../data/studentTimelineData';
 
 type StudentProfileHeaderProps = {
-  profile: StudentTimelineProfile;
+  profile: {
+    name: string;
+    initials?: string;
+    examLabel: string;
+    integrityScore: number;
+  };
   backTo: string;
 };
 

@@ -24,6 +24,7 @@ import LecturerStudentsPage from './pages/LecturerStudentsPage';
 import LecturerIntegrityReportsPage from './pages/LecturerIntegrityReportsPage';
 import LecturerProctoringPage from './pages/LecturerProctoringPage';
 import LecturerCreateExamPage from './pages/LecturerCreateExamPage';
+import LecturerSessionDetailPage from './pages/LecturerSessionDetailPage';
 import LecturerSettingsPage from './pages/LecturerSettingsPage';
 import LecturerSupportPage from './pages/LecturerSupportPage';
 import AccessDeniedPage  from './pages/AccessDeniedPage';
@@ -78,6 +79,7 @@ function App() {
           <Route path="/lecturer/exams/:examId/live" element={<LecturerLiveMonitoringPage />} />
           <Route path="/lecturer/exams/:examId/students/:studentId/timeline" element={<LecturerStudentTimelinePage />} />
           <Route path="/lecturer/students" element={<LecturerStudentsPage />} />
+          <Route path="/lecturer/students/sessions/:sessionId" element={<LecturerSessionDetailPage />} />
           <Route path="/lecturer/students/:studentId/timeline" element={<LecturerStudentTimelinePage />} />
           <Route path="/lecturer/reports" element={<LecturerIntegrityReportsPage />} />
           <Route path="/lecturer/proctoring" element={<LecturerProctoringPage />} />

@@ -1,25 +1,36 @@
 import { memo, useMemo, useState } from 'react';
 import Icon from '../student/Icon';
-import type { TimelineEvent } from '../../data/studentTimelineData';
+import type { SessionEventSeverity } from '../../types/lecturerStudents';
+import type { TimelineEventView } from '../../lib/lecturerStudentsUtils';
 import {
-  eventCardClass,
-  eventDotClass,
-  eventTitleClass,
-  pointsBadgeClass,
-} from '../../data/studentTimelineData';
+  severityCardClass,
+  severityDotClass,
+  severityIcon,
+  severityIconClass,
+  severityTitleClass,
+} from '../../lib/lecturerStudentsUtils';
 
 type SessionEventTimelineProps = {
-  events: TimelineEvent[];
+  events: TimelineEventView[];
   searchQuery: string;
+  loading?: boolean;
 };
 
-const SessionEventTimeline = memo(({ events, searchQuery }: SessionEventTimelineProps) => {
-  const [filter, setFilter] = useState<'all' | TimelineEvent['type']>('all');
+const FILTER_OPTIONS: { value: 'all' | SessionEventSeverity; label: string }[] = [
+  { value: 'all', label: 'Filter: All Events' },
+  { value: 'SUCCESS', label: 'Success' },
+  { value: 'WARNING', label: 'Warnings' },
+  { value: 'DANGER', label: 'Critical' },
+  { value: 'NEUTRAL', label: 'Neutral' },
+];
+
+const SessionEventTimeline = memo(({ events, searchQuery, loading = false }: SessionEventTimelineProps) => {
+  const [filter, setFilter] = useState<'all' | SessionEventSeverity>('all');
 
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return events.filter((event) => {
-      if (filter !== 'all' && event.type !== filter) return false;
+      if (filter !== 'all' && event.severity !== filter) return false;
       if (!q) return true;
       return (
         event.title.toLowerCase().includes(q) ||
@@ -28,6 +39,19 @@ const SessionEventTimeline = memo(({ events, searchQuery }: SessionEventTimeline
       );
     });
   }, [events, filter, searchQuery]);
+
+  if (loading) {
+    return (
+      <div className="bg-student-surface rounded-[24px] p-4 sm:p-6 lecturer-card-elevation xl:col-span-2 animate-pulse">
+        <div className="h-8 w-48 bg-student-surface-container-high rounded mb-8" />
+        <div className="space-y-6 pl-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-24 bg-student-surface-container-high rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-student-surface rounded-[24px] p-4 sm:p-6 lecturer-card-elevation relative overflow-hidden xl:col-span-2">
@@ -41,11 +65,9 @@ const SessionEventTimeline = memo(({ events, searchQuery }: SessionEventTimeline
           className="px-3 py-1 bg-student-surface-container rounded-full text-student-label-md font-student text-student-on-surface-variant border-0 focus:ring-2 focus:ring-student-primary/30 cursor-pointer"
           aria-label="Filter events"
         >
-          <option value="all">Filter: All Events</option>
-          <option value="start">Session Start</option>
-          <option value="minor">Minor Infractions</option>
-          <option value="critical">Critical Violations</option>
-          <option value="end">Session End</option>
+          {FILTER_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
         </select>
       </div>
 
@@ -53,40 +75,37 @@ const SessionEventTimeline = memo(({ events, searchQuery }: SessionEventTimeline
         {filtered.map((event) => (
           <div key={event.id} className="relative">
             <div
-              className={`absolute -left-[25px] top-1 w-4 h-4 rounded-full ring-4 ring-student-surface ${eventDotClass[event.type]} ${
-                event.pulse ? 'animate-pulse' : ''
+              className={`absolute -left-[25px] top-1 w-4 h-4 rounded-full ring-4 ring-student-surface ${severityDotClass[event.severity]} ${
+                event.severity === 'DANGER' ? 'animate-pulse' : ''
               }`}
             />
             <div className="flex flex-wrap justify-between items-start gap-2 mb-1">
-              <span className={`text-student-label-md font-student ${eventTitleClass[event.type]}`}>
+              <span className={`text-student-label-md font-student ${severityTitleClass[event.severity]}`}>
                 {event.time} • {event.title}
               </span>
-              {event.points !== undefined && (event.type === 'minor' || event.type === 'critical') && (
-                <span className={`px-2 py-0.5 rounded-full text-student-label-md font-student font-bold ${pointsBadgeClass[event.type]}`}>
+              {event.points !== undefined && (
+                <span className={`px-2 py-0.5 rounded-full text-student-label-md font-student font-bold ${
+                  event.severity === 'DANGER'
+                    ? 'bg-student-error text-student-on-error'
+                    : 'bg-student-secondary-container text-student-on-secondary-container'
+                }`}>
                   -{event.points} pts
                 </span>
               )}
             </div>
-            <div className={`p-4 rounded-xl border ${eventCardClass[event.type]}`}>
+            <div className={`p-4 rounded-xl border ${severityCardClass[event.severity]}`}>
               <p className="text-student-body-md font-student text-student-on-surface flex items-start gap-2">
                 <Icon
-                  name={event.icon}
-                  className={`shrink-0 mt-0.5 ${
-                    event.type === 'critical'
-                      ? 'text-student-error'
-                      : event.type === 'minor'
-                        ? 'text-student-on-secondary-container'
-                        : event.type === 'start'
-                          ? 'text-student-primary'
-                          : 'text-student-on-surface-variant'
-                  }`}
+                  name={severityIcon(event.eventType ?? event.title, event.severity)}
+                  className={`shrink-0 mt-0.5 ${severityIconClass[event.severity]}`}
                 />
                 <span>{event.message}</span>
               </p>
-              {event.evidenceLabel && (
+              {event.hasSnapshot && (
                 <div className="mt-3 flex gap-2">
-                  <div className="w-32 h-20 rounded-lg border border-student-error/20 bg-student-surface-container-high flex items-center justify-center text-student-on-surface-variant text-xs font-student text-center px-2">
-                    {event.evidenceLabel}
+                  <div className="w-32 h-20 rounded-lg border border-student-error/20 bg-student-surface-container-high flex flex-col items-center justify-center text-student-on-surface-variant text-xs font-student text-center px-2 gap-1">
+                    <Icon name="photo_camera" className="text-[18px]" />
+                    Snapshot captured
                   </div>
                 </div>
               )}

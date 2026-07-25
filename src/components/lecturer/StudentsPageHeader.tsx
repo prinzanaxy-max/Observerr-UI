@@ -1,11 +1,12 @@
 import { memo } from 'react';
 import Icon from '../student/Icon';
-import { COURSE_FILTERS } from '../../data/lecturerStudentsData';
+import type { CourseFilterOption } from '../../types/lecturerStudents';
 
 type StudentsPageHeaderProps = {
   initials: string;
   searchQuery: string;
   courseFilter: string;
+  courseOptions: CourseFilterOption[];
   onSearchChange: (value: string) => void;
   onCourseChange: (value: string) => void;
   onGoLive: () => void;
@@ -15,6 +16,7 @@ const StudentsPageHeader = memo(({
   initials,
   searchQuery,
   courseFilter,
+  courseOptions,
   onSearchChange,
   onCourseChange,
   onGoLive,
@@ -42,7 +44,7 @@ const StudentsPageHeader = memo(({
           className="appearance-none bg-student-surface-container-lowest border border-student-outline-variant rounded-full py-2 pl-4 pr-10 text-student-body-md font-student text-student-on-surface focus:outline-none focus:border-student-primary focus:ring-1 focus:ring-student-primary transition-colors cursor-pointer"
           aria-label="Filter by course"
         >
-          {COURSE_FILTERS.map((course) => (
+          {courseOptions.map((course) => (
             <option key={course.value} value={course.value}>{course.label}</option>
           ))}
         </select>

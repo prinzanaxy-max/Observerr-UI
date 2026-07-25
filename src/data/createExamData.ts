@@ -1,8 +1,3 @@
-export type CourseOption = {
-  value: string;
-  label: string;
-};
-
 export type SecuritySettingKey = 'webcamMonitoring' | 'tabSwitchTracking' | 'blockCopyPaste';
 
 export type SecuritySetting = {
@@ -24,14 +19,6 @@ export type CreateExamFormState = {
 };
 
 export const CREATE_EXAM_PATH = '/lecturer/exams/new';
-
-export const COURSE_OPTIONS: CourseOption[] = [
-  { value: 'cs101', label: 'CS101: Introduction to Computer Science' },
-  { value: 'math202', label: 'MATH202: Linear Algebra' },
-  { value: 'eng105', label: 'ENG105: Academic Writing' },
-  { value: 'cs401', label: 'CS401: Advanced Algorithms' },
-  { value: 'math401', label: 'MATH401: Advanced Calculus' },
-];
 
 export const SECURITY_SETTINGS: SecuritySetting[] = [
   {
