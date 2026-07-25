@@ -39,7 +39,12 @@ export type StudentResultsPageResponse = {
   size: number;
 };
 
-export type { StudentStats as StudentResultsSummary } from './studentStats';
+export type StudentResultsSummary = {
+  examsCompleted: number;
+  avgIntegrity: number;
+  verifiedSessions: number;
+  underReview: number;
+};
 
 /** Row shape used by ResultsTable and related UI. */
 export type StudentResultRow = {
