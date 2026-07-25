@@ -1,7 +1,9 @@
 import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../Icon';
+import StudentAvatar from '../StudentAvatar';
 import { useAuthProfile } from '../../../hooks/useAuthProfile';
+import { useStudentSettings } from '../../../hooks/useStudentSettings';
 
 type ResultDetailHeaderProps = {
   title: string;
@@ -11,6 +13,7 @@ type ResultDetailHeaderProps = {
 
 const ResultDetailHeader = memo(({ title, completedLabel, integrityScore }: ResultDetailHeaderProps) => {
   const { initials } = useAuthProfile();
+  const { avatarUrl } = useStudentSettings();
 
   return (
     <header className="shrink-0 bg-transparent border-b border-student-outline-variant/20 px-4 sm:px-6 md:px-8 py-4 sticky top-0 z-30 backdrop-blur-md bg-student-surface-bright/80">
@@ -46,9 +49,9 @@ const ResultDetailHeader = memo(({ title, completedLabel, integrityScore }: Resu
             <button type="button" className="w-10 h-10 rounded-full hover:bg-student-surface-container-highest/50 flex items-center justify-center transition-colors text-student-primary" aria-label="Help">
               <Icon name="help" />
             </button>
-            <div className="w-10 h-10 rounded-full bg-student-primary-container flex items-center justify-center text-student-on-primary-container font-semibold text-sm border border-student-outline-variant">
-              {initials}
-            </div>
+            <Link to="/student/profile" aria-label="View profile">
+              <StudentAvatar src={avatarUrl} initials={initials} size="sm" />
+            </Link>
           </div>
         </div>
       </div>

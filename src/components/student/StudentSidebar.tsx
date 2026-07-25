@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import ObserverrLogo from '../ObserverrLogo';
 import Icon from './Icon';
 import LogoutActions from '../auth/LogoutActions';
+import StudentAvatar from './StudentAvatar';
 import {
   STUDENT_PORTAL_FOOTER_NAV,
   STUDENT_PORTAL_NAV,
@@ -13,6 +14,7 @@ type StudentSidebarProps = {
   institutionalId: string;
   email?: string;
   initials: string;
+  avatarUrl?: string | null;
 };
 
 const isNavActive = (pathname: string, path: string) =>
@@ -23,6 +25,7 @@ const StudentSidebar = memo(({
   institutionalId,
   email,
   initials,
+  avatarUrl,
 }: StudentSidebarProps) => {
   const { pathname } = useLocation();
 
@@ -90,12 +93,7 @@ const StudentSidebar = memo(({
         </nav>
 
         <div className="flex items-center gap-3 px-2 mb-4 min-w-0">
-          <div
-            className="w-10 h-10 rounded-full shrink-0 bg-student-primary-container flex items-center justify-center text-student-on-primary-container font-semibold text-sm border border-student-outline-variant"
-            aria-hidden="true"
-          >
-            {initials}
-          </div>
+          <StudentAvatar src={avatarUrl} initials={initials} size="sm" />
           <div className="min-w-0">
             <p className="text-student-label-md font-student text-student-on-surface truncate font-semibold">{institutionalId}</p>
             <p className="text-[11px] text-student-on-surface-variant truncate">{email || 'Student Account'}</p>

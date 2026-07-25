@@ -1,14 +1,18 @@
 import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../Icon';
+import ProfilePhotoUpload from './ProfilePhotoUpload';
 
 type ProfileHeroCardProps = {
   displayName: string;
   institutionalId: string;
   email: string;
   initials: string;
+  avatarUrl?: string | null;
   memberSince: string;
   integrityScore: number;
+  onUploadPhoto: (file: File) => Promise<boolean>;
+  onRemovePhoto: () => void;
 };
 
 const ProfileHeroCard = memo(({
@@ -16,19 +20,22 @@ const ProfileHeroCard = memo(({
   institutionalId,
   email,
   initials,
+  avatarUrl,
   memberSince,
   integrityScore,
+  onUploadPhoto,
+  onRemovePhoto,
 }: ProfileHeroCardProps) => (
   <section className="student-exam-glass-card rounded-[24px] p-6 sm:p-8 overflow-hidden relative">
     <div className="pointer-events-none absolute -top-16 -right-16 w-48 h-48 rounded-full bg-student-primary-container/20 blur-3xl" />
 
     <div className="relative flex flex-col md:flex-row md:items-center gap-6">
-      <div
-        className="w-24 h-24 sm:w-28 sm:h-28 rounded-full shrink-0 bg-gradient-to-br from-student-primary to-student-primary-container flex items-center justify-center text-student-on-primary text-3xl font-bold border-4 border-student-surface shadow-lg"
-        aria-hidden="true"
-      >
-        {initials}
-      </div>
+      <ProfilePhotoUpload
+        avatarUrl={avatarUrl}
+        initials={initials}
+        onUpload={onUploadPhoto}
+        onRemove={onRemovePhoto}
+      />
 
       <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-center gap-2 mb-2">

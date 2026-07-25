@@ -5,6 +5,7 @@ import ProfileStatsGrid from '../components/student/profile/ProfileStatsGrid';
 import ProfileVerificationCard from '../components/student/profile/ProfileVerificationCard';
 import ProfileRecentResults from '../components/student/profile/ProfileRecentResults';
 import ProfileQuickLinks from '../components/student/profile/ProfileQuickLinks';
+import SettingsAlert from '../components/student/settings/SettingsAlert';
 import {
   PROFILE_QUICK_LINKS,
   VERIFICATION_ITEMS,
@@ -19,7 +20,15 @@ import { useStudentSettings } from '../hooks/useStudentSettings';
 const StudentProfilePage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const { institutionalId, email, initials, user } = useAuthProfile();
-  const { displayName } = useStudentSettings();
+  const {
+    displayName,
+    avatarUrl,
+    uploadAvatar,
+    removeAvatar,
+    saveStatus,
+    saveMessage,
+    clearStatus,
+  } = useStudentSettings();
 
   useEffect(() => {
     document.title = 'Profile — Observerr';
@@ -49,14 +58,21 @@ const StudentProfilePage = () => {
           <h1 className="text-student-headline-md font-student text-student-on-background font-bold">Profile</h1>
         </div>
 
+        <div className="mb-6">
+          <SettingsAlert status={saveStatus} message={saveMessage} onDismiss={clearStatus} />
+        </div>
+
         <div className="flex flex-col gap-6 lg:gap-8">
           <ProfileHeroCard
             displayName={displayName}
             institutionalId={institutionalId}
             email={email}
             initials={initials}
+            avatarUrl={avatarUrl}
             memberSince={memberSince}
             integrityScore={integrityScore}
+            onUploadPhoto={uploadAvatar}
+            onRemovePhoto={removeAvatar}
           />
 
           <ProfileStatsGrid stats={stats} />
