@@ -1,17 +1,16 @@
 import { AxiosError } from 'axios';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { buildResultsSummaryCards } from '../lib/studentStatsUtils';
 import { mapResultItemToRow } from '../lib/studentResultsUtils';
 import * as studentResultsService from '../services/studentResultsService';
 import useAuthStore from '../store/authStore';
 import type { ResultSortKey } from '../types/studentResults';
-import { useStudentStats } from './useStudentStats';
+import { useResultsSummary } from './useResultsSummary';
 
 export function useStudentResults() {
   const navigate = useNavigate();
   const clearAuth = useAuthStore((s) => s.clear);
-  const { stats, loading: summaryLoading } = useStudentStats();
+  const { summaryCards, loading: summaryLoading } = useResultsSummary();
 
   const [page, setPageIndex] = useState(0);
   const [sortKey, setSortKey] = useState<ResultSortKey>('recent');
@@ -92,11 +91,6 @@ export function useStudentResults() {
   );
 
   const uiPage = page + 1;
-
-  const summaryCards = useMemo(
-    () => (summaryLoading ? [] : buildResultsSummaryCards(stats)),
-    [stats, summaryLoading],
-  );
 
   return {
     summaryCards,

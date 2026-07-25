@@ -1,4 +1,3 @@
-import type { ProfileStat } from '../data/studentProfileData';
 import type { StudentStats } from '../types/studentStats';
 
 export type StatsCard = {
@@ -37,37 +36,6 @@ export const buildResultsSummaryCards = (stats: StudentStats): StatsCard[] => [
     value: String(stats.underReview),
     icon: 'pending',
     tone: 'secondary',
-  },
-];
-
-export const buildProfileStats = (stats: StudentStats): ProfileStat[] => [
-  {
-    id: 'exams',
-    label: 'Exams Completed',
-    value: String(stats.examsCompleted),
-    icon: 'history_edu',
-    tone: 'neutral',
-  },
-  {
-    id: 'integrity',
-    label: 'Avg. Integrity',
-    value: `${stats.avgIntegrity}%`,
-    icon: 'verified_user',
-    tone: 'primary',
-  },
-  {
-    id: 'verified',
-    label: 'Verified Sessions',
-    value: String(stats.verifiedSessions),
-    icon: 'check_circle',
-    tone: 'primary',
-  },
-  {
-    id: 'review',
-    label: 'Under Review',
-    value: String(stats.underReview),
-    icon: 'flag',
-    tone: stats.underReview > 0 ? 'secondary' : 'neutral',
   },
 ];
 

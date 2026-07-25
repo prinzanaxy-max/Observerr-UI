@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import Icon from '../Icon';
 
-import type { StatsCard } from '../../lib/studentStatsUtils';
+import type { StatsCard } from '../../../lib/studentStatsUtils';
 
 type ResultsSummaryCardsProps = {
   cards: StatsCard[];

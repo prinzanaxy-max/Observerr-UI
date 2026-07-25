@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import StudentPortalLayout from '../components/student/StudentPortalLayout';
 import ProfileHeroCard from '../components/student/profile/ProfileHeroCard';
-import ProfileStatsGrid from '../components/student/profile/ProfileStatsGrid';
+import ResultsSummaryCards from '../components/student/results/ResultsSummaryCards';
 import ProfileVerificationCard from '../components/student/profile/ProfileVerificationCard';
 import ProfileRecentResults from '../components/student/profile/ProfileRecentResults';
 import ProfileQuickLinks from '../components/student/profile/ProfileQuickLinks';
@@ -15,8 +15,7 @@ import {
 import { useAuthProfile } from '../hooks/useAuthProfile';
 import { useProfilePicture } from '../hooks/useProfilePicture';
 import { useStudentSettings } from '../hooks/useStudentSettings';
-import { useStudentStats } from '../hooks/useStudentStats';
-import { buildProfileStats } from '../lib/studentStatsUtils';
+import { useResultsSummary } from '../hooks/useResultsSummary';
 import { getInitialsFromName } from '../lib/profileUtils';
 import type { SaveStatus } from '../hooks/useAccountSettings';
 
@@ -28,7 +27,7 @@ const StudentProfilePage = () => {
   const { institutionalId, email, user } = useAuthProfile();
   const { displayName, settings } = useStudentSettings();
   const profilePicture = useProfilePicture();
-  const { stats: studentStats, loading: statsLoading } = useStudentStats();
+  const { stats, summaryCards, loading: statsLoading } = useResultsSummary();
 
   const initials = useMemo(
     () =>
@@ -44,8 +43,7 @@ const StudentProfilePage = () => {
     document.title = 'Profile — Observerr';
   }, []);
 
-  const stats = useMemo(() => buildProfileStats(studentStats), [studentStats]);
-  const integrityScore = studentStats.avgIntegrity;
+  const integrityScore = stats.avgIntegrity;
   const memberSince = useMemo(() => formatMemberSince(user?.createdAt), [user?.createdAt]);
 
   const verificationItems = useMemo(
@@ -129,7 +127,7 @@ const StudentProfilePage = () => {
             photoError={profilePicture.photoError}
           />
 
-          <ProfileStatsGrid stats={stats} loading={statsLoading} />
+          <ResultsSummaryCards cards={summaryCards} loading={statsLoading} />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start">
             <div className="lg:col-span-2 flex flex-col gap-6">
