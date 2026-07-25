@@ -1,14 +1,20 @@
 import { memo, useMemo } from 'react';
 import Icon from './Icon';
-import { INTEGRITY_SCORE } from '../../data/studentDashboardData';
+
+type IntegrityScoreCardProps = {
+  score: number;
+  loading?: boolean;
+};
 
 const CIRCLE_RADIUS = 40;
 const CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS;
 
-const IntegrityScoreCard = memo(() => {
+const IntegrityScoreCard = memo(({ score, loading = false }: IntegrityScoreCardProps) => {
+  const displayScore = loading ? 0 : score;
+
   const strokeDashoffset = useMemo(
-    () => CIRCUMFERENCE * (1 - INTEGRITY_SCORE / 100),
-    [],
+    () => CIRCUMFERENCE * (1 - displayScore / 100),
+    [displayScore],
   );
 
   return (
@@ -49,7 +55,11 @@ const IntegrityScoreCard = memo(() => {
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-student-display-lg font-student text-white">{INTEGRITY_SCORE}%</span>
+          {loading ? (
+            <span className="auth-spinner" />
+          ) : (
+            <span className="text-student-display-lg font-student text-white">{displayScore}%</span>
+          )}
         </div>
       </div>
     </div>

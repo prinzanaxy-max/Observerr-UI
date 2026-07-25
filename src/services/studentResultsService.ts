@@ -3,7 +3,6 @@ import { mapSortKeyToApi } from '../lib/studentResultsUtils';
 import type {
   ResultSortKey,
   StudentResultsPageResponse,
-  StudentResultsSummary,
 } from '../types/studentResults';
 import { RESULTS_PAGE_SIZE } from '../types/studentResults';
 
@@ -12,11 +11,6 @@ export type FetchResultsParams = {
   size?: number;
   sort: ResultSortKey;
 };
-
-export async function fetchResultsSummary(): Promise<StudentResultsSummary> {
-  const { data } = await apiClient.get<StudentResultsSummary>('/api/student/results/summary');
-  return data;
-}
 
 export async function fetchResultsList({
   page,

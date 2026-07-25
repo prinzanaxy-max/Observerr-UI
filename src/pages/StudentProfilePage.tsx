@@ -11,12 +11,12 @@ import {
   VERIFICATION_ITEMS,
   filterProfileResults,
   formatMemberSince,
-  getOverallIntegrityScore,
-  getStudentProfileStats,
 } from '../data/studentProfileData';
 import { useAuthProfile } from '../hooks/useAuthProfile';
 import { useProfilePicture } from '../hooks/useProfilePicture';
 import { useStudentSettings } from '../hooks/useStudentSettings';
+import { useStudentStats } from '../hooks/useStudentStats';
+import { buildProfileStats } from '../lib/studentStatsUtils';
 import { getInitialsFromName } from '../lib/profileUtils';
 import type { SaveStatus } from '../hooks/useAccountSettings';
 
@@ -28,6 +28,7 @@ const StudentProfilePage = () => {
   const { institutionalId, email, user } = useAuthProfile();
   const { displayName, settings } = useStudentSettings();
   const profilePicture = useProfilePicture();
+  const { stats: studentStats, loading: statsLoading } = useStudentStats();
 
   const initials = useMemo(
     () =>
@@ -43,9 +44,22 @@ const StudentProfilePage = () => {
     document.title = 'Profile — Observerr';
   }, []);
 
-  const stats = useMemo(() => getStudentProfileStats(), []);
-  const integrityScore = useMemo(() => getOverallIntegrityScore(), []);
+  const stats = useMemo(() => buildProfileStats(studentStats), [studentStats]);
+  const integrityScore = studentStats.avgIntegrity;
   const memberSince = useMemo(() => formatMemberSince(user?.createdAt), [user?.createdAt]);
+
+  const verificationItems = useMemo(
+    () =>
+      VERIFICATION_ITEMS.map((item) =>
+        item.id === 'integrity'
+          ? {
+              ...item,
+              description: `Overall score ${integrityScore}% — consistent adherence to testing protocols.`,
+            }
+          : item,
+      ),
+    [integrityScore],
+  );
 
   const recentResults = useMemo(
     () => filterProfileResults(searchQuery),
@@ -115,12 +129,12 @@ const StudentProfilePage = () => {
             photoError={profilePicture.photoError}
           />
 
-          <ProfileStatsGrid stats={stats} />
+          <ProfileStatsGrid stats={stats} loading={statsLoading} />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start">
             <div className="lg:col-span-2 flex flex-col gap-6">
               <ProfileRecentResults results={recentResults} />
-              <ProfileVerificationCard items={VERIFICATION_ITEMS} />
+              <ProfileVerificationCard items={verificationItems} />
             </div>
 
             <div className="lg:col-span-1">

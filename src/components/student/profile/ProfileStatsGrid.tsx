@@ -4,6 +4,7 @@ import type { ProfileStat } from '../../../data/studentProfileData';
 
 type ProfileStatsGridProps = {
   stats: ProfileStat[];
+  loading?: boolean;
 };
 
 const toneClass = (tone: ProfileStat['tone']) => {
@@ -17,7 +18,20 @@ const toneClass = (tone: ProfileStat['tone']) => {
   }
 };
 
-const ProfileStatsGrid = memo(({ stats }: ProfileStatsGridProps) => (
+const ProfileStatsSkeleton = () => (
+  <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
+    {Array.from({ length: 4 }).map((_, i) => (
+      <div key={i} className="student-exam-glass-card rounded-2xl p-5 h-[120px] bg-student-surface-container-high/60" />
+    ))}
+  </section>
+);
+
+const ProfileStatsGrid = memo(({ stats, loading = false }: ProfileStatsGridProps) => {
+  if (loading) {
+    return <ProfileStatsSkeleton />;
+  }
+
+  return (
   <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
     {stats.map((stat) => (
       <div
@@ -36,7 +50,8 @@ const ProfileStatsGrid = memo(({ stats }: ProfileStatsGridProps) => (
       </div>
     ))}
   </section>
-));
+  );
+});
 
 ProfileStatsGrid.displayName = 'ProfileStatsGrid';
 

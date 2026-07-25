@@ -1,20 +1,14 @@
 import { memo } from 'react';
 import Icon from '../Icon';
 
-export type ResultsSummaryCard = {
-  id: string;
-  label: string;
-  value: string;
-  icon: string;
-  tone?: 'primary' | 'secondary' | 'neutral';
-};
+import type { StatsCard } from '../../lib/studentStatsUtils';
 
 type ResultsSummaryCardsProps = {
-  cards: ResultsSummaryCard[];
+  cards: StatsCard[];
   loading?: boolean;
 };
 
-const toneClass = (tone: ResultsSummaryCard['tone']) => {
+const toneClass = (tone: StatsCard['tone']) => {
   switch (tone) {
     case 'primary':
       return 'text-student-primary';

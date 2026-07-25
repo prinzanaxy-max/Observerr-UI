@@ -13,10 +13,18 @@ import {
   UPCOMING_EXAMS,
   type UpcomingExam,
 } from '../data/studentDashboardData';
+import { buildQuickStatRows } from '../lib/studentStatsUtils';
+import { useStudentStats } from '../hooks/useStudentStats';
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const { stats, loading: statsLoading } = useStudentStats();
+
+  const quickStatRows = useMemo(
+    () => buildQuickStatRows(stats),
+    [stats],
+  );
 
   useEffect(() => {
     document.title = 'Dashboard — Observerr';
@@ -60,13 +68,13 @@ const StudentDashboard = () => {
       <div className="p-4 sm:p-8 max-w-[1200px] mx-auto w-full pb-8">
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="lg:w-[65%] space-y-8">
-            <IntegrityScoreCard />
+            <IntegrityScoreCard score={stats.avgIntegrity} loading={statsLoading} />
             <UpcomingExamsSection exams={filteredExams} onExamSelect={handleExamSelect} />
             <RecentResultsSection results={filteredResults} />
           </div>
 
           <div className="lg:w-[35%] space-y-8">
-            <QuickStatsPanel />
+            <QuickStatsPanel rows={quickStatRows} loading={statsLoading} />
             <ScoreTrendChart />
             <RecentAlertsPanel alerts={RECENT_ALERTS} />
           </div>

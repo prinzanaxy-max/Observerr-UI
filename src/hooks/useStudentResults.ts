@@ -1,24 +1,20 @@
 import { AxiosError } from 'axios';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { buildResultsSummaryCards } from '../lib/studentStatsUtils';
 import { mapResultItemToRow } from '../lib/studentResultsUtils';
 import * as studentResultsService from '../services/studentResultsService';
 import useAuthStore from '../store/authStore';
-import type { ResultSortKey, StudentResultsSummary } from '../types/studentResults';
-
-const SUMMARY_CACHE_MS = 5 * 60 * 1000;
-
-let summaryCache: { data: StudentResultsSummary; fetchedAt: number } | null = null;
+import type { ResultSortKey } from '../types/studentResults';
+import { useStudentStats } from './useStudentStats';
 
 export function useStudentResults() {
   const navigate = useNavigate();
   const clearAuth = useAuthStore((s) => s.clear);
+  const { stats, loading: summaryLoading } = useStudentStats();
 
   const [page, setPageIndex] = useState(0);
   const [sortKey, setSortKey] = useState<ResultSortKey>('recent');
-
-  const [summary, setSummary] = useState<StudentResultsSummary | null>(null);
-  const [summaryLoading, setSummaryLoading] = useState(true);
 
   const [from, setFrom] = useState(0);
   const [to, setTo] = useState(0);
@@ -51,24 +47,6 @@ export function useStudentResults() {
     [clearAuth, navigate],
   );
 
-  const loadSummary = useCallback(async () => {
-    setSummaryLoading(true);
-    try {
-      if (summaryCache && Date.now() - summaryCache.fetchedAt < SUMMARY_CACHE_MS) {
-        setSummary(summaryCache.data);
-        return;
-      }
-
-      const data = await studentResultsService.fetchResultsSummary();
-      summaryCache = { data, fetchedAt: Date.now() };
-      setSummary(data);
-    } catch (err) {
-      handleApiError(err);
-    } finally {
-      setSummaryLoading(false);
-    }
-  }, [handleApiError]);
-
   const loadList = useCallback(async () => {
     setListLoading(true);
     setError('');
@@ -97,10 +75,6 @@ export function useStudentResults() {
   }, [handleApiError, page, sortKey]);
 
   useEffect(() => {
-    void loadSummary();
-  }, [loadSummary]);
-
-  useEffect(() => {
     void loadList();
   }, [loadList]);
 
@@ -119,39 +93,10 @@ export function useStudentResults() {
 
   const uiPage = page + 1;
 
-  const summaryCards = useMemo(() => {
-    if (!summary) return [];
-    return [
-      {
-        id: 'exams',
-        label: 'Exams Completed',
-        value: String(summary.examsCompleted),
-        icon: 'history_edu',
-        tone: 'neutral' as const,
-      },
-      {
-        id: 'integrity',
-        label: 'Avg Integrity',
-        value: `${summary.avgIntegrity}%`,
-        icon: 'verified_user',
-        tone: 'primary' as const,
-      },
-      {
-        id: 'verified',
-        label: 'Verified Sessions',
-        value: String(summary.verifiedSessions),
-        icon: 'check_circle',
-        tone: 'primary' as const,
-      },
-      {
-        id: 'review',
-        label: 'Under Review',
-        value: String(summary.underReview),
-        icon: 'pending',
-        tone: 'secondary' as const,
-      },
-    ];
-  }, [summary]);
+  const summaryCards = useMemo(
+    () => (summaryLoading ? [] : buildResultsSummaryCards(stats)),
+    [stats, summaryLoading],
+  );
 
   return {
     summaryCards,

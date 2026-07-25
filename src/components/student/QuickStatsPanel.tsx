@@ -1,35 +1,45 @@
 import { memo } from 'react';
 import Icon from './Icon';
-import { QUICK_STATS } from '../../data/studentDashboardData';
+import type { QuickStatRow } from '../../lib/studentStatsUtils';
 
-const QuickStatsPanel = memo(() => (
+type QuickStatsPanelProps = {
+  rows: QuickStatRow[];
+  loading?: boolean;
+};
+
+const QuickStatsSkeleton = () => (
+  <div className="space-y-4 animate-pulse">
+    {Array.from({ length: 4 }).map((_, i) => (
+      <div key={i} className="h-14 rounded-xl bg-student-surface-container-high/70" />
+    ))}
+  </div>
+);
+
+const QuickStatsPanel = memo(({ rows, loading = false }: QuickStatsPanelProps) => (
   <div className="student-glass-card p-6">
     <h3 className="text-student-headline-sm font-student text-student-on-surface mb-6">Quick Stats</h3>
-    <div className="space-y-4">
-      <div className="flex justify-between items-center p-4 bg-student-surface-container-lowest rounded-xl border border-student-surface-variant/50">
-        <div className="flex items-center text-student-on-surface-variant">
-          <Icon name="history_edu" className="mr-3 text-student-primary" />
-          <span className="text-sm font-medium">Exams Taken</span>
-        </div>
-        <span className="text-student-headline-sm font-student text-student-on-surface">{QUICK_STATS.examsTaken}</span>
+    {loading ? (
+      <QuickStatsSkeleton />
+    ) : (
+      <div className="space-y-4">
+        {rows.map((row) => (
+          <div
+            key={row.id}
+            className="flex justify-between items-center p-4 bg-student-surface-container-lowest rounded-xl border border-student-surface-variant/50"
+          >
+            <div className="flex items-center text-student-on-surface-variant">
+              <Icon name={row.icon} className="mr-3 text-student-primary" />
+              <span className="text-sm font-medium">{row.label}</span>
+            </div>
+            <span
+              className={`text-student-headline-sm font-student text-student-on-surface ${row.valueClassName ?? ''}`}
+            >
+              {row.value}
+            </span>
+          </div>
+        ))}
       </div>
-
-      <div className="flex justify-between items-center p-4 bg-student-surface-container-lowest rounded-xl border border-student-surface-variant/50">
-        <div className="flex items-center text-student-on-surface-variant">
-          <Icon name="security" className="mr-3 text-student-primary" />
-          <span className="text-sm font-medium">Avg. Integrity</span>
-        </div>
-        <span className="text-student-headline-sm font-student text-student-primary">{QUICK_STATS.avgIntegrity}%</span>
-      </div>
-
-      <div className="flex justify-between items-center p-4 bg-student-surface-container-lowest rounded-xl border border-student-surface-variant/50">
-        <div className="flex items-center text-student-on-surface-variant">
-          <Icon name="flag" className="mr-3 text-student-secondary" />
-          <span className="text-sm font-medium">Flags</span>
-        </div>
-        <span className="text-student-headline-sm font-student text-student-on-surface">{QUICK_STATS.flags}</span>
-      </div>
-    </div>
+    )}
   </div>
 ));
 
