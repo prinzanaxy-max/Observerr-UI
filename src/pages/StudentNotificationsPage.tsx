@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StudentPortalLayout from '../components/student/StudentPortalLayout';
 import NotificationsHeader from '../components/student/notifications/NotificationsHeader';
@@ -11,13 +11,26 @@ import {
   type StudentNotification,
 } from '../data/studentNotificationsData';
 
+const DISMISS_ANIMATION_MS = 400;
+const STAGGER_MS = 55;
+
 const StudentNotificationsPage = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [notifications, setNotifications] = useState(cloneNotifications);
+  const [dismissingIds, setDismissingIds] = useState<Set<number>>(() => new Set());
+  const dismissTimers = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
 
   useEffect(() => {
     document.title = 'Notifications — Observerr';
+  }, []);
+
+  useEffect(() => {
+    const timers = dismissTimers.current;
+    return () => {
+      timers.forEach((timer) => clearTimeout(timer));
+      timers.clear();
+    };
   }, []);
 
   const unreadCount = useMemo(
@@ -32,9 +45,37 @@ const StudentNotificationsPage = () => {
 
   const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
 
-  const handleMarkAllRead = useCallback(() => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  const dismissNotification = useCallback((id: number) => {
+    if (dismissTimers.current.has(id)) return;
+
+    setDismissingIds((prev) => new Set(prev).add(id));
+
+    const timer = setTimeout(() => {
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      setDismissingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      dismissTimers.current.delete(id);
+    }, DISMISS_ANIMATION_MS);
+
+    dismissTimers.current.set(id, timer);
   }, []);
+
+  const dismissNotifications = useCallback((ids: number[]) => {
+    ids.forEach((id, index) => {
+      setTimeout(() => dismissNotification(id), index * STAGGER_MS);
+    });
+  }, [dismissNotification]);
+
+  const handleMarkAllRead = useCallback(() => {
+    const unreadIds = notifications.filter((n) => !n.read).map((n) => n.id);
+    if (unreadIds.length === 0) return;
+
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    dismissNotifications(unreadIds);
+  }, [dismissNotifications, notifications]);
 
   const handleSelect = useCallback((notification: StudentNotification) => {
     setNotifications((prev) =>
@@ -87,6 +128,8 @@ const StudentNotificationsPage = () => {
                 key={notification.id}
                 notification={notification}
                 onSelect={handleSelect}
+                onDismiss={dismissNotification}
+                dismissing={dismissingIds.has(notification.id)}
               />
             ))}
           </div>

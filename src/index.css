@@ -224,6 +224,25 @@ body {
   background-attachment: fixed;
 }
 
+@keyframes notificationSlideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+    max-height: 220px;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(110%);
+    max-height: 0;
+  }
+}
+
+.notification-slide-out {
+  animation: notificationSlideOut 0.4s ease-in forwards;
+  overflow: hidden;
+  pointer-events: none;
+}
+
 .student-settings-bg {
   background: linear-gradient(135deg, #f4f4ee 0%, #e3e3de 100%);
   background-attachment: fixed;

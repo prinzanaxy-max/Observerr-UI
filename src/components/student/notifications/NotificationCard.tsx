@@ -5,6 +5,8 @@ import type { NotificationAccent, StudentNotification } from '../../../data/stud
 type NotificationCardProps = {
   notification: StudentNotification;
   onSelect: (notification: StudentNotification) => void;
+  onDismiss: (id: number) => void;
+  dismissing?: boolean;
 };
 
 type AccentStyles = {
@@ -51,31 +53,50 @@ const getStyles = (notification: StudentNotification): AccentStyles => {
   return unreadStyles[notification.accent];
 };
 
-const NotificationCard = memo(({ notification, onSelect }: NotificationCardProps) => {
+const NotificationCard = memo(({
+  notification,
+  onSelect,
+  onDismiss,
+  dismissing = false,
+}: NotificationCardProps) => {
   const styles = getStyles(notification);
 
   return (
-    <button
-      type="button"
-      onClick={() => onSelect(notification)}
-      className={`w-full text-left rounded-xl p-6 flex gap-4 relative overflow-hidden shadow-[0px_10px_30px_rgba(0,0,0,0.05)] border border-student-outline-variant/30 hover:shadow-[0px_15px_40px_rgba(0,0,0,0.08)] transition-all cursor-pointer ${styles.cardBg} ${styles.cardOpacity}`}
+    <div
+      className={`w-full rounded-xl flex gap-2 relative overflow-hidden shadow-[0px_10px_30px_rgba(0,0,0,0.05)] border border-student-outline-variant/30 hover:shadow-[0px_15px_40px_rgba(0,0,0,0.08)] transition-shadow ${styles.cardBg} ${styles.cardOpacity} ${dismissing ? 'notification-slide-out' : ''}`}
     >
       <div className={`absolute left-0 top-0 bottom-0 w-1 ${styles.bar}`} aria-hidden="true" />
 
-      <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${styles.iconWrap}`}>
-        <Icon name={notification.icon} filled={notification.filled} />
-      </div>
-
-      <div className="flex-1 min-w-0">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 mb-1">
-          <h3 className={`${styles.titleClass} pr-2`}>{notification.title}</h3>
-          <span className={`text-student-label-md font-student shrink-0 ${styles.time}`}>
-            {notification.timeLabel}
-          </span>
+      <button
+        type="button"
+        onClick={() => onSelect(notification)}
+        className="flex-1 min-w-0 text-left p-6 flex gap-4 cursor-pointer"
+      >
+        <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${styles.iconWrap}`}>
+          <Icon name={notification.icon} filled={notification.filled} />
         </div>
-        <p className="text-student-body-md font-student text-student-on-surface-variant">{notification.message}</p>
-      </div>
-    </button>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 mb-1">
+            <h3 className={`${styles.titleClass} pr-2`}>{notification.title}</h3>
+            <span className={`text-student-label-md font-student shrink-0 ${styles.time}`}>
+              {notification.timeLabel}
+            </span>
+          </div>
+          <p className="text-student-body-md font-student text-student-on-surface-variant">{notification.message}</p>
+        </div>
+      </button>
+
+      <button
+        type="button"
+        onClick={() => onDismiss(notification.id)}
+        disabled={dismissing}
+        className="shrink-0 self-start m-4 p-2 rounded-full text-student-on-surface-variant hover:text-student-error hover:bg-student-error/10 transition-colors disabled:opacity-40"
+        aria-label={`Clear notification: ${notification.title}`}
+      >
+        <Icon name="delete" className="text-[20px]" />
+      </button>
+    </div>
   );
 });
 
