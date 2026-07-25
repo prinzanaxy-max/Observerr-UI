@@ -1,6 +1,8 @@
 import { memo } from 'react';
 import Icon from '../Icon';
-import type { ResultStatus } from '../../../data/studentResultsData';
+import type { StudentResultRow } from '../../../types/studentResults';
+
+export type ResultStatus = StudentResultRow['status'];
 
 type ResultsStatusBadgeProps = {
   status: ResultStatus;

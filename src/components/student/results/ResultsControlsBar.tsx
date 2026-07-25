@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import Icon from '../Icon';
-import type { ResultSortKey } from '../../../data/studentResultsData';
+import type { ResultSortKey } from '../../../types/studentResults';
 
 type ResultsControlsBarProps = {
   showingFrom: number;
@@ -12,9 +12,9 @@ type ResultsControlsBarProps = {
 
 const SORT_OPTIONS: { value: ResultSortKey; label: string }[] = [
   { value: 'recent', label: 'Most Recent' },
-  { value: 'score_high', label: 'Score: High to Low' },
-  { value: 'score_low', label: 'Score: Low to High' },
-  { value: 'course', label: 'Course Name' },
+  { value: 'oldest', label: 'Oldest' },
+  { value: 'score_high', label: 'Highest Integrity' },
+  { value: 'score_low', label: 'Lowest Integrity' },
 ];
 
 const ResultsControlsBar = memo(({
@@ -26,7 +26,7 @@ const ResultsControlsBar = memo(({
 }: ResultsControlsBarProps) => (
   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
     <p className="text-student-body-md font-student text-student-on-surface-variant">
-      Showing {showingFrom}-{showingTo} of {total} completed assessments.
+      Showing {showingFrom}-{showingTo} of {total} completed assessments
     </p>
 
     <div className="flex items-center gap-3">
