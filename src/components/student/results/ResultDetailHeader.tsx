@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import Icon from '../Icon';
 import StudentAvatar from '../StudentAvatar';
 import { useAuthProfile } from '../../../hooks/useAuthProfile';
-import { useStudentSettings } from '../../../hooks/useStudentSettings';
 
 type ResultDetailHeaderProps = {
   title: string;
@@ -12,8 +11,7 @@ type ResultDetailHeaderProps = {
 };
 
 const ResultDetailHeader = memo(({ title, completedLabel, integrityScore }: ResultDetailHeaderProps) => {
-  const { initials } = useAuthProfile();
-  const { avatarUrl } = useStudentSettings();
+  const { initials, profilePictureUrl } = useAuthProfile();
 
   return (
     <header className="shrink-0 bg-transparent border-b border-student-outline-variant/20 px-4 sm:px-6 md:px-8 py-4 sticky top-0 z-30 backdrop-blur-md bg-student-surface-bright/80">
@@ -50,7 +48,7 @@ const ResultDetailHeader = memo(({ title, completedLabel, integrityScore }: Resu
               <Icon name="help" />
             </button>
             <Link to="/student/profile" aria-label="View profile">
-              <StudentAvatar src={avatarUrl} initials={initials} size="sm" />
+              <StudentAvatar src={profilePictureUrl} initials={initials} size="sm" />
             </Link>
           </div>
         </div>

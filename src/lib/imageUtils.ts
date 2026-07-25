@@ -1,4 +1,4 @@
-const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
+const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const;
 const MAX_INPUT_BYTES = 5 * 1024 * 1024;
 const OUTPUT_SIZE = 256;
 const JPEG_QUALITY = 0.85;
@@ -9,10 +9,10 @@ export type ImageValidationResult =
 
 export const validateProfileImage = (file: File): ImageValidationResult => {
   if (!ACCEPTED_TYPES.includes(file.type as (typeof ACCEPTED_TYPES)[number])) {
-    return { ok: false, message: 'Please upload a JPG, PNG, or WebP image.' };
+    return { ok: false, message: 'Only JPEG, PNG, WebP, and GIF images are allowed' };
   }
   if (file.size > MAX_INPUT_BYTES) {
-    return { ok: false, message: 'Image must be 5 MB or smaller.' };
+    return { ok: false, message: 'Profile picture must be 5 MB or smaller' };
   }
   return { ok: true };
 };

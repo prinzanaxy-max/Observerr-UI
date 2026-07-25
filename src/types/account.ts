@@ -3,6 +3,13 @@ export interface AccountResponse {
   lastName: string | null;
   institutionalId: string;
   email: string;
+  profilePictureUrl: string | null;
+}
+
+export interface ProfilePictureResponse {
+  success: boolean;
+  message: string;
+  profilePictureUrl: string | null;
 }
 
 export interface UpdateAccountRequest {

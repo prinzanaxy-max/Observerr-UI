@@ -8,7 +8,8 @@ export function useAuthProfile() {
 
   const institutionalId = user?.institutionalId ?? sessionId ?? '—';
   const email = user?.email ?? '';
+  const profilePictureUrl = user?.profilePictureUrl ?? null;
   const initials = useMemo(() => getInitialsFromId(institutionalId), [institutionalId]);
 
-  return { user, institutionalId, email, initials };
+  return { user, institutionalId, email, initials, profilePictureUrl };
 }

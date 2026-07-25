@@ -7,8 +7,11 @@ type ProfilePhotoUploadProps = {
   avatarUrl?: string | null;
   initials: string;
   onUpload: (file: File) => Promise<boolean>;
-  onRemove: () => void;
+  onRemove: () => Promise<boolean>;
   disabled?: boolean;
+  uploading?: boolean;
+  removing?: boolean;
+  error?: string;
 };
 
 const ProfilePhotoUpload = memo(({
@@ -17,40 +20,39 @@ const ProfilePhotoUpload = memo(({
   onUpload,
   onRemove,
   disabled = false,
+  uploading = false,
+  removing = false,
+  error = '',
 }: ProfilePhotoUploadProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState('');
+  const [localUploading, setLocalUploading] = useState(false);
+
+  const isBusy = uploading || removing || localUploading;
 
   const openPicker = useCallback(() => {
-    if (!disabled && !uploading) {
+    if (!disabled && !isBusy) {
       inputRef.current?.click();
     }
-  }, [disabled, uploading]);
+  }, [disabled, isBusy]);
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
 
-    setError('');
-    setUploading(true);
+    setLocalUploading(true);
     try {
-      const success = await onUpload(file);
-      if (!success) {
-        setError('Could not update profile photo.');
-      }
-    } catch {
-      setError('Could not update profile photo.');
+      await onUpload(file);
     } finally {
-      setUploading(false);
+      setLocalUploading(false);
     }
   }, [onUpload]);
 
-  const handleRemove = useCallback(() => {
-    setError('');
-    onRemove();
+  const handleRemove = useCallback(async () => {
+    await onRemove();
   }, [onRemove]);
+
+  const showSpinner = isBusy;
 
   return (
     <div className="flex flex-col items-center sm:items-start gap-3">
@@ -62,7 +64,7 @@ const ProfilePhotoUpload = memo(({
           className="border-4 border-student-surface shadow-lg"
         />
 
-        {uploading && (
+        {showSpinner && (
           <div className="absolute inset-0 rounded-full bg-student-on-surface/40 flex items-center justify-center">
             <span className="auth-spinner" />
           </div>
@@ -71,7 +73,7 @@ const ProfilePhotoUpload = memo(({
         <button
           type="button"
           onClick={openPicker}
-          disabled={disabled || uploading}
+          disabled={disabled || isBusy}
           className="absolute bottom-1 right-1 w-9 h-9 rounded-full bg-student-primary text-student-on-primary flex items-center justify-center shadow-md hover:bg-student-primary-container transition-colors disabled:opacity-60"
           aria-label="Upload profile photo"
         >
@@ -93,7 +95,7 @@ const ProfilePhotoUpload = memo(({
         <button
           type="button"
           onClick={openPicker}
-          disabled={disabled || uploading}
+          disabled={disabled || isBusy}
           className="text-student-body-md font-student text-student-primary hover:underline disabled:opacity-60"
         >
           {avatarUrl ? 'Change photo' : 'Upload photo'}
@@ -103,11 +105,11 @@ const ProfilePhotoUpload = memo(({
             <span className="text-student-on-surface-variant" aria-hidden="true">·</span>
             <button
               type="button"
-              onClick={handleRemove}
-              disabled={disabled || uploading}
+              onClick={() => void handleRemove()}
+              disabled={disabled || isBusy}
               className="text-student-body-md font-student text-student-error hover:underline disabled:opacity-60"
             >
-              Remove
+              Remove photo
             </button>
           </>
         )}
@@ -117,7 +119,7 @@ const ProfilePhotoUpload = memo(({
         <p className="text-student-label-md font-student text-student-error">{error}</p>
       )}
       <p className="text-student-label-md font-student text-student-on-surface-variant max-w-[220px] text-center sm:text-left">
-        JPG, PNG, or WebP · Max 5 MB
+        JPEG, PNG, WebP, or GIF · Max 5 MB
       </p>
     </div>
   );

@@ -3,7 +3,6 @@ export type SettingsTab = 'account' | 'notifications' | 'privacy' | 'support';
 export type StudentSettingsProfile = {
   firstName: string;
   lastName: string;
-  avatarUrl?: string | null;
 };
 
 export type NotificationPreferences = {

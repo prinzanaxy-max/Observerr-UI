@@ -4,7 +4,6 @@ import {
   type NotificationPreferences,
   type StoredStudentSettings,
 } from '../data/studentSettingsData';
-import { compressProfileImage } from '../lib/imageUtils';
 import { notifyStudentSettingsChanged, STUDENT_SETTINGS_CHANGED } from '../lib/studentSettingsEvents';
 import { useAuthProfile } from './useAuthProfile';
 
@@ -70,11 +69,6 @@ export function useStudentSettings() {
     setSaveMessage(message);
   }, []);
 
-  const showError = useCallback((message: string) => {
-    setSaveStatus('error');
-    setSaveMessage(message);
-  }, []);
-
   const updateNotificationPref = useCallback(
     (key: keyof NotificationPreferences, value: boolean) => {
       clearStatus();
@@ -107,52 +101,15 @@ export function useStudentSettings() {
     return [firstName, lastName].filter(Boolean).join(' ') || institutionalId;
   }, [institutionalId, settings.profile]);
 
-  const avatarUrl = settings.profile.avatarUrl ?? null;
-
-  const uploadAvatar = useCallback(
-    async (file: File) => {
-      clearStatus();
-      try {
-        const dataUrl = await compressProfileImage(file);
-        const next: StoredStudentSettings = {
-          ...settings,
-          profile: { ...settings.profile, avatarUrl: dataUrl },
-        };
-        writeStoredSettings(institutionalId, next);
-        setSettings(next);
-        showSuccess('Profile photo updated.');
-        return true;
-      } catch (err) {
-        showError(err instanceof Error ? err.message : 'Could not upload photo.');
-        return false;
-      }
-    },
-    [clearStatus, institutionalId, settings, showError, showSuccess],
-  );
-
-  const removeAvatar = useCallback(() => {
-    clearStatus();
-    const next: StoredStudentSettings = {
-      ...settings,
-      profile: { ...settings.profile, avatarUrl: null },
-    };
-    writeStoredSettings(institutionalId, next);
-    setSettings(next);
-    showSuccess('Profile photo removed.');
-  }, [clearStatus, institutionalId, settings, showSuccess]);
-
   return {
     email,
     institutionalId,
     settings,
     displayName,
-    avatarUrl,
     saveStatus,
     saveMessage,
     clearStatus,
     updateNotificationPref,
     saveAllNotifications,
-    uploadAvatar,
-    removeAvatar,
   };
 }

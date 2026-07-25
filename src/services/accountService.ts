@@ -4,6 +4,7 @@ import type {
   AccountResponse,
   ChangePasswordRequest,
   PasswordChangeResponse,
+  ProfilePictureResponse,
   UpdateAccountRequest,
 } from '../types/account';
 
@@ -23,6 +24,34 @@ export async function updateAccount(body: UpdateAccountRequest): Promise<Account
     }
     throw err;
   }
+}
+
+export async function uploadProfilePicture(file: File): Promise<ProfilePictureResponse> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const { data } = await apiClient.post<ProfilePictureResponse>(
+    '/api/account/me/profile-picture',
+    formData,
+    {
+      transformRequest: [
+        (body, headers) => {
+          if (headers && typeof headers === 'object') {
+            delete (headers as Record<string, unknown>)['Content-Type'];
+          }
+          return body;
+        },
+      ],
+    },
+  );
+  return data;
+}
+
+export async function removeProfilePicture(): Promise<ProfilePictureResponse> {
+  const { data } = await apiClient.delete<ProfilePictureResponse>(
+    '/api/account/me/profile-picture',
+  );
+  return data;
 }
 
 export async function changePassword(body: ChangePasswordRequest): Promise<PasswordChangeResponse> {

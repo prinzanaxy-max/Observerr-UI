@@ -15,20 +15,29 @@ import {
   getStudentProfileStats,
 } from '../data/studentProfileData';
 import { useAuthProfile } from '../hooks/useAuthProfile';
+import { useProfilePicture } from '../hooks/useProfilePicture';
 import { useStudentSettings } from '../hooks/useStudentSettings';
+import { getInitialsFromName } from '../lib/profileUtils';
+import type { SaveStatus } from '../hooks/useAccountSettings';
 
 const StudentProfilePage = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const { institutionalId, email, initials, user } = useAuthProfile();
-  const {
-    displayName,
-    avatarUrl,
-    uploadAvatar,
-    removeAvatar,
-    saveStatus,
-    saveMessage,
-    clearStatus,
-  } = useStudentSettings();
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const [saveMessage, setSaveMessage] = useState('');
+
+  const { institutionalId, email, user } = useAuthProfile();
+  const { displayName, settings } = useStudentSettings();
+  const profilePicture = useProfilePicture();
+
+  const initials = useMemo(
+    () =>
+      getInitialsFromName(
+        settings.profile.firstName,
+        settings.profile.lastName,
+        institutionalId,
+      ),
+    [institutionalId, settings.profile.firstName, settings.profile.lastName],
+  );
 
   useEffect(() => {
     document.title = 'Profile — Observerr';
@@ -44,6 +53,34 @@ const StudentProfilePage = () => {
   );
 
   const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
+
+  const clearStatus = useCallback(() => {
+    setSaveStatus('idle');
+    setSaveMessage('');
+  }, []);
+
+  const handleUploadPhoto = useCallback(
+    async (file: File) => {
+      clearStatus();
+      profilePicture.clearPhotoError();
+      const result = await profilePicture.uploadProfilePicture(file);
+      if (result === false) return false;
+      setSaveStatus('success');
+      setSaveMessage('Profile picture updated.');
+      return true;
+    },
+    [clearStatus, profilePicture.clearPhotoError, profilePicture.uploadProfilePicture],
+  );
+
+  const handleRemovePhoto = useCallback(async () => {
+    clearStatus();
+    profilePicture.clearPhotoError();
+    const ok = await profilePicture.removeProfilePicture();
+    if (!ok) return false;
+    setSaveStatus('success');
+    setSaveMessage('Profile picture removed.');
+    return true;
+  }, [clearStatus, profilePicture.clearPhotoError, profilePicture.removeProfilePicture]);
 
   return (
     <StudentPortalLayout
@@ -68,11 +105,14 @@ const StudentProfilePage = () => {
             institutionalId={institutionalId}
             email={email}
             initials={initials}
-            avatarUrl={avatarUrl}
+            avatarUrl={profilePicture.profilePictureUrl}
             memberSince={memberSince}
             integrityScore={integrityScore}
-            onUploadPhoto={uploadAvatar}
-            onRemovePhoto={removeAvatar}
+            onUploadPhoto={handleUploadPhoto}
+            onRemovePhoto={handleRemovePhoto}
+            uploadingPhoto={profilePicture.uploading}
+            removingPhoto={profilePicture.removing}
+            photoError={profilePicture.photoError}
           />
 
           <ProfileStatsGrid stats={stats} />

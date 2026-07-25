@@ -1,7 +1,6 @@
 import { memo, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuthProfile } from '../../hooks/useAuthProfile';
-import { useStudentSettings } from '../../hooks/useStudentSettings';
 import { getStudentActiveNav } from '../../data/studentPortalNav';
 import ObserverrLogo from '../ObserverrLogo';
 import StudentSidebar from './StudentSidebar';
@@ -28,8 +27,7 @@ const StudentPortalLayout = memo(({
   contentClassName = '',
   header,
 }: StudentPortalLayoutProps) => {
-  const { institutionalId, email, initials } = useAuthProfile();
-  const { avatarUrl } = useStudentSettings();
+  const { institutionalId, email, initials, profilePictureUrl } = useAuthProfile();
   const { pathname } = useLocation();
   const activeNav = getStudentActiveNav(pathname);
 
@@ -40,7 +38,7 @@ const StudentPortalLayout = memo(({
         institutionalId={institutionalId}
         email={email}
         initials={initials}
-        avatarUrl={avatarUrl}
+        avatarUrl={profilePictureUrl}
       />
 
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
@@ -52,7 +50,7 @@ const StudentPortalLayout = memo(({
             </span>
           </Link>
           <Link to="/student/profile" aria-label="View profile">
-            <StudentAvatar src={avatarUrl} initials={initials} size="xs" />
+            <StudentAvatar src={profilePictureUrl} initials={initials} size="xs" />
           </Link>
         </div>
 

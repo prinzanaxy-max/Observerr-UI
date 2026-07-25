@@ -30,6 +30,7 @@ export interface CurrentUser {
   email: string;
   role: UserRole;
   createdAt: string;
+  profilePictureUrl?: string | null;
 }
 
 export interface ApiError {

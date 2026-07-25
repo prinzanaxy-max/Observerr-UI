@@ -77,6 +77,13 @@ const StudentSettingsPage = () => {
               onSaveAccount={accountSettings.handleSaveAccount}
               onChangePassword={accountSettings.handleChangePassword}
               onRetryLoad={() => void accountSettings.reloadAccount()}
+              initials={accountSettings.initials}
+              profilePictureUrl={accountSettings.profilePictureUrl}
+              uploadingPhoto={accountSettings.uploadingPhoto}
+              removingPhoto={accountSettings.removingPhoto}
+              photoError={accountSettings.photoError}
+              onUploadProfilePicture={accountSettings.handleUploadProfilePicture}
+              onRemoveProfilePicture={accountSettings.handleRemoveProfilePicture}
             />
             <PrivacyMonitoringPanel />
           </>

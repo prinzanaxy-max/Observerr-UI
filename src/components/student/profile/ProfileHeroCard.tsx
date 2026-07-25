@@ -12,7 +12,10 @@ type ProfileHeroCardProps = {
   memberSince: string;
   integrityScore: number;
   onUploadPhoto: (file: File) => Promise<boolean>;
-  onRemovePhoto: () => void;
+  onRemovePhoto: () => Promise<boolean>;
+  uploadingPhoto?: boolean;
+  removingPhoto?: boolean;
+  photoError?: string;
 };
 
 const ProfileHeroCard = memo(({
@@ -25,6 +28,9 @@ const ProfileHeroCard = memo(({
   integrityScore,
   onUploadPhoto,
   onRemovePhoto,
+  uploadingPhoto = false,
+  removingPhoto = false,
+  photoError = '',
 }: ProfileHeroCardProps) => (
   <section className="student-exam-glass-card rounded-[24px] p-6 sm:p-8 overflow-hidden relative">
     <div className="pointer-events-none absolute -top-16 -right-16 w-48 h-48 rounded-full bg-student-primary-container/20 blur-3xl" />
@@ -35,6 +41,9 @@ const ProfileHeroCard = memo(({
         initials={initials}
         onUpload={onUploadPhoto}
         onRemove={onRemovePhoto}
+        uploading={uploadingPhoto}
+        removing={removingPhoto}
+        error={photoError}
       />
 
       <div className="flex-1 min-w-0">

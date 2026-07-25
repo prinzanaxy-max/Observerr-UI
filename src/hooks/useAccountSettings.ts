@@ -4,8 +4,10 @@ import useAuthStore from '../store/authStore';
 import { mapAccountApiError } from '../lib/accountErrors';
 import { validateAccountForm, validatePasswordForm } from '../lib/accountValidation';
 import { syncProfileNamesToLocalSettings } from '../lib/studentSettingsSync';
+import { getInitialsFromName } from '../lib/profileUtils';
 import * as accountService from '../services/accountService';
 import type { AccountResponse, ChangePasswordRequest } from '../types/account';
+import { useProfilePicture } from './useProfilePicture';
 
 export type SaveStatus = 'idle' | 'success' | 'error';
 
@@ -18,6 +20,7 @@ const emptyPasswordForm = (): ChangePasswordRequest => ({
 export function useAccountSettings() {
   const navigate = useNavigate();
   const clearAuth = useAuthStore((s) => s.clear);
+  const updateProfilePicture = useAuthStore((s) => s.updateProfilePicture);
 
   const [account, setAccount] = useState<AccountResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,6 +39,14 @@ export function useAccountSettings() {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [saveMessage, setSaveMessage] = useState('');
 
+  const profilePicture = useProfilePicture(account?.profilePictureUrl);
+
+  const initials = getInitialsFromName(
+    account?.firstName,
+    account?.lastName,
+    account?.institutionalId,
+  );
+
   const clearStatus = useCallback(() => {
     setSaveStatus('idle');
     setSaveMessage('');
@@ -51,6 +62,8 @@ export function useAccountSettings() {
         firstName: data.firstName ?? '',
         lastName: data.lastName ?? '',
       });
+      profilePicture.syncPictureUrl(data.profilePictureUrl ?? null);
+      updateProfilePicture(data.profilePictureUrl ?? null);
     } catch (err) {
       const mapped = mapAccountApiError(err);
       if (mapped.unauthorized) {
@@ -62,7 +75,7 @@ export function useAccountSettings() {
     } finally {
       setLoading(false);
     }
-  }, [clearAuth, navigate]);
+  }, [clearAuth, navigate, profilePicture.syncPictureUrl, updateProfilePicture]);
 
   useEffect(() => {
     void loadAccount();
@@ -172,6 +185,35 @@ export function useAccountSettings() {
     });
   }, []);
 
+  const handleUploadProfilePicture = useCallback(
+    async (file: File) => {
+      clearStatus();
+      profilePicture.clearPhotoError();
+      const result = await profilePicture.uploadProfilePicture(file);
+      if (result === false) return false;
+      setAccount((prev) => (prev ? { ...prev, profilePictureUrl: result } : prev));
+      setSaveStatus('success');
+      setSaveMessage('Profile picture updated.');
+      return true;
+    },
+    [
+      clearStatus,
+      profilePicture.clearPhotoError,
+      profilePicture.uploadProfilePicture,
+    ],
+  );
+
+  const handleRemoveProfilePicture = useCallback(async () => {
+    clearStatus();
+    profilePicture.clearPhotoError();
+    const ok = await profilePicture.removeProfilePicture();
+    if (!ok) return false;
+    setAccount((prev) => (prev ? { ...prev, profilePictureUrl: null } : prev));
+    setSaveStatus('success');
+    setSaveMessage('Profile picture removed.');
+    return true;
+  }, [clearStatus, profilePicture.clearPhotoError, profilePicture.removeProfilePicture]);
+
   return {
     account,
     loading,
@@ -191,5 +233,12 @@ export function useAccountSettings() {
     updatePasswordField,
     handleSaveAccount,
     handleChangePassword,
+    initials,
+    profilePictureUrl: profilePicture.profilePictureUrl,
+    uploadingPhoto: profilePicture.uploading,
+    removingPhoto: profilePicture.removing,
+    photoError: profilePicture.photoError,
+    handleUploadProfilePicture,
+    handleRemoveProfilePicture,
   };
 }

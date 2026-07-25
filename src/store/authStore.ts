@@ -32,6 +32,7 @@ interface AuthActions {
   clear: () => void;
   setSession: (auth: AuthResponse) => void;
   setAccessToken: (accessToken: string) => void;
+  updateProfilePicture: (profilePictureUrl: string | null) => void;
   getAccessToken: () => string | null;
   bootstrapSession: () => Promise<void>;
   fetchCurrentUser: () => Promise<void>;
@@ -108,6 +109,12 @@ const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
 
   setAccessToken: (accessToken) => {
     set({ accessToken, isAuthenticated: true });
+  },
+
+  updateProfilePicture: (profilePictureUrl) => {
+    const { user } = get();
+    if (!user) return;
+    set({ user: { ...user, profilePictureUrl } });
   },
 
   getAccessToken: () => get().accessToken,

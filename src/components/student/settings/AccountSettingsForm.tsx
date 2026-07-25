@@ -2,6 +2,7 @@ import { memo, useState, type FormEvent } from 'react';
 import { PasswordToggle } from '../../auth/AuthImagePanel';
 import Icon from '../Icon';
 import SettingsField from './SettingsField';
+import ProfilePhotoUpload from '../profile/ProfilePhotoUpload';
 import { PASSWORD_POLICY_HINT } from '../../../lib/accountValidation';
 import type { AccountResponse } from '../../../types/account';
 
@@ -21,6 +22,13 @@ type AccountSettingsFormProps = {
   onSaveAccount: () => Promise<boolean>;
   onChangePassword: () => Promise<boolean>;
   onRetryLoad: () => void;
+  initials: string;
+  profilePictureUrl?: string | null;
+  uploadingPhoto?: boolean;
+  removingPhoto?: boolean;
+  photoError?: string;
+  onUploadProfilePicture: (file: File) => Promise<boolean>;
+  onRemoveProfilePicture: () => Promise<boolean>;
 };
 
 const AccountSettingsSkeleton = memo(() => (
@@ -52,6 +60,13 @@ const AccountSettingsForm = memo(({
   onSaveAccount,
   onChangePassword,
   onRetryLoad,
+  initials,
+  profilePictureUrl,
+  uploadingPhoto = false,
+  removingPhoto = false,
+  photoError = '',
+  onUploadProfilePicture,
+  onRemoveProfilePicture,
 }: AccountSettingsFormProps) => {
   const handleAccountSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -87,7 +102,19 @@ const AccountSettingsForm = memo(({
             </button>
           </div>
         ) : (
-          <form onSubmit={handleAccountSubmit} className="space-y-6 max-w-2xl">
+          <div className="space-y-8 max-w-2xl">
+            <ProfilePhotoUpload
+              avatarUrl={profilePictureUrl}
+              initials={initials}
+              onUpload={onUploadProfilePicture}
+              onRemove={onRemoveProfilePicture}
+              disabled={savingAccount}
+              uploading={uploadingPhoto}
+              removing={removingPhoto}
+              error={photoError}
+            />
+
+            <form onSubmit={handleAccountSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <SettingsField
                 label="First Name"
@@ -137,7 +164,8 @@ const AccountSettingsForm = memo(({
                 Save Changes
               </button>
             </div>
-          </form>
+            </form>
+          </div>
         )}
       </section>
 
