@@ -1,11 +1,18 @@
 import { memo, useCallback, useEffect, useState } from 'react';
 import { NOTIFICATION_TOGGLES, type NotificationPreferences } from '../../../data/studentSettingsData';
+import PushNotificationsToggle from './PushNotificationsToggle';
+import type { PushPermissionStatus } from '../../../types/pushNotifications';
 
 type NotificationSettingsPanelProps = {
   preferences: NotificationPreferences;
   saving: boolean;
   onToggle: (key: keyof NotificationPreferences, value: boolean) => void;
   onSaveAll: (preferences: NotificationPreferences) => Promise<boolean>;
+  pushStatus: PushPermissionStatus;
+  pushEnabled: boolean;
+  pushErrorMessage: string;
+  onEnablePush: () => Promise<boolean>;
+  onDisablePush: () => void;
 };
 
 const NotificationSettingsPanel = memo(({
@@ -13,6 +20,11 @@ const NotificationSettingsPanel = memo(({
   saving,
   onToggle,
   onSaveAll,
+  pushStatus,
+  pushEnabled,
+  pushErrorMessage,
+  onEnablePush,
+  onDisablePush,
 }: NotificationSettingsPanelProps) => {
   const [draft, setDraft] = useState(preferences);
 
@@ -40,6 +52,14 @@ const NotificationSettingsPanel = memo(({
       </div>
 
       <ul className="space-y-4 max-w-2xl">
+        <PushNotificationsToggle
+          status={pushStatus}
+          pushEnabled={pushEnabled}
+          errorMessage={pushErrorMessage}
+          onEnable={onEnablePush}
+          onDisable={onDisablePush}
+        />
+
         {NOTIFICATION_TOGGLES.map((item) => (
           <li
             key={item.key}

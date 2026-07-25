@@ -28,6 +28,7 @@ import AccessDeniedPage  from './pages/AccessDeniedPage';
 import NotFoundPage      from './pages/NotFoundPage';
 import ProtectedRoute    from './components/ProtectedRoute';
 import RoleProtectedRoute from './components/RoleProtectedRoute';
+import PushNotificationProvider from './components/PushNotificationProvider';
 
 function App() {
   const bootstrapSession = useAuthStore((s) => s.bootstrapSession);
@@ -37,7 +38,8 @@ function App() {
   }, [bootstrapSession]);
 
   return (
-    <BrowserRouter>
+    <PushNotificationProvider>
+      <BrowserRouter>
       <Routes>
         {/* Public */}
         <Route path="/"         element={<LandingPage />} />
@@ -83,7 +85,8 @@ function App() {
         <Route path="/403" element={<AccessDeniedPage />} />
         <Route path="*"    element={<NotFoundPage />} />
       </Routes>
-    </BrowserRouter>
+      </BrowserRouter>
+    </PushNotificationProvider>
   );
 }
 

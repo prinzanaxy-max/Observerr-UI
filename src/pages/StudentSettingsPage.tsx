@@ -9,6 +9,7 @@ import SupportPanel from '../components/student/settings/SupportPanel';
 import Icon from '../components/student/Icon';
 import { filterSettingsTabs, type SettingsTab } from '../data/studentSettingsData';
 import { useAccountSettings } from '../hooks/useAccountSettings';
+import { usePushNotifications } from '../hooks/usePushNotifications';
 import { useStudentSettings } from '../hooks/useStudentSettings';
 
 const StudentSettingsPage = () => {
@@ -17,6 +18,7 @@ const StudentSettingsPage = () => {
   const [savingNotifications, setSavingNotifications] = useState(false);
 
   const accountSettings = useAccountSettings();
+  const pushNotifications = usePushNotifications();
 
   const {
     settings,
@@ -86,6 +88,11 @@ const StudentSettingsPage = () => {
             saving={savingNotifications}
             onToggle={updateNotificationPref}
             onSaveAll={handleSaveNotifications}
+            pushStatus={pushNotifications.status}
+            pushEnabled={pushNotifications.pushEnabled}
+            pushErrorMessage={pushNotifications.errorMessage}
+            onEnablePush={pushNotifications.requestNotificationPermission}
+            onDisablePush={pushNotifications.disablePushNotifications}
           />
         );
       case 'privacy':
