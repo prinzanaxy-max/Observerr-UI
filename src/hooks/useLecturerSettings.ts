@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { NotificationPreferences } from './studentSettingsData';
+import type { NotificationPreferences } from '../data/studentSettingsData';
 import {
   getDefaultLecturerSettings,
   type StoredLecturerSettings,
