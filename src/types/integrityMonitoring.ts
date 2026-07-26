@@ -19,7 +19,12 @@ export type IntegrityEventType =
   | 'devtools_shortcut_attempt'
   | 'clipboard_event'
   | 'camera_permission_lost'
-  | 'proctoring_unavailable';
+  | 'proctoring_unavailable'
+  | 'tab_blur_no_face'
+  | 'camera_feed_frozen'
+  | 'session_started'
+  | 'session_ended'
+  | 'calibration_complete';
 
 export type IntegrityEvent = {
   type: IntegrityEventType;

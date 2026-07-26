@@ -122,12 +122,19 @@ export class IntegrityEventMachine {
     }
   }
 
-  onTabBlur() {
+  onTabBlur(faceDetected = true) {
     if (this.tabHidden) return;
     this.tabHidden = true;
     this.tabBlurCount += 1;
     this.tabBlurEpisode = { startedAt: Date.now() };
-    this.emitEvent('tab_blur', { metadata: { count: this.tabBlurCount } });
+    this.emitEvent('tab_blur', {
+      metadata: { count: this.tabBlurCount, faceDetected },
+    });
+    if (!faceDetected) {
+      this.emitEvent('tab_blur_no_face', {
+        metadata: { count: this.tabBlurCount, faceDetected: false },
+      });
+    }
   }
 
   onTabFocus() {
@@ -151,6 +158,12 @@ export class IntegrityEventMachine {
 
   onCameraPermissionLost(reason: string) {
     this.emitEvent('camera_permission_lost', { metadata: { reason } });
+  }
+
+  emitFrozenFrame() {
+    this.emitEvent('camera_feed_frozen', {
+      metadata: { reason: 'static_frame_detected' },
+    });
   }
 
   reset() {

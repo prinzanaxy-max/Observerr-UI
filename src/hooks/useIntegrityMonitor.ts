@@ -47,6 +47,20 @@ export type UseIntegrityMonitorReturn = {
   error: string | null;
 };
 
+function sampleVideoFrame(video: HTMLVideoElement): string | null {
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 32;
+    canvas.height = 24;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/jpeg', 0.5).slice(-64);
+  } catch {
+    return null;
+  }
+}
+
 function isDevtoolsShortcut(e: KeyboardEvent): boolean {
   const key = e.key.toLowerCase();
   if (key === 'f12') return true;
@@ -80,6 +94,10 @@ export function useIntegrityMonitor({
   const lastInferenceRef = useRef(0);
   const monitoringRef = useRef(false);
   const baselineRef = useRef<CalibrationBaseline | null>(externalBaseline);
+  const lastFaceDetectedRef = useRef(true);
+  const frozenFrameCountRef = useRef(0);
+  const lastFrameSampleRef = useRef<string | null>(null);
+  const frozenEmittedRef = useRef(false);
   const onEventRef = useRef(onIntegrityEvent);
   onEventRef.current = onIntegrityEvent;
 
@@ -131,6 +149,18 @@ export function useIntegrityMonitor({
         partialOutOfFrame,
       };
 
+      lastFaceDetectedRef.current = faceDetected;
+
+      if (video.videoWidth > 0 && !frozenEmittedRef.current) {
+        const sample = sampleVideoFrame(video);
+        if (sample && sample === lastFrameSampleRef.current) {
+          frozenFrameCountRef.current += 1;
+        } else {
+          frozenFrameCountRef.current = 0;
+          lastFrameSampleRef.current = sample;
+        }
+      }
+
       const machine = machineRef.current;
       if (!machine || !monitoringRef.current) return signals;
 
@@ -138,6 +168,15 @@ export function useIntegrityMonitor({
       machine.updateFaceCount(signals.faceCount);
       machine.updateGaze(signals.gazeDeviation);
       machine.updatePartialFace(signals.partialOutOfFrame);
+
+      if (
+        video.videoWidth > 0 &&
+        !frozenEmittedRef.current &&
+        frozenFrameCountRef.current >= 5
+      ) {
+        frozenEmittedRef.current = true;
+        machine.emitFrozenFrame();
+      }
 
       return signals;
     },
@@ -327,13 +366,13 @@ export function useIntegrityMonitor({
 
     const onVisibility = () => {
       if (document.hidden) {
-        machineRef.current?.onTabBlur();
+        machineRef.current?.onTabBlur(lastFaceDetectedRef.current);
       } else {
         machineRef.current?.onTabFocus();
       }
     };
 
-    const onBlur = () => machineRef.current?.onTabBlur();
+    const onBlur = () => machineRef.current?.onTabBlur(lastFaceDetectedRef.current);
     const onFocus = () => machineRef.current?.onTabFocus();
 
     const onKeyDown = (e: KeyboardEvent) => {

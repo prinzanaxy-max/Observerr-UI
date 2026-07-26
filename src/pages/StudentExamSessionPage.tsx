@@ -15,6 +15,7 @@ import IntegrityMonitorErrorBoundary from '../components/student/exam/IntegrityM
 import ProctoringStatusBanner from '../components/student/exam/ProctoringStatusBanner';
 import { useIntegrityMonitor } from '../hooks/useIntegrityMonitor';
 import { useIntegrityScore } from '../hooks/useIntegrityScore';
+import { useIntegritySessionSync } from '../hooks/useIntegritySessionSync';
 import { getStudentExamDetail } from '../data/studentExamSessionData';
 import type { IntegrityEvent } from '../types/integrityMonitoring';
 
@@ -35,6 +36,7 @@ type ExamSessionWithMonitorProps = {
   integrityScore: number;
   calibrationDone: boolean;
   onCalibrationDone: () => void;
+  onProctoringUnavailable: () => void;
   children: React.ReactNode;
 };
 
@@ -45,6 +47,7 @@ function ExamSessionWithMonitor({
   integrityScore,
   calibrationDone,
   onCalibrationDone,
+  onProctoringUnavailable,
   children,
 }: ExamSessionWithMonitorProps) {
   const monitor = useIntegrityMonitor({
@@ -57,9 +60,10 @@ function ExamSessionWithMonitor({
 
   useEffect(() => {
     if (monitor.status === 'unavailable' || monitor.status === 'permission_denied') {
+      onProctoringUnavailable();
       onCalibrationDone();
     }
-  }, [monitor.status, onCalibrationDone]);
+  }, [monitor.status, onCalibrationDone, onProctoringUnavailable]);
 
   const showCalibration =
     !calibrationDone &&
@@ -104,6 +108,8 @@ const StudentExamSessionPage = () => {
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const examContainerRef = useRef<HTMLDivElement>(null);
+  const sessionIdRef = useRef(crypto.randomUUID());
+  const proctoringAvailableRef = useRef(true);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -113,14 +119,35 @@ const StudentExamSessionPage = () => {
     exam ? exam.durationMinutes * 60 : 0,
   );
 
-  const { score: integrityScore, handleIntegrityEvent } = useIntegrityScore();
+  const {
+    score: integrityScore,
+    handleIntegrityEvent,
+    logSessionEvent,
+    buildSummary,
+    getAuditLog,
+    requiresReview,
+  } = useIntegrityScore(id, sessionIdRef.current);
+
+  const { submitSession } = useIntegritySessionSync(
+    id,
+    sessionIdRef.current,
+    getAuditLog,
+    () => {},
+  );
+
+  const finalizeSession = useCallback(async () => {
+    logSessionEvent('SESSION_ENDED', 'Exam session ended', 'Student submitted or timed out.');
+    const summary = buildSummary(proctoringAvailableRef.current);
+    await submitSession(summary, getAuditLog());
+  }, [buildSummary, getAuditLog, logSessionEvent, submitSession]);
 
   useEffect(() => {
     if (exam) {
       document.title = `Exam — ${exam.title} | Observerr`;
       setSecondsLeft(exam.durationMinutes * 60);
+      logSessionEvent('SESSION_STARTED', 'Exam session started', `Exam ${exam.id} proctoring session opened.`);
     }
-  }, [exam]);
+  }, [exam, logSessionEvent]);
 
   useEffect(() => {
     if (!exam || submitted || !calibrationDone) return undefined;
@@ -128,6 +155,7 @@ const StudentExamSessionPage = () => {
       setSecondsLeft((prev) => {
         if (prev <= 1) {
           window.clearInterval(timer);
+          void finalizeSession();
           setSubmitted(true);
           return 0;
         }
@@ -135,7 +163,7 @@ const StudentExamSessionPage = () => {
       });
     }, 1000);
     return () => window.clearInterval(timer);
-  }, [exam, submitted, calibrationDone]);
+  }, [exam, submitted, calibrationDone, finalizeSession]);
 
   const questions = exam?.questions ?? [];
   const currentQuestion = questions[currentIndex];
@@ -160,8 +188,18 @@ const StudentExamSessionPage = () => {
   }, [questions.length]);
 
   const handleSubmit = useCallback(() => {
+    void finalizeSession();
     setSubmitted(true);
-  }, []);
+  }, [finalizeSession]);
+
+  const handleCalibrationDone = useCallback(() => {
+    setCalibrationDone(true);
+    logSessionEvent(
+      'CALIBRATION_COMPLETE',
+      'Gaze calibration complete',
+      'Baseline head pose captured for gaze deviation detection.',
+    );
+  }, [logSessionEvent]);
 
   if (!exam) {
     return <Navigate to="/student/exams" replace />;
@@ -181,6 +219,9 @@ const StudentExamSessionPage = () => {
           </p>
           <p className="text-student-body-md font-student text-student-on-surface-variant mb-2">
             Integrity score: {integrityScore}%
+            {requiresReview && (
+              <span className="block text-amber-700 mt-1">Your session has been flagged for review.</span>
+            )}
           </p>
           <p className="text-student-body-md font-student text-student-on-surface-variant mb-8">
             Your responses have been recorded. Results will appear when your instructor publishes them.
@@ -209,7 +250,10 @@ const StudentExamSessionPage = () => {
         onIntegrityEvent={handleIntegrityEvent}
         integrityScore={integrityScore}
         calibrationDone={calibrationDone}
-        onCalibrationDone={() => setCalibrationDone(true)}
+        onCalibrationDone={handleCalibrationDone}
+        onProctoringUnavailable={() => {
+          proctoringAvailableRef.current = false;
+        }}
       >
         <ExamSessionHeader
           title={exam.title}
