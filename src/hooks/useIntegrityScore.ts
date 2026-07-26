@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState, type RefObject } from 'react';
 import type { IntegrityEvent } from '../types/integrityMonitoring';
 import type { IntegrityAuditRecord, IntegritySessionSummary } from '../types/integritySession';
 import {
@@ -10,7 +10,11 @@ import {
   type ScoreUpdate,
 } from '../lib/integrity/integrityScoring';
 
-export function useIntegrityScore(examId: number, sessionId: string, initialScore = INTEGRITY_STARTING_SCORE) {
+export function useIntegrityScore(
+  examId: number,
+  sessionIdRef: RefObject<string>,
+  initialScore = INTEGRITY_STARTING_SCORE,
+) {
   const [score, setScore] = useState(initialScore);
   const [lastUpdate, setLastUpdate] = useState<ScoreUpdate | null>(null);
   const [auditLog, setAuditLog] = useState<IntegrityAuditRecord[]>([]);
@@ -21,6 +25,12 @@ export function useIntegrityScore(examId: number, sessionId: string, initialScor
   const sessionStartedAtRef = useRef(new Date().toISOString());
   const scoreRef = useRef(initialScore);
   const auditLogRef = useRef<IntegrityAuditRecord[]>([]);
+
+  const getSessionId = useCallback(() => sessionIdRef.current || 'pending', [sessionIdRef]);
+
+  const setSessionStartedAt = useCallback((startedAt: string) => {
+    sessionStartedAtRef.current = startedAt;
+  }, []);
 
   const appendRecord = useCallback((record: IntegrityAuditRecord) => {
     auditLogRef.current = [...auditLogRef.current, record];
@@ -35,6 +45,7 @@ export function useIntegrityScore(examId: number, sessionId: string, initialScor
       tabBlurCountRef.current += 1;
     }
 
+    const sessionId = getSessionId();
     const { code, title, description } = describeEvent(event);
     let rules = resolveDeductionsForEvent(event, tabBlurCountRef.current);
 
@@ -83,10 +94,11 @@ export function useIntegrityScore(examId: number, sessionId: string, initialScor
         metadata: { examId, sessionId, rawType: event.type, ...event.metadata },
       });
     }
-  }, [appendRecord, examId, sessionId]);
+  }, [appendRecord, examId, getSessionId]);
 
   const logSessionEvent = useCallback(
     (eventCode: IntegrityAuditRecord['eventCode'], title: string, description: string) => {
+      const sessionId = getSessionId();
       appendRecord({
         clientEventId: createClientEventId(),
         eventCode,
@@ -100,12 +112,12 @@ export function useIntegrityScore(examId: number, sessionId: string, initialScor
         metadata: { examId, sessionId },
       });
     },
-    [appendRecord, examId, sessionId],
+    [appendRecord, examId, getSessionId],
   );
 
   const buildSummary = useCallback(
     (proctoringAvailable: boolean): IntegritySessionSummary => ({
-      sessionId,
+      sessionId: getSessionId(),
       examId,
       startedAt: sessionStartedAtRef.current,
       endedAt: new Date().toISOString(),
@@ -116,7 +128,7 @@ export function useIntegrityScore(examId: number, sessionId: string, initialScor
       requiresReview: requiresReview || auditLogRef.current.some((r) => r.requiresReview),
       proctoringAvailable,
     }),
-    [auditLogRef, examId, requiresReview, sessionId],
+    [examId, getSessionId, requiresReview],
   );
 
   return {
@@ -127,6 +139,7 @@ export function useIntegrityScore(examId: number, sessionId: string, initialScor
     handleIntegrityEvent,
     logSessionEvent,
     buildSummary,
+    setSessionStartedAt,
     getAuditLog: () => auditLogRef.current,
     getScore: () => scoreRef.current,
   };

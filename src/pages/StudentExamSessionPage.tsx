@@ -37,6 +37,7 @@ type ExamSessionWithMonitorProps = {
   calibrationDone: boolean;
   onCalibrationDone: () => void;
   onProctoringUnavailable: () => void;
+  sessionError?: string | null;
   children: React.ReactNode;
 };
 
@@ -48,6 +49,7 @@ function ExamSessionWithMonitor({
   calibrationDone,
   onCalibrationDone,
   onProctoringUnavailable,
+  sessionError,
   children,
 }: ExamSessionWithMonitorProps) {
   const monitor = useIntegrityMonitor({
@@ -92,7 +94,7 @@ function ExamSessionWithMonitor({
       <ProctoringStatusBanner
         status={bannerStatus}
         integrityScore={integrityScore}
-        message={monitor.error}
+        message={monitor.error ?? sessionError}
       />
 
       {children}
@@ -108,8 +110,9 @@ const StudentExamSessionPage = () => {
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const examContainerRef = useRef<HTMLDivElement>(null);
-  const sessionIdRef = useRef(crypto.randomUUID());
+  const sessionIdRef = useRef('');
   const proctoringAvailableRef = useRef(true);
+  const sessionStartedLoggedRef = useRef(false);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -126,14 +129,31 @@ const StudentExamSessionPage = () => {
     buildSummary,
     getAuditLog,
     requiresReview,
-  } = useIntegrityScore(id, sessionIdRef.current);
+    setSessionStartedAt,
+  } = useIntegrityScore(id, sessionIdRef);
 
-  const { submitSession } = useIntegritySessionSync(
-    id,
-    sessionIdRef.current,
-    getAuditLog,
-    () => {},
+  const handleSessionReady = useCallback(
+    (session: { sessionId: string; startedAt: string }) => {
+      sessionIdRef.current = session.sessionId;
+      setSessionStartedAt(session.startedAt);
+      if (!sessionStartedLoggedRef.current) {
+        sessionStartedLoggedRef.current = true;
+        logSessionEvent(
+          'SESSION_STARTED',
+          'Exam session started',
+          `Backend session ${session.sessionId} opened for exam ${id}.`,
+        );
+      }
+    },
+    [id, logSessionEvent, setSessionStartedAt],
   );
+
+  const { submitSession, sessionError } = useIntegritySessionSync({
+    examId: id,
+    enabled: !Number.isNaN(id) && id > 0,
+    getAuditLog,
+    onSessionReady: handleSessionReady,
+  });
 
   const finalizeSession = useCallback(async () => {
     logSessionEvent('SESSION_ENDED', 'Exam session ended', 'Student submitted or timed out.');
@@ -145,9 +165,8 @@ const StudentExamSessionPage = () => {
     if (exam) {
       document.title = `Exam — ${exam.title} | Observerr`;
       setSecondsLeft(exam.durationMinutes * 60);
-      logSessionEvent('SESSION_STARTED', 'Exam session started', `Exam ${exam.id} proctoring session opened.`);
     }
-  }, [exam, logSessionEvent]);
+  }, [exam]);
 
   useEffect(() => {
     if (!exam || submitted || !calibrationDone) return undefined;
@@ -254,6 +273,7 @@ const StudentExamSessionPage = () => {
         onProctoringUnavailable={() => {
           proctoringAvailableRef.current = false;
         }}
+        sessionError={sessionError}
       >
         <ExamSessionHeader
           title={exam.title}

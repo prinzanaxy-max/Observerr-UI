@@ -16,7 +16,7 @@ export type LecturerStudentItem = {
   avgIntegrityScore: number;
   riskLevel: RiskLevel;
   lastActive: string;
-  latestSessionId: number | null;
+  latestSessionId: string | number | null;
 };
 
 export type LecturerStudentsPageResponse = {
@@ -42,7 +42,7 @@ export type SessionTimelineEvent = {
 };
 
 export type LecturerSessionDetailResponse = {
-  sessionId: number;
+  sessionId: string | number;
   studentId: number;
   studentNumber: string;
   studentName: string;
@@ -52,6 +52,7 @@ export type LecturerSessionDetailResponse = {
   courseName: string;
   courseLabel: string;
   integrityScore: number;
+  requiresReview?: boolean;
   duration: string;
   totalFlags: number;
   deviceFlags: number;

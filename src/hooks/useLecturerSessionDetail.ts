@@ -6,7 +6,7 @@ import * as lecturerStudentsService from '../services/lecturerStudentsService';
 import useAuthStore from '../store/authStore';
 import type { LecturerSessionDetailResponse } from '../types/lecturerStudents';
 
-export function useLecturerSessionDetail(sessionId: number | null) {
+export function useLecturerSessionDetail(sessionId: string | null) {
   const navigate = useNavigate();
   const clearAuth = useAuthStore((s) => s.clear);
 
@@ -16,7 +16,7 @@ export function useLecturerSessionDetail(sessionId: number | null) {
   const [forbidden, setForbidden] = useState(false);
 
   const loadSession = useCallback(async () => {
-    if (!sessionId || Number.isNaN(sessionId)) {
+    if (!sessionId || sessionId.trim() === '') {
       setSession(null);
       setLoading(false);
       return;

@@ -44,8 +44,8 @@ const StudentsTable = memo(({
   const navigate = useNavigate();
   const safeTotalPages = Math.max(1, totalPages);
 
-  const goToSession = (sessionId: number | null) => {
-    if (sessionId != null) {
+  const goToSession = (sessionId: string | number | null) => {
+    if (sessionId != null && sessionId !== '') {
       navigate(`/lecturer/students/sessions/${sessionId}`);
     }
   };

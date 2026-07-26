@@ -1,6 +1,11 @@
+import { AxiosError } from 'axios';
 import apiClient from '../lib/axios';
+import { toApiAuditRecords } from '../lib/integrity/integrityApiMapper';
 import type {
+  AppendIntegrityEventsResponse,
   BatchIntegrityEventsPayload,
+  CompleteIntegritySessionResponse,
+  IntegrityAuditRecord,
   StartIntegritySessionResponse,
   SubmitIntegritySessionPayload,
 } from '../types/integritySession';
@@ -15,14 +20,31 @@ export async function startIntegritySession(examId: number): Promise<StartIntegr
 
 export async function appendIntegrityEvents(
   sessionId: string,
-  payload: BatchIntegrityEventsPayload,
-): Promise<void> {
-  await apiClient.post(`/api/student/exam-sessions/${sessionId}/integrity-events`, payload);
+  events: IntegrityAuditRecord[],
+): Promise<AppendIntegrityEventsResponse> {
+  const payload: BatchIntegrityEventsPayload = { events: toApiAuditRecords(events) };
+  const { data } = await apiClient.post<AppendIntegrityEventsResponse>(
+    `/api/student/exam-sessions/${sessionId}/integrity-events`,
+    payload,
+  );
+  return data;
 }
 
 export async function submitIntegritySession(
   sessionId: string,
   payload: SubmitIntegritySessionPayload,
-): Promise<void> {
-  await apiClient.post(`/api/student/exam-sessions/${sessionId}/complete`, payload);
+): Promise<CompleteIntegritySessionResponse> {
+  const apiPayload = {
+    summary: payload.summary,
+    events: toApiAuditRecords(payload.events),
+  };
+  const { data } = await apiClient.post<CompleteIntegritySessionResponse>(
+    `/api/student/exam-sessions/${sessionId}/complete`,
+    apiPayload,
+  );
+  return data;
+}
+
+export function isSessionConflictError(err: unknown): boolean {
+  return err instanceof AxiosError && err.response?.status === 409;
 }

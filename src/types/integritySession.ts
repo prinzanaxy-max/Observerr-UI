@@ -1,4 +1,5 @@
 import type { IntegritySeverity } from './integrityMonitoring';
+import type { ApiIntegrityAuditRecord } from '../lib/integrity/integrityApiMapper';
 
 /** Stable codes stored in DB — do not rename once deployed. */
 export type IntegrityEventCode =
@@ -28,7 +29,6 @@ export type IntegrityEventCode =
   | 'MULTI_FACE_CLEARED';
 
 export type IntegrityAuditRecord = {
-  /** Client-generated id for idempotent ingest */
   clientEventId: string;
   eventCode: IntegrityEventCode;
   title: string;
@@ -61,12 +61,26 @@ export type SubmitIntegritySessionPayload = {
 };
 
 export type BatchIntegrityEventsPayload = {
-  events: IntegrityAuditRecord[];
+  events: ApiIntegrityAuditRecord[];
 };
 
 export type StartIntegritySessionResponse = {
   sessionId: string;
   examId: number;
+  studentId: number;
   startedAt: string;
   startingScore: number;
+  status: 'IN_PROGRESS' | 'COMPLETED';
+};
+
+export type AppendIntegrityEventsResponse = {
+  accepted: number;
+  skipped: number;
+};
+
+export type CompleteIntegritySessionResponse = {
+  sessionId: string;
+  finalScore: number;
+  requiresReview: boolean;
+  status: 'COMPLETED';
 };

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useAuthProfile } from '../hooks/useAuthProfile';
 import { useLecturerSessionDetail } from '../hooks/useLecturerSessionDetail';
@@ -17,10 +17,7 @@ const LecturerSessionDetailPage = () => {
   const { institutionalId, email, initials } = useAuthProfile();
   const [searchQuery, setSearchQuery] = useState('');
 
-  const sessionId = useMemo(() => {
-    const parsed = Number(sessionIdParam);
-    return Number.isNaN(parsed) ? null : parsed;
-  }, [sessionIdParam]);
+  const sessionId = sessionIdParam?.trim() || null;
 
   const { session, events, loading, error, forbidden, reload } = useLecturerSessionDetail(sessionId);
 
@@ -32,7 +29,7 @@ const LecturerSessionDetailPage = () => {
 
   const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
 
-  if (!sessionIdParam || sessionId === null) {
+  if (!sessionIdParam || !sessionId) {
     return <Navigate to="/lecturer/students" replace />;
   }
 
@@ -98,7 +95,15 @@ const LecturerSessionDetailPage = () => {
         ) : (
           <>
             {profileHeader && (
-              <StudentProfileHeader profile={profileHeader} backTo="/lecturer/students" />
+              <>
+                <StudentProfileHeader profile={profileHeader} backTo="/lecturer/students" />
+                {session?.requiresReview && (
+                  <div className="mb-5 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 font-student text-student-body-md flex items-center gap-2">
+                    <Icon name="flag" className="shrink-0" />
+                    This session requires human review — critical integrity events were detected.
+                  </div>
+                )}
+              </>
             )}
 
             {loading && !profileHeader && (

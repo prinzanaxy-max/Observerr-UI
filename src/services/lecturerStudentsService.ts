@@ -25,7 +25,7 @@ export async function fetchLecturerStudents({
 }
 
 export async function fetchLecturerSessionDetail(
-  sessionId: number,
+  sessionId: string | number,
 ): Promise<LecturerSessionDetailResponse> {
   const { data } = await apiClient.get<LecturerSessionDetailResponse>(
     `/api/lecturer/students/sessions/${sessionId}`,
