@@ -5,11 +5,25 @@ import { trendIcon } from '../../data/integrityReportsData';
 
 type IntegritySummaryCardsProps = {
   metrics: SummaryMetric[];
+  loading?: boolean;
 };
 
-const IntegritySummaryCards = memo(({ metrics }: IntegritySummaryCardsProps) => (
+const SummaryCardSkeleton = () => (
+  <article className="bg-student-surface rounded-[24px] p-6 lecturer-card-elevation min-h-[160px] animate-pulse">
+    <div className="flex justify-between items-start gap-3">
+      <div className="h-4 w-32 bg-student-surface-container-high rounded" />
+      <div className="w-10 h-10 rounded-full bg-student-surface-container-high shrink-0" />
+    </div>
+    <div className="mt-8 h-10 w-24 bg-student-surface-container-high rounded" />
+    <div className="mt-3 h-3 w-36 bg-student-surface-container-high rounded" />
+  </article>
+);
+
+const IntegritySummaryCards = memo(({ metrics, loading = false }: IntegritySummaryCardsProps) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-    {metrics.map((metric) => (
+    {loading
+      ? Array.from({ length: 4 }).map((_, i) => <SummaryCardSkeleton key={i} />)
+      : metrics.map((metric) => (
       <article
         key={metric.id}
         className="bg-student-surface rounded-[24px] p-6 lecturer-card-elevation flex flex-col justify-between min-h-[160px] relative overflow-hidden group hover:shadow-[0px_15px_40px_rgba(0,0,0,0.08)] transition-all"
@@ -37,7 +51,7 @@ const IntegritySummaryCards = memo(({ metrics }: IntegritySummaryCardsProps) => 
           </div>
         </div>
       </article>
-    ))}
+      ))}
   </div>
 ));
 

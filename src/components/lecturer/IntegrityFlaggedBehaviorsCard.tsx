@@ -5,12 +5,30 @@ import type { FlaggedBehaviorItem } from '../../data/integrityReportsData';
 type IntegrityFlaggedBehaviorsCardProps = {
   behaviors: FlaggedBehaviorItem[];
   onViewFullReport?: () => void;
+  loading?: boolean;
 };
 
-const IntegrityFlaggedBehaviorsCard = memo(({ behaviors, onViewFullReport }: IntegrityFlaggedBehaviorsCardProps) => (
+const IntegrityFlaggedBehaviorsCard = memo(({
+  behaviors,
+  onViewFullReport,
+  loading = false,
+}: IntegrityFlaggedBehaviorsCardProps) => (
   <section className="bg-student-surface rounded-[24px] p-6 lecturer-card-elevation flex flex-col min-h-[400px]">
     <h3 className="text-student-headline-sm font-student text-student-on-surface mb-6">Top Flagged Behaviors</h3>
 
+    {loading ? (
+      <div className="flex-1 flex flex-col gap-6 animate-pulse">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i}>
+            <div className="flex justify-between mb-2">
+              <div className="h-4 w-36 bg-student-surface-container-high rounded" />
+              <div className="h-4 w-16 bg-student-surface-container-high rounded" />
+            </div>
+            <div className="h-2 w-full bg-student-surface-container-high rounded-full" />
+          </div>
+        ))}
+      </div>
+    ) : (
     <div className="flex-1 flex flex-col gap-6 overflow-y-auto pr-2 lecturer-custom-scrollbar">
       {behaviors.map((behavior) => (
         <div key={behavior.id}>
@@ -34,6 +52,7 @@ const IntegrityFlaggedBehaviorsCard = memo(({ behaviors, onViewFullReport }: Int
         </div>
       ))}
     </div>
+    )}
 
     <button
       type="button"

@@ -4,15 +4,38 @@ import type { TrendDay } from '../../data/integrityReportsData';
 
 type IntegrityEventTrendsChartProps = {
   days: TrendDay[];
+  title?: string;
+  subtitle?: string;
+  loading?: boolean;
 };
 
-const IntegrityEventTrendsChart = memo(({ days }: IntegrityEventTrendsChartProps) => (
+const IntegrityEventTrendsChart = memo(({
+  days,
+  title = 'Integrity Event Trends',
+  subtitle = 'Daily flagged events vs monitored sessions',
+  loading = false,
+}: IntegrityEventTrendsChartProps) => {
+  if (loading) {
+    return (
+      <section className="lg:col-span-2 bg-student-surface rounded-[24px] p-6 lecturer-card-elevation flex flex-col min-h-[400px] animate-pulse">
+        <div className="h-6 w-48 bg-student-surface-container-high rounded mb-2" />
+        <div className="h-4 w-72 bg-student-surface-container-high rounded mb-8" />
+        <div className="flex-1 flex items-end gap-4 min-h-[220px]">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <div key={i} className="flex-1 bg-student-surface-container-high rounded-t-md" style={{ height: `${30 + (i % 3) * 20}%` }} />
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  return (
   <section className="lg:col-span-2 bg-student-surface rounded-[24px] p-6 lecturer-card-elevation flex flex-col min-h-[400px]">
     <div className="flex justify-between items-start mb-6 gap-3">
       <div>
-        <h3 className="text-student-headline-sm font-student text-student-on-surface">Integrity Event Trends</h3>
+        <h3 className="text-student-headline-sm font-student text-student-on-surface">{title}</h3>
         <p className="text-student-body-md font-student text-student-on-surface-variant mt-1">
-          Daily flagged events vs monitored sessions
+          {subtitle}
         </p>
       </div>
       <button
@@ -43,7 +66,11 @@ const IntegrityEventTrendsChart = memo(({ days }: IntegrityEventTrendsChartProps
                   ? 'bg-student-error shadow-[0_0_10px_rgba(186,26,26,0.4)]'
                   : 'bg-student-primary shadow-[0_0_10px_rgba(43,108,0,0.4)]'
               }`}
-              style={{ height: `${(day.flagsPct / day.sessionsPct) * 100}%` }}
+              style={{
+                height: day.sessionsPct > 0
+                  ? `${Math.min(100, (day.flagsPct / day.sessionsPct) * 100)}%`
+                  : '0%',
+              }}
             />
           </div>
           <span className="font-student text-student-label-md text-student-on-surface-variant mt-2 absolute -bottom-6">
@@ -53,7 +80,8 @@ const IntegrityEventTrendsChart = memo(({ days }: IntegrityEventTrendsChartProps
       ))}
     </div>
   </section>
-));
+  );
+});
 
 IntegrityEventTrendsChart.displayName = 'IntegrityEventTrendsChart';
 
