@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { parseApiError } from '../lib/apiErrorMessage';
+import { parseAnalyticsApiError } from '../lib/apiErrorMessage';
 import type { DateRangeKey } from '../data/integrityReportsData';
 import {
   mapAnalyticsOverviewToView,
@@ -17,12 +17,14 @@ export function useLecturerAnalyticsOverview(period: DateRangeKey) {
   const [overview, setOverview] = useState<AnalyticsOverviewView | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [errorHint, setErrorHint] = useState('');
   const [forbidden, setForbidden] = useState(false);
 
   const loadOverview = useCallback(
     async (range: Exclude<DateRangeKey, 'custom'>) => {
       setLoading(true);
       setError('');
+      setErrorHint('');
       setForbidden(false);
 
       try {
@@ -39,11 +41,7 @@ export function useLecturerAnalyticsOverview(period: DateRangeKey) {
           return;
         }
 
-        const parsed = parseApiError(
-          err,
-          'Could not load analytics. Please try again.',
-          'You do not have permission to view analytics.',
-        );
+        const parsed = parseAnalyticsApiError(err);
 
         if (parsed.unauthorized) {
           clearAuth();
@@ -53,6 +51,7 @@ export function useLecturerAnalyticsOverview(period: DateRangeKey) {
 
         setForbidden(parsed.forbidden);
         setError(parsed.message);
+        setErrorHint(parsed.hint ?? '');
         setOverview(null);
       } finally {
         setLoading(false);
@@ -85,6 +84,7 @@ export function useLecturerAnalyticsOverview(period: DateRangeKey) {
     report,
     loading: period !== 'custom' && loading,
     error,
+    errorHint,
     forbidden,
     reload: () => {
       if (period !== 'custom') void loadOverview(period);

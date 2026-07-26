@@ -16,7 +16,7 @@ const LecturerIntegrityReportsPage = () => {
   const { institutionalId, email, initials } = useAuthProfile();
 
   const [dateRange, setDateRange] = useState<DateRangeKey>('7d');
-  const { report, loading, error, forbidden, reload } = useLecturerAnalyticsOverview(dateRange);
+  const { report, loading, error, errorHint, forbidden, reload } = useLecturerAnalyticsOverview(dateRange);
 
   useEffect(() => {
     document.title = 'Integrity Reports — Observerr Lecturer';
@@ -58,8 +58,15 @@ const LecturerIntegrityReportsPage = () => {
         )}
 
         {(error || forbidden) && !loading && (
-          <div className="rounded-xl border border-student-error-container bg-student-error-container/30 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <p className="font-student text-student-body-md text-student-on-error-container">{error}</p>
+          <div className="rounded-xl border border-student-error-container bg-student-error-container/30 px-4 py-3 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div className="min-w-0">
+              <p className="font-student text-student-body-md text-student-on-error-container">{error}</p>
+              {errorHint && (
+                <p className="font-student text-student-label-md text-student-on-error-container/80 mt-1">
+                  {errorHint}
+                </p>
+              )}
+            </div>
             {!forbidden && (
               <button
                 type="button"

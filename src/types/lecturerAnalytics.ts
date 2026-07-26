@@ -1,3 +1,9 @@
+export type AnalyticsApiError = {
+  error: string;
+  message: string;
+  timestamp: string;
+};
+
 export type AnalyticsPeriod = '7D' | '30D' | '3M';
 
 export type AnalyticsChangeDirection = 'UP' | 'DOWN' | 'STABLE';
