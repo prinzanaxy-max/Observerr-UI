@@ -1,9 +1,22 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type RefObject,
+} from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import ExamSessionHeader from '../components/student/exam/ExamSessionHeader';
 import ExamQuestionPanel from '../components/student/exam/ExamQuestionPanel';
 import ExamSessionNav from '../components/student/exam/ExamSessionNav';
+import IntegrityCalibrationOverlay from '../components/student/exam/IntegrityCalibrationOverlay';
+import IntegrityMonitorErrorBoundary from '../components/student/exam/IntegrityMonitorErrorBoundary';
+import ProctoringStatusBanner from '../components/student/exam/ProctoringStatusBanner';
+import { useIntegrityMonitor } from '../hooks/useIntegrityMonitor';
+import { useIntegrityScore } from '../hooks/useIntegrityScore';
 import { getStudentExamDetail } from '../data/studentExamSessionData';
+import type { IntegrityEvent } from '../types/integrityMonitoring';
 
 const formatTime = (totalSeconds: number) => {
   const h = Math.floor(totalSeconds / 3600);
@@ -15,18 +28,92 @@ const formatTime = (totalSeconds: number) => {
   return `${m}:${String(s).padStart(2, '0')}`;
 };
 
+type ExamSessionWithMonitorProps = {
+  videoRef: RefObject<HTMLVideoElement | null>;
+  examContainerRef: RefObject<HTMLDivElement | null>;
+  onIntegrityEvent: (event: IntegrityEvent) => void;
+  integrityScore: number;
+  calibrationDone: boolean;
+  onCalibrationDone: () => void;
+  children: React.ReactNode;
+};
+
+function ExamSessionWithMonitor({
+  videoRef,
+  examContainerRef,
+  onIntegrityEvent,
+  integrityScore,
+  calibrationDone,
+  onCalibrationDone,
+  children,
+}: ExamSessionWithMonitorProps) {
+  const monitor = useIntegrityMonitor({
+    videoRef,
+    examContainerRef,
+    enabled: true,
+    onIntegrityEvent,
+    blockClipboard: true,
+  });
+
+  useEffect(() => {
+    if (monitor.status === 'unavailable' || monitor.status === 'permission_denied') {
+      onCalibrationDone();
+    }
+  }, [monitor.status, onCalibrationDone]);
+
+  const showCalibration =
+    !calibrationDone &&
+    monitor.status !== 'unavailable' &&
+    monitor.status !== 'permission_denied';
+
+  const bannerStatus = useMemo(() => {
+    if (monitor.status === 'permission_denied') return 'permission_denied' as const;
+    if (monitor.status === 'unavailable') return 'unavailable' as const;
+    if (!calibrationDone || monitor.status === 'loading') return 'loading' as const;
+    return 'monitoring' as const;
+  }, [calibrationDone, monitor.status]);
+
+  return (
+    <div ref={examContainerRef} className="student-exam-pre h-dvh flex flex-col font-student text-student-on-surface antialiased">
+      {/* Hidden capture — landmarks only; raw video never sent to backend */}
+      <video ref={videoRef} className="sr-only" aria-hidden playsInline muted />
+
+      {showCalibration && (
+        <IntegrityCalibrationOverlay
+          onCalibrate={monitor.calibrate}
+          onComplete={onCalibrationDone}
+        />
+      )}
+
+      <ProctoringStatusBanner
+        status={bannerStatus}
+        integrityScore={integrityScore}
+        message={monitor.error}
+      />
+
+      {children}
+    </div>
+  );
+}
+
 const StudentExamSessionPage = () => {
   const { examId } = useParams<{ examId: string }>();
   const navigate = useNavigate();
   const id = Number(examId);
   const exam = Number.isNaN(id) ? undefined : getStudentExamDetail(id);
 
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const examContainerRef = useRef<HTMLDivElement>(null);
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [calibrationDone, setCalibrationDone] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(() =>
     exam ? exam.durationMinutes * 60 : 0,
   );
+
+  const { score: integrityScore, handleIntegrityEvent } = useIntegrityScore();
 
   useEffect(() => {
     if (exam) {
@@ -36,7 +123,7 @@ const StudentExamSessionPage = () => {
   }, [exam]);
 
   useEffect(() => {
-    if (!exam || submitted) return undefined;
+    if (!exam || submitted || !calibrationDone) return undefined;
     const timer = window.setInterval(() => {
       setSecondsLeft((prev) => {
         if (prev <= 1) {
@@ -48,7 +135,7 @@ const StudentExamSessionPage = () => {
       });
     }, 1000);
     return () => window.clearInterval(timer);
-  }, [exam, submitted]);
+  }, [exam, submitted, calibrationDone]);
 
   const questions = exam?.questions ?? [];
   const currentQuestion = questions[currentIndex];
@@ -92,6 +179,9 @@ const StudentExamSessionPage = () => {
           <p className="text-student-body-md font-student text-student-on-surface-variant mb-2">
             You answered {answeredCount} of {questions.length} questions.
           </p>
+          <p className="text-student-body-md font-student text-student-on-surface-variant mb-2">
+            Integrity score: {integrityScore}%
+          </p>
           <p className="text-student-body-md font-student text-student-on-surface-variant mb-8">
             Your responses have been recorded. Results will appear when your instructor publishes them.
           </p>
@@ -112,63 +202,74 @@ const StudentExamSessionPage = () => {
   }
 
   return (
-    <div className="student-exam-pre h-dvh flex flex-col font-student text-student-on-surface antialiased">
-      <ExamSessionHeader
-        title={exam.title}
-        courseCode={exam.courseCode}
-        currentQuestion={currentIndex + 1}
-        totalQuestions={questions.length}
-        timeRemaining={formatTime(secondsLeft)}
-        examId={exam.id}
-      />
+    <IntegrityMonitorErrorBoundary>
+      <ExamSessionWithMonitor
+        videoRef={videoRef}
+        examContainerRef={examContainerRef}
+        onIntegrityEvent={handleIntegrityEvent}
+        integrityScore={integrityScore}
+        calibrationDone={calibrationDone}
+        onCalibrationDone={() => setCalibrationDone(true)}
+      >
+        <ExamSessionHeader
+          title={exam.title}
+          courseCode={exam.courseCode}
+          currentQuestion={currentIndex + 1}
+          totalQuestions={questions.length}
+          timeRemaining={formatTime(secondsLeft)}
+          examId={exam.id}
+        />
 
-      <main className="flex-1 overflow-y-auto py-6 px-4 sm:px-6 pb-28 student-hide-scrollbar">
-        <div className="max-w-[900px] mx-auto">
-          <div className="sm:hidden mb-4 flex items-center gap-2 text-student-label-md font-student text-student-on-surface-variant">
-            <span className="px-3 py-1 rounded-full bg-student-surface-container-high">{formatTime(secondsLeft)} remaining</span>
-            <span>{answeredCount}/{questions.length} answered</span>
+        <main className="flex-1 overflow-y-auto py-6 px-4 sm:px-6 pb-28 student-hide-scrollbar">
+          <div className="max-w-[900px] mx-auto">
+            <div className="sm:hidden mb-4 flex items-center gap-2 text-student-label-md font-student text-student-on-surface-variant">
+              <span className="px-3 py-1 rounded-full bg-student-surface-container-high">
+                {formatTime(secondsLeft)} remaining
+              </span>
+              <span>{answeredCount}/{questions.length} answered</span>
+            </div>
+
+            <ExamQuestionPanel
+              question={currentQuestion}
+              answer={currentAnswer}
+              onAnswerChange={handleAnswerChange}
+            />
+
+            <div className="mt-6 flex flex-wrap gap-2 justify-center">
+              {questions.map((q, idx) => {
+                const hasAnswer = (answers[q.id] ?? '').trim().length > 0;
+                return (
+                  <button
+                    key={q.id}
+                    type="button"
+                    onClick={() => setCurrentIndex(idx)}
+                    className={`w-9 h-9 rounded-full text-sm font-student font-semibold transition-colors ${
+                      idx === currentIndex
+                        ? 'bg-student-primary text-student-on-primary'
+                        : hasAnswer
+                          ? 'bg-student-primary-container text-student-on-primary-container'
+                          : 'bg-student-surface-container-high text-student-on-surface-variant hover:bg-student-surface-container'
+                    }`}
+                    aria-label={`Go to question ${q.number}`}
+                  >
+                    {q.number}
+                  </button>
+                );
+              })}
+            </div>
           </div>
+        </main>
 
-          <ExamQuestionPanel
-            question={currentQuestion}
-            answer={currentAnswer}
-            onAnswerChange={handleAnswerChange}
-          />
-
-          <div className="mt-6 flex flex-wrap gap-2 justify-center">
-            {questions.map((q, idx) => {
-              const hasAnswer = (answers[q.id] ?? '').trim().length > 0;
-              return (
-                <button
-                  key={q.id}
-                  type="button"
-                  onClick={() => setCurrentIndex(idx)}
-                  className={`w-9 h-9 rounded-full text-sm font-student font-semibold transition-colors ${
-                    idx === currentIndex
-                      ? 'bg-student-primary text-student-on-primary'
-                      : hasAnswer
-                        ? 'bg-student-primary-container text-student-on-primary-container'
-                        : 'bg-student-surface-container-high text-student-on-surface-variant hover:bg-student-surface-container'
-                  }`}
-                  aria-label={`Go to question ${q.number}`}
-                >
-                  {q.number}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </main>
-
-      <ExamSessionNav
-        currentIndex={currentIndex}
-        totalQuestions={questions.length}
-        onPrevious={handlePrevious}
-        onNext={handleNext}
-        onSubmit={handleSubmit}
-        canSubmit={answeredCount > 0}
-      />
-    </div>
+        <ExamSessionNav
+          currentIndex={currentIndex}
+          totalQuestions={questions.length}
+          onPrevious={handlePrevious}
+          onNext={handleNext}
+          onSubmit={handleSubmit}
+          canSubmit={answeredCount > 0}
+        />
+      </ExamSessionWithMonitor>
+    </IntegrityMonitorErrorBoundary>
   );
 };
 
