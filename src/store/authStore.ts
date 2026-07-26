@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import * as authService from '../services/authService';
+import * as accountService from '../services/accountService';
 import { clearAuthSession, getStoredAccessToken, persistAuthSession, setStoredAccessToken } from '../lib/authSessionStorage';
 import { refreshAuthSession } from '../lib/authRefresh';
 import type {
@@ -148,8 +149,19 @@ const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
   fetchCurrentUser: async () => {
     try {
       const user = await authService.getMe();
+      let profilePictureUrl = user.profilePictureUrl ?? null;
+
+      if (!profilePictureUrl) {
+        try {
+          const account = await accountService.fetchAccount();
+          profilePictureUrl = account.profilePictureUrl ?? null;
+        } catch {
+          // Account endpoint optional for profile picture hydration
+        }
+      }
+
       set({
-        user,
+        user: { ...user, profilePictureUrl },
         role: user.role,
         institutionalId: user.institutionalId,
         isAuthenticated: true,

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import useAuthStore from '../store/authStore';
-import { getInitialsFromId } from '../lib/profileUtils';
+import { getInitialsFromId, resolveProfilePictureUrl } from '../lib/profileUtils';
 
 export function useAuthProfile() {
   const user = useAuthStore((s) => s.user);
@@ -8,7 +8,7 @@ export function useAuthProfile() {
 
   const institutionalId = user?.institutionalId ?? sessionId ?? '—';
   const email = user?.email ?? '';
-  const profilePictureUrl = user?.profilePictureUrl ?? null;
+  const profilePictureUrl = resolveProfilePictureUrl(user?.profilePictureUrl);
   const initials = useMemo(() => getInitialsFromId(institutionalId), [institutionalId]);
 
   return { user, institutionalId, email, initials, profilePictureUrl };

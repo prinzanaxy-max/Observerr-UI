@@ -1,4 +1,5 @@
-import { memo } from 'react';
+import { memo, useEffect, useState } from 'react';
+import { resolveProfilePictureUrl } from '../../lib/profileUtils';
 
 const sizeClasses = {
   xs: 'w-8 h-8 text-xs',
@@ -23,12 +24,19 @@ const StudentAvatar = memo(({
   alt = 'Profile photo',
 }: StudentAvatarProps) => {
   const sizeClass = sizeClasses[size];
+  const resolvedSrc = resolveProfilePictureUrl(src);
+  const [imageFailed, setImageFailed] = useState(false);
 
-  if (src) {
+  useEffect(() => {
+    setImageFailed(false);
+  }, [resolvedSrc]);
+
+  if (resolvedSrc && !imageFailed) {
     return (
       <img
-        src={src}
+        src={resolvedSrc}
         alt={alt}
+        onError={() => setImageFailed(true)}
         className={`${sizeClass} rounded-full object-cover border border-student-outline-variant shrink-0 ${className}`}
       />
     );

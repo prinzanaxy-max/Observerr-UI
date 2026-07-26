@@ -1,6 +1,8 @@
 import { memo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuthProfile } from '../../hooks/useAuthProfile';
 import Icon from '../student/Icon';
+import StudentAvatar from '../student/StudentAvatar';
 import LogoutActions from '../auth/LogoutActions';
 import { PORTAL_FOOTER_NAV, PORTAL_NAV } from '../../data/lecturerPortalNav';
 
@@ -16,6 +18,7 @@ const isActivePath = (pathname: string, path: string) =>
 
 const LecturerPortalSidebar = memo(({ institutionalId, email, initials, onNewExam }: LecturerPortalSidebarProps) => {
   const { pathname } = useLocation();
+  const { profilePictureUrl } = useAuthProfile();
 
   return (
     <aside className="hidden md:flex w-[240px] shrink-0 flex-col h-full bg-student-surface shadow-[0px_10px_30px_rgba(0,0,0,0.05)] z-10 p-4">
@@ -86,9 +89,7 @@ const LecturerPortalSidebar = memo(({ institutionalId, email, initials, onNewExa
         })}
 
         <div className="flex items-center gap-3 px-4 py-3 mt-2 min-w-0">
-          <div className="w-8 h-8 rounded-full shrink-0 bg-student-primary-container flex items-center justify-center text-student-on-primary-container text-xs font-bold border-2 border-student-surface-variant">
-            {initials}
-          </div>
+          <StudentAvatar src={profilePictureUrl} initials={initials} size="xs" />
           <div className="min-w-0">
             <span className="block text-student-body-md font-student font-medium text-student-on-surface truncate">{institutionalId}</span>
             {email && (

@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { resolveProfilePictureUrl } from '../lib/profileUtils';
 import { useNavigate } from 'react-router-dom';
 import { mapAccountApiError } from '../lib/accountErrors';
 import { validateProfileImage } from '../lib/imageUtils';
@@ -16,8 +17,9 @@ export function useProfilePicture(initialUrl?: string | null) {
   const [removing, setRemoving] = useState(false);
   const [photoError, setPhotoError] = useState('');
 
-  const profilePictureUrl =
-    localPictureUrl !== undefined ? localPictureUrl : authPictureUrl;
+  const profilePictureUrl = resolveProfilePictureUrl(
+    localPictureUrl !== undefined ? localPictureUrl : authPictureUrl,
+  );
 
   const syncPictureUrl = useCallback(
     (url: string | null) => {
