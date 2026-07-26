@@ -85,12 +85,14 @@ const behaviorStyles = (tone: AnalyticsTopBehavior['tone']) => {
 };
 
 export function mapAnalyticsOverviewToView(data: LecturerAnalyticsOverviewResponse): AnalyticsOverviewView {
-  const maxMonitored = Math.max(...data.trends.points.map((p) => p.monitoredSessions), 1);
-  const totalBehaviorEvents = data.topBehaviors.reduce((sum, b) => sum + b.eventCount, 0);
+  const points = data.trends?.points ?? [];
+  const topBehaviors = data.topBehaviors ?? [];
+  const maxMonitored = Math.max(...points.map((p) => p.monitoredSessions), 1);
+  const totalBehaviorEvents = topBehaviors.reduce((sum, b) => sum + b.eventCount, 0);
 
   return {
-    trendTitle: data.trends.title,
-    trendSubtitle: data.trends.subtitle,
+    trendTitle: data.trends?.title ?? 'Integrity Event Trends',
+    trendSubtitle: data.trends?.subtitle ?? 'Daily flagged events vs monitored sessions',
     summary: [
       mapSummaryMetric(
         'exams',
@@ -146,13 +148,13 @@ export function mapAnalyticsOverviewToView(data: LecturerAnalyticsOverviewRespon
         },
       ),
     ],
-    trend: data.trends.points.map((point) => ({
+    trend: points.map((point) => ({
       label: point.label,
       sessionsPct: (point.monitoredSessions / maxMonitored) * 100,
       flagsPct: (point.flaggedEvents / maxMonitored) * 100,
       critical: point.alert,
     })),
-    behaviors: data.topBehaviors.map((behavior) => {
+    behaviors: topBehaviors.map((behavior) => {
       const styles = behaviorStyles(behavior.tone);
       return {
         id: behavior.behaviorCode,

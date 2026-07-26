@@ -1,6 +1,6 @@
-import { AxiosError } from 'axios';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { parseApiError } from '../lib/apiErrorMessage';
 import type { DateRangeKey } from '../data/integrityReportsData';
 import {
   mapAnalyticsOverviewToView,
@@ -31,22 +31,28 @@ export function useLecturerAnalyticsOverview(period: DateRangeKey) {
         );
         setOverview(mapAnalyticsOverviewToView(data));
       } catch (err) {
-        if (err instanceof AxiosError) {
-          const status = err.response?.status;
-          if (status === 401) {
-            clearAuth();
-            navigate('/auth', { replace: true });
-            return;
-          }
-          if (status === 403) {
-            setForbidden(true);
-            setError('You do not have permission to view analytics.');
-          } else {
-            setError('Could not load analytics. Please try again.');
-          }
-        } else {
-          setError('Could not load analytics. Please try again.');
+        console.error('[Analytics] load failed', err);
+
+        if (err instanceof Error && err.message.startsWith('Analytics response')) {
+          setError(`${err.message} — backend JSON may not match the contract.`);
+          setOverview(null);
+          return;
         }
+
+        const parsed = parseApiError(
+          err,
+          'Could not load analytics. Please try again.',
+          'You do not have permission to view analytics.',
+        );
+
+        if (parsed.unauthorized) {
+          clearAuth();
+          navigate('/auth', { replace: true });
+          return;
+        }
+
+        setForbidden(parsed.forbidden);
+        setError(parsed.message);
         setOverview(null);
       } finally {
         setLoading(false);
