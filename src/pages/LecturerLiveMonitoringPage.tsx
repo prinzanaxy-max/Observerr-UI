@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useAuthProfile } from '../hooks/useAuthProfile';
 import { useLecturerExam } from '../hooks/useLecturerExam';
+import { useLecturerLiveSessions } from '../hooks/useLecturerLiveSessions';
 import { computeRemainingSeconds, formatExamTitle } from '../lib/lecturerExamsUtils';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
 import LiveMonitoringHeader from '../components/lecturer/LiveMonitoringHeader';
@@ -9,12 +10,7 @@ import MonitoringStatsCards from '../components/lecturer/MonitoringStatsCards';
 import MonitoringFilterBar from '../components/lecturer/MonitoringFilterBar';
 import MonitoringStudentTable from '../components/lecturer/MonitoringStudentTable';
 import Icon from '../components/student/Icon';
-import {
-  LIVE_SESSION_STATS,
-  MONITORED_STUDENTS,
-  type MonitoredStudent,
-  type RiskFilter,
-} from '../data/liveMonitoringData';
+import type { MonitoredStudent, RiskFilter } from '../data/liveMonitoringData';
 import { CREATE_EXAM_PATH } from '../data/createExamData';
 
 const LecturerLiveMonitoringPage = () => {
@@ -31,7 +27,25 @@ const LecturerLiveMonitoringPage = () => {
     return Number.isNaN(parsed) ? null : parsed;
   }, [examIdParam]);
 
-  const { exam, loading, error, forbidden, notFound, reload } = useLecturerExam(examId);
+  const { exam, loading: examLoading, error: examError, forbidden: examForbidden, notFound: examNotFound, reload: reloadExam } = useLecturerExam(examId);
+  const {
+    students: monitoredStudents,
+    stats: sessionStats,
+    loading: sessionsLoading,
+    error: sessionsError,
+    forbidden: sessionsForbidden,
+    notFound: sessionsNotFound,
+    reload: reloadSessions,
+  } = useLecturerLiveSessions(examId);
+
+  const loading = examLoading || sessionsLoading;
+  const error = examError || sessionsError;
+  const forbidden = examForbidden || sessionsForbidden;
+  const notFound = examNotFound || sessionsNotFound;
+  const reload = useCallback(() => {
+    void reloadExam();
+    void reloadSessions();
+  }, [reloadExam, reloadSessions]);
 
   const examTitle = exam ? formatExamTitle(exam) : loading ? 'Loading exam…' : 'Live Exam';
   const initialSeconds = exam
@@ -44,7 +58,7 @@ const LecturerLiveMonitoringPage = () => {
 
   const filteredStudents = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return MONITORED_STUDENTS.filter((student) => {
+    return monitoredStudents.filter((student) => {
       if (riskFilter !== 'all' && student.risk !== riskFilter) return false;
       if (!q) return true;
       return (
@@ -53,15 +67,19 @@ const LecturerLiveMonitoringPage = () => {
         (student.lastEvent?.toLowerCase().includes(q) ?? false)
       );
     });
-  }, [riskFilter, searchQuery]);
+  }, [monitoredStudents, riskFilter, searchQuery]);
 
   const handleEndExam = useCallback(() => setEndConfirm(true), []);
   const confirmEndExam = useCallback(() => navigate('/lecturer/exams'), [navigate]);
   const handleViewTimeline = useCallback(
     (student: MonitoredStudent) => {
-      navigate(`/lecturer/exams/${examId}/students/${student.id}/timeline`);
+      if (student.latestSessionId) {
+        navigate(`/lecturer/students/sessions/${student.latestSessionId}`);
+        return;
+      }
+      navigate(`/lecturer/students/${student.id}/timeline`);
     },
-    [navigate, examId],
+    [navigate],
   );
   const handleWatchFeed = useCallback(
     (student: MonitoredStudent) => {
@@ -114,7 +132,15 @@ const LecturerLiveMonitoringPage = () => {
           </div>
         ) : (
           <>
-            <MonitoringStatsCards stats={LIVE_SESSION_STATS} />
+            {sessionStats ? (
+              <MonitoringStatsCards stats={sessionStats} />
+            ) : loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 animate-pulse">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="h-28 bg-student-surface-container-high rounded-brand" />
+                ))}
+              </div>
+            ) : null}
             <MonitoringFilterBar
               activeFilter={riskFilter}
               searchQuery={searchQuery}

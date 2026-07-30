@@ -23,7 +23,7 @@ const ProctoringMainFeed = memo(({
 }: ProctoringMainFeedProps) => (
   <section className="bg-student-surface rounded-[24px] lecturer-card-elevation overflow-hidden flex flex-col">
     <div className="relative aspect-video bg-student-inverse-surface overflow-hidden">
-      {feed.cameraOn ? (
+      {feed.cameraOn && feed.feedPreview ? (
         <>
           <img
             src={feed.feedPreview}

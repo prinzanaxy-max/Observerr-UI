@@ -1,6 +1,7 @@
 import { memo, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Icon from '../student/Icon';
-import { LIVE_EXAM } from '../../data/lecturerDashboardData';
+import type { DashboardLiveExam } from '../../types/lecturerDashboard';
 
 const formatRemaining = (totalSeconds: number) => {
   const mins = Math.floor(totalSeconds / 60);
@@ -8,15 +9,40 @@ const formatRemaining = (totalSeconds: number) => {
   return `${mins}:${secs.toString().padStart(2, '0')} remaining`;
 };
 
-const LiveExamCard = memo(() => {
-  const [secondsLeft, setSecondsLeft] = useState(LIVE_EXAM.initialSeconds);
+type LiveExamCardProps = {
+  liveExam: DashboardLiveExam | null;
+  loading?: boolean;
+};
+
+const LiveExamCard = memo(({ liveExam, loading = false }: LiveExamCardProps) => {
+  const navigate = useNavigate();
+  const [secondsLeft, setSecondsLeft] = useState(liveExam?.remainingSeconds ?? 0);
 
   useEffect(() => {
+    setSecondsLeft(liveExam?.remainingSeconds ?? 0);
+  }, [liveExam?.remainingSeconds]);
+
+  useEffect(() => {
+    if (!liveExam) return undefined;
     const id = window.setInterval(() => {
       setSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => window.clearInterval(id);
-  }, []);
+  }, [liveExam]);
+
+  if (loading) {
+    return (
+      <section className="lecturer-gradient-brand p-6 sm:p-8 rounded-brand min-h-[200px] animate-pulse opacity-80" />
+    );
+  }
+
+  if (!liveExam) {
+    return null;
+  }
+
+  const openLive = () => {
+    navigate(`/lecturer/exams/${liveExam.examId}/live`);
+  };
 
   return (
     <section className="lecturer-gradient-brand p-6 sm:p-8 rounded-brand shadow-[0px_10px_30px_rgba(0,0,0,0.05)] relative overflow-hidden">
@@ -33,13 +59,14 @@ const LiveExamCard = memo(() => {
               </span>
             </div>
             <h3 className="text-student-headline-md font-student text-student-on-primary-fixed font-extrabold tracking-tight">
-              {LIVE_EXAM.title}
+              {liveExam.title}
             </h3>
           </div>
           <button
             type="button"
+            onClick={openLive}
             className="bg-white/20 hover:bg-white/30 backdrop-blur-md p-3 rounded-full text-student-on-primary-fixed transition-colors shrink-0"
-            aria-label="Expand live exam view"
+            aria-label="Open live monitoring"
           >
             <Icon name="open_in_full" />
           </button>
@@ -47,9 +74,13 @@ const LiveExamCard = memo(() => {
 
         <div className="flex flex-wrap gap-4">
           {[
-            { label: 'Active', value: LIVE_EXAM.active, tone: 'text-student-primary' },
-            { label: 'High Risk', value: LIVE_EXAM.highRisk, tone: 'text-student-error' },
-            { label: 'Avg Score', value: `${LIVE_EXAM.avgScore}%`, tone: 'text-student-primary' },
+            { label: 'Active', value: liveExam.activeStudents, tone: 'text-student-primary' },
+            { label: 'High Risk', value: liveExam.highRiskCount, tone: 'text-student-error' },
+            {
+              label: 'Avg Score',
+              value: `${Math.round(liveExam.avgIntegrityScore)}%`,
+              tone: 'text-student-primary',
+            },
           ].map((stat) => (
             <div key={stat.label} className="bg-white/90 px-5 py-3 rounded-2xl flex flex-col min-w-[100px]">
               <span className="text-student-label-md font-student text-student-on-surface-variant uppercase font-bold tracking-widest">

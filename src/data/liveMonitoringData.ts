@@ -11,6 +11,7 @@ export type MonitoredStudent = {
   risk: 'high' | 'medium' | 'low';
   lastEvent: string | null;
   highlighted?: boolean;
+  latestSessionId?: string | number | null;
 };
 
 export type LiveSessionStats = {

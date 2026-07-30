@@ -1,16 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthProfile } from '../hooks/useAuthProfile';
+import { useLecturerProctoring } from '../hooks/useLecturerProctoring';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
 import ProctoringPageHeader from '../components/lecturer/ProctoringPageHeader';
 import ProctoringMainFeed from '../components/lecturer/ProctoringMainFeed';
 import ProctoringStudentRail from '../components/lecturer/ProctoringStudentRail';
-import {
-  PROCTORING_EXAMS,
-  PROCTORING_FEEDS,
-  PROCTORING_TIMER_SECONDS,
-  type ProctoringFeed,
-} from '../data/proctoringData';
+import type { ProctoringFeed } from '../data/proctoringData';
 import { CREATE_EXAM_PATH } from '../data/createExamData';
 
 const LecturerProctoringPage = () => {
@@ -18,44 +14,47 @@ const LecturerProctoringPage = () => {
   const [searchParams] = useSearchParams();
   const { institutionalId, email, initials } = useAuthProfile();
 
-  const initialStudentId = searchParams.get('student') ?? PROCTORING_FEEDS[0]?.id ?? '';
-  const [selectedExamId, setSelectedExamId] = useState(PROCTORING_EXAMS[0]?.id ?? 1);
-  const [selectedFeedId, setSelectedFeedId] = useState(initialStudentId);
+  const [selectedExamId, setSelectedExamId] = useState<number | null>(null);
+  const [selectedFeedId, setSelectedFeedId] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [audioMuted, setAudioMuted] = useState(false);
+
+  const { exams, feeds, loading, error, reloadExams } = useLecturerProctoring(selectedExamId);
 
   useEffect(() => {
     document.title = 'Live Proctoring — Observerr Lecturer';
   }, []);
 
   useEffect(() => {
-    const studentParam = searchParams.get('student');
-    if (studentParam && PROCTORING_FEEDS.some((feed) => feed.id === studentParam)) {
-      setSelectedFeedId(studentParam);
+    if (exams.length > 0 && selectedExamId === null) {
+      setSelectedExamId(exams[0].id);
     }
-  }, [searchParams]);
+  }, [exams, selectedExamId]);
+
+  useEffect(() => {
+    const studentParam = searchParams.get('student');
+    if (studentParam && feeds.some((feed) => feed.id === studentParam)) {
+      setSelectedFeedId(studentParam);
+    } else if (feeds.length > 0 && !feeds.some((f) => f.id === selectedFeedId)) {
+      setSelectedFeedId(feeds[0].id);
+    }
+  }, [feeds, searchParams, selectedFeedId]);
 
   const filteredFeeds = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return PROCTORING_FEEDS;
-    return PROCTORING_FEEDS.filter(
+    if (!q) return feeds;
+    return feeds.filter(
       (feed) =>
         feed.name.toLowerCase().includes(q) ||
         feed.id.includes(q) ||
         feed.liveStatusLabel.toLowerCase().includes(q),
     );
-  }, [searchQuery]);
+  }, [feeds, searchQuery]);
 
   const selectedFeed = useMemo(
-    () => PROCTORING_FEEDS.find((feed) => feed.id === selectedFeedId) ?? PROCTORING_FEEDS[0],
-    [selectedFeedId],
+    () => filteredFeeds.find((feed) => feed.id === selectedFeedId) ?? filteredFeeds[0],
+    [filteredFeeds, selectedFeedId],
   );
-
-  useEffect(() => {
-    if (filteredFeeds.length > 0 && !filteredFeeds.some((f) => f.id === selectedFeedId)) {
-      setSelectedFeedId(filteredFeeds[0].id);
-    }
-  }, [filteredFeeds, selectedFeedId]);
 
   const handleSelectFeed = useCallback((feed: ProctoringFeed) => {
     setSelectedFeedId(feed.id);
@@ -63,15 +62,18 @@ const LecturerProctoringPage = () => {
   }, []);
 
   const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
-  const handleExamChange = useCallback((examId: number) => setSelectedExamId(examId), []);
+  const handleExamChange = useCallback((examId: number) => {
+    setSelectedExamId(examId);
+    setSelectedFeedId('');
+  }, []);
   const handleToggleAudio = useCallback(() => setAudioMuted((prev) => !prev), []);
   const handleViewTimeline = useCallback(() => {
-    if (selectedFeed) {
-      navigate(`/lecturer/students/${selectedFeed.id}/timeline`);
+    if (selectedFeed?.sessionId) {
+      navigate(`/lecturer/students/sessions/${selectedFeed.sessionId}`);
     }
-  }, [navigate, selectedFeed]);
+  }, [navigate, selectedFeed?.sessionId]);
 
-  if (PROCTORING_EXAMS.length === 0) {
+  if (!loading && exams.length === 0) {
     return (
       <LecturerPortalLayout
         institutionalId={institutionalId}
@@ -85,6 +87,16 @@ const LecturerProctoringPage = () => {
           <p className="text-student-body-md font-student text-student-on-surface-variant mb-6">
             Start or join a live exam session to monitor student feeds.
           </p>
+          {error && (
+            <p className="text-student-error font-student text-student-body-md mb-4">{error}</p>
+          )}
+          <button
+            type="button"
+            onClick={() => void reloadExams()}
+            className="mr-3 px-6 py-3 rounded-full border border-student-primary text-student-primary font-student font-bold"
+          >
+            Retry
+          </button>
           <button
             type="button"
             onClick={() => navigate('/lecturer/exams')}
@@ -105,35 +117,41 @@ const LecturerProctoringPage = () => {
       onNewExam={() => navigate(CREATE_EXAM_PATH)}
       contentClassName="lecturer-exams-bg"
       header={
-        <ProctoringPageHeader
-          exams={PROCTORING_EXAMS}
-          selectedExamId={selectedExamId}
-          initialSeconds={PROCTORING_TIMER_SECONDS}
-          onExamChange={handleExamChange}
-          initials={initials}
-        />
+        selectedExamId !== null ? (
+          <ProctoringPageHeader
+            exams={exams}
+            selectedExamId={selectedExamId}
+            initialSeconds={0}
+            onExamChange={handleExamChange}
+            initials={initials}
+          />
+        ) : undefined
       }
     >
       <div className="p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto w-full pb-12">
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-5 min-h-0">
-          {selectedFeed && (
-            <ProctoringMainFeed
-              feed={selectedFeed}
-              audioMuted={audioMuted}
-              onToggleAudio={handleToggleAudio}
-              onViewTimeline={handleViewTimeline}
-              onWarn={() => {}}
-            />
-          )}
+        {loading && feeds.length === 0 ? (
+          <div className="h-96 rounded-[24px] bg-student-surface-container-high animate-pulse" />
+        ) : (
+          <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-5 min-h-0">
+            {selectedFeed && (
+              <ProctoringMainFeed
+                feed={selectedFeed}
+                audioMuted={audioMuted}
+                onToggleAudio={handleToggleAudio}
+                onViewTimeline={handleViewTimeline}
+                onWarn={() => {}}
+              />
+            )}
 
-          <ProctoringStudentRail
-            feeds={filteredFeeds}
-            selectedId={selectedFeedId}
-            searchQuery={searchQuery}
-            onSearchChange={handleSearchChange}
-            onSelect={handleSelectFeed}
-          />
-        </div>
+            <ProctoringStudentRail
+              feeds={filteredFeeds}
+              selectedId={selectedFeedId}
+              searchQuery={searchQuery}
+              onSearchChange={handleSearchChange}
+              onSelect={handleSelectFeed}
+            />
+          </div>
+        )}
       </div>
     </LecturerPortalLayout>
   );

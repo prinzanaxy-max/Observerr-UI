@@ -15,6 +15,7 @@ export type ProctoringFeed = {
   lastFlag?: string;
   streamingSince: string;
   seatLabel?: string;
+  sessionId?: string | number;
 };
 
 export type ProctoringExam = {
