@@ -10,16 +10,17 @@ import RecentAlertsPanel from '../components/student/RecentAlertsPanel';
 import {
   RECENT_ALERTS,
   RECENT_RESULTS,
-  UPCOMING_EXAMS,
   type UpcomingExam,
 } from '../data/studentDashboardData';
 import { buildQuickStatRows } from '../lib/studentStatsUtils';
 import { useStudentStats } from '../hooks/useStudentStats';
+import { useStudentExams } from '../hooks/useStudentExams';
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const { stats, loading: statsLoading } = useStudentStats();
+  const { upcomingForDashboard, loading: examsLoading } = useStudentExams();
 
   const quickStatRows = useMemo(
     () => buildQuickStatRows(stats),
@@ -32,14 +33,14 @@ const StudentDashboard = () => {
 
   const filteredExams = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return UPCOMING_EXAMS;
-    return UPCOMING_EXAMS.filter(
+    if (!q) return upcomingForDashboard;
+    return upcomingForDashboard.filter(
       (exam) =>
         exam.title.toLowerCase().includes(q) ||
         exam.courseCode.toLowerCase().includes(q) ||
         exam.professor.toLowerCase().includes(q),
     );
-  }, [searchQuery]);
+  }, [searchQuery, upcomingForDashboard]);
 
   const filteredResults = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -69,7 +70,10 @@ const StudentDashboard = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="lg:w-[65%] space-y-8">
             <IntegrityScoreCard score={stats.avgIntegrity} loading={statsLoading} />
-            <UpcomingExamsSection exams={filteredExams} onExamSelect={handleExamSelect} />
+            <UpcomingExamsSection
+              exams={examsLoading ? [] : filteredExams}
+              onExamSelect={handleExamSelect}
+            />
             <RecentResultsSection results={filteredResults} />
           </div>
 

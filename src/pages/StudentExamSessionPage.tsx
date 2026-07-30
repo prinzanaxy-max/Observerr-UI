@@ -16,7 +16,7 @@ import ProctoringStatusBanner from '../components/student/exam/ProctoringStatusB
 import { useIntegrityMonitor } from '../hooks/useIntegrityMonitor';
 import { useIntegrityScore } from '../hooks/useIntegrityScore';
 import { useIntegritySessionSync } from '../hooks/useIntegritySessionSync';
-import { getStudentExamDetail } from '../data/studentExamSessionData';
+import { useStudentExam } from '../hooks/useStudentExam';
 import type { IntegrityEvent } from '../types/integrityMonitoring';
 
 const formatTime = (totalSeconds: number) => {
@@ -106,7 +106,8 @@ const StudentExamSessionPage = () => {
   const { examId } = useParams<{ examId: string }>();
   const navigate = useNavigate();
   const id = Number(examId);
-  const exam = Number.isNaN(id) ? undefined : getStudentExamDetail(id);
+  const examIdNum = Number.isNaN(id) ? null : id;
+  const { exam, loading } = useStudentExam(examIdNum);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const examContainerRef = useRef<HTMLDivElement>(null);
@@ -118,9 +119,7 @@ const StudentExamSessionPage = () => {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [calibrationDone, setCalibrationDone] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(() =>
-    exam ? exam.durationMinutes * 60 : 0,
-  );
+  const [secondsLeft, setSecondsLeft] = useState(0);
 
   const {
     score: integrityScore,
@@ -219,6 +218,18 @@ const StudentExamSessionPage = () => {
       'Baseline head pose captured for gaze deviation detection.',
     );
   }, [logSessionEvent]);
+
+  if (examIdNum === null) {
+    return <Navigate to="/student/exams" replace />;
+  }
+
+  if (loading) {
+    return (
+      <div className="student-exam-pre h-dvh flex items-center justify-center font-student text-student-on-surface-variant">
+        Loading exam…
+      </div>
+    );
+  }
 
   if (!exam) {
     return <Navigate to="/student/exams" replace />;

@@ -5,12 +5,13 @@ import ExamDetailsCard from '../components/student/exam/ExamDetailsCard';
 import MonitoringNotice from '../components/student/exam/MonitoringNotice';
 import BeforeYouBegin from '../components/student/exam/BeforeYouBegin';
 import ExamPreActionBar from '../components/student/exam/ExamPreActionBar';
-import { getStudentExamDetail } from '../data/studentExamSessionData';
+import { useStudentExam } from '../hooks/useStudentExam';
 
 const StudentExamPrePage = () => {
   const { examId } = useParams<{ examId: string }>();
   const id = Number(examId);
-  const exam = Number.isNaN(id) ? undefined : getStudentExamDetail(id);
+  const examIdNum = Number.isNaN(id) ? null : id;
+  const { exam, loading, error, notFound } = useStudentExam(examIdNum);
 
   useEffect(() => {
     if (exam) {
@@ -18,8 +19,28 @@ const StudentExamPrePage = () => {
     }
   }, [exam]);
 
-  if (!exam) {
+  if (examIdNum === null) {
     return <Navigate to="/student/exams" replace />;
+  }
+
+  if (loading) {
+    return (
+      <div className="student-exam-pre h-dvh flex items-center justify-center font-student text-student-on-surface-variant">
+        Loading exam…
+      </div>
+    );
+  }
+
+  if (notFound || !exam) {
+    return <Navigate to="/student/exams" replace />;
+  }
+
+  if (error && !exam) {
+    return (
+      <div className="student-exam-pre h-dvh flex flex-col items-center justify-center px-6 font-student text-center">
+        <p className="text-student-body-md text-student-on-surface-variant mb-4">{error}</p>
+      </div>
+    );
   }
 
   return (

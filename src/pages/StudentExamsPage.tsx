@@ -4,25 +4,24 @@ import StudentPortalLayout from '../components/student/StudentPortalLayout';
 import ExamsTabControl from '../components/student/ExamsTabControl';
 import StudentExamCard from '../components/student/StudentExamCard';
 import Icon from '../components/student/Icon';
-import {
-  ALL_STUDENT_EXAMS,
-  type ExamListTab,
-  type StudentExam,
-} from '../data/studentExamsData';
+import { useStudentExams } from '../hooks/useStudentExams';
+import type { ExamListTab, StudentExam } from '../data/studentExamsData';
 
 const StudentExamsPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<ExamListTab>('upcoming');
   const [searchQuery, setSearchQuery] = useState('');
+  const { upcomingExams, completedExams, loading, error, reload } = useStudentExams();
 
   useEffect(() => {
     document.title = 'Exams — Observerr';
   }, []);
 
+  const tabExams = activeTab === 'upcoming' ? upcomingExams : completedExams;
+
   const filteredExams = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return ALL_STUDENT_EXAMS.filter((exam) => {
-      if (exam.tab !== activeTab) return false;
+    return tabExams.filter((exam) => {
       if (!q) return true;
       return (
         exam.title.toLowerCase().includes(q) ||
@@ -30,7 +29,7 @@ const StudentExamsPage = () => {
         exam.date.toLowerCase().includes(q)
       );
     });
-  }, [activeTab, searchQuery]);
+  }, [tabExams, searchQuery]);
 
   const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
   const handleTabChange = useCallback((tab: ExamListTab) => setActiveTab(tab), []);
@@ -53,7 +52,24 @@ const StudentExamsPage = () => {
 
         <ExamsTabControl activeTab={activeTab} onTabChange={handleTabChange} />
 
-        {filteredExams.length > 0 ? (
+        {loading ? (
+          <div className="text-center py-16 px-6">
+            <p className="text-student-body-md font-student text-student-on-surface-variant">Loading exams…</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-16 px-6 rounded-[24px] bg-student-surface border border-student-surface-variant">
+            <Icon name="error_outline" className="text-[48px] text-student-error mb-4 mx-auto" />
+            <h2 className="text-student-headline-sm font-student text-student-on-surface mb-2">Could not load exams</h2>
+            <p className="text-student-body-md font-student text-student-on-surface-variant mb-6">{error}</p>
+            <button
+              type="button"
+              onClick={() => void reload()}
+              className="px-6 py-2 rounded-full bg-student-primary text-student-on-primary font-student font-semibold"
+            >
+              Try again
+            </button>
+          </div>
+        ) : filteredExams.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredExams.map((exam) => (
               <StudentExamCard key={exam.id} exam={exam} onAction={handleExamAction} />
