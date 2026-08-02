@@ -4,7 +4,11 @@ import {
   type NotificationPreferences,
   type StoredStudentSettings,
 } from '../data/studentSettingsData';
-import { notifyStudentSettingsChanged, STUDENT_SETTINGS_CHANGED } from '../lib/studentSettingsEvents';
+import { STUDENT_SETTINGS_CHANGED } from '../lib/studentSettingsEvents';
+import {
+  fetchNotificationPreferences,
+  updateNotificationPreferences,
+} from '../services/notificationService';
 import { useAuthProfile } from './useAuthProfile';
 
 const storageKey = (institutionalId: string) => `observerr:student-settings:${institutionalId}`;
@@ -28,12 +32,6 @@ const readStoredSettings = (institutionalId: string, email: string): StoredStude
   }
 };
 
-const writeStoredSettings = (institutionalId: string, settings: StoredStudentSettings) => {
-  if (!institutionalId || institutionalId === '—') return;
-  localStorage.setItem(storageKey(institutionalId), JSON.stringify(settings));
-  notifyStudentSettingsChanged(institutionalId);
-};
-
 export type SaveStatus = 'idle' | 'success' | 'error';
 
 export function useStudentSettings() {
@@ -49,10 +47,32 @@ export function useStudentSettings() {
   }, [institutionalId, email]);
 
   useEffect(() => {
+    let cancelled = false;
+    void fetchNotificationPreferences()
+      .then((notifications) => {
+        if (!cancelled) {
+          setSettings((current) => ({ ...current, notifications }));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSaveStatus('error');
+          setSaveMessage('Could not load notification preferences.');
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     const handler = (event: Event) => {
       const detail = (event as CustomEvent<{ institutionalId: string }>).detail;
       if (detail?.institutionalId === institutionalId) {
-        setSettings(readStoredSettings(institutionalId, email));
+        setSettings((current) => ({
+          ...readStoredSettings(institutionalId, email),
+          notifications: current.notifications,
+        }));
       }
     };
     window.addEventListener(STUDENT_SETTINGS_CHANGED, handler);
@@ -76,24 +96,27 @@ export function useStudentSettings() {
         ...settings,
         notifications: { ...settings.notifications, [key]: value },
       };
-      writeStoredSettings(institutionalId, next);
       setSettings(next);
-      showSuccess('Notification preferences updated.');
     },
-    [clearStatus, institutionalId, settings, showSuccess],
+    [clearStatus, settings],
   );
 
   const saveAllNotifications = useCallback(
     async (notifications: NotificationPreferences) => {
       clearStatus();
-      const next: StoredStudentSettings = { ...settings, notifications };
-      writeStoredSettings(institutionalId, next);
-      setSettings(next);
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      showSuccess('Notification preferences saved.');
-      return true;
+      try {
+        const saved = await updateNotificationPreferences(notifications);
+        const next: StoredStudentSettings = { ...settings, notifications: saved };
+        setSettings(next);
+        showSuccess('Notification preferences saved.');
+        return true;
+      } catch {
+        setSaveStatus('error');
+        setSaveMessage('Could not save notification preferences. Please try again.');
+        return false;
+      }
     },
-    [clearStatus, institutionalId, settings, showSuccess],
+    [clearStatus, settings, showSuccess],
   );
 
   const displayName = useMemo(() => {

@@ -63,6 +63,8 @@ export const mapResultItemToRow = (item: StudentResultItem): StudentResultRow =>
   dateTaken: item.dateTaken,
   timeLabel: formatTimingLabel(item.timing),
   integrityScore: item.integrityScore,
+  score: item.score,
+  maxScore: item.maxScore,
   status: mapApiStatusToDisplay(item.status),
 });
 

@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { Link } from 'react-router-dom';
 import Icon from '../student/Icon';
 
 type ExamsPageHeaderProps = {
@@ -10,13 +11,13 @@ const ExamsPageHeader = memo(({ initials, onGoLive }: ExamsPageHeaderProps) => (
   <header className="hidden md:flex shrink-0 justify-between items-center h-16 px-8 bg-student-surface/80 backdrop-blur-md border-b border-transparent z-20">
     <div className="text-student-headline-md font-student font-semibold text-student-on-surface">Exams Overview</div>
     <div className="flex items-center gap-4">
-      <button
-        type="button"
+      <Link
+        to="/lecturer/settings"
         className="text-student-on-surface-variant hover:text-student-primary transition-colors focus:ring-2 focus:ring-student-primary/20 rounded-full p-2"
-        aria-label="Notifications"
+        aria-label="Notification settings"
       >
         <Icon name="notifications" />
-      </button>
+      </Link>
       <button
         type="button"
         onClick={onGoLive}

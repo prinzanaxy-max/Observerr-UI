@@ -36,7 +36,7 @@ const LecturerStudentsPage = () => {
 
   const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
   const handleCourseChange = useCallback((value: string) => setCourseFilter(value), []);
-  const handleGoLive = useCallback(() => navigate('/lecturer/exams'), []);
+  const handleGoLive = useCallback(() => navigate('/lecturer/exams'), [navigate]);
 
   return (
     <LecturerPortalLayout

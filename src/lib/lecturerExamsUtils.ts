@@ -54,7 +54,26 @@ export const buildCreateExamRequest = (
   course: form.courseId.trim(),
   startAt: formatStartAt(form.startDateTime),
   durationMinutes: Number.parseInt(form.durationMinutes, 10),
+  studentInstitutionalIds: Array.from(
+    new Set(
+      form.studentInstitutionalIdsText
+        .split(/[\s,;]+/)
+        .map((id) => id.trim())
+        .filter(Boolean),
+    ),
+  ),
   security: { ...form.security },
+  questions: form.questions.map((question) => ({
+    text: question.text.trim(),
+    options: {
+      A: question.options.A.trim(),
+      B: question.options.B.trim(),
+      C: question.options.C.trim(),
+      D: question.options.D.trim(),
+    },
+    correctAnswer: question.correctAnswer,
+    points: question.points,
+  })),
   publish,
 });
 
@@ -62,8 +81,21 @@ export const validateCreateExamForm = (form: CreateExamFormState): string | null
   if (!form.title.trim()) return 'Exam title is required.';
   if (!form.courseId.trim()) return 'Associated course is required.';
   if (!form.startDateTime) return 'Start date and time is required.';
+  if (!form.studentInstitutionalIdsText.trim()) {
+    return 'Add at least one student institutional ID before publishing.';
+  }
   const duration = Number.parseInt(form.durationMinutes, 10);
   if (Number.isNaN(duration) || duration < 15) return 'Duration must be at least 15 minutes.';
+  if (!form.questions.length) return 'Add at least one question.';
+  for (const [index, question] of form.questions.entries()) {
+    if (!question.text.trim()) return `Question ${index + 1} needs question text.`;
+    if (Object.values(question.options).some((option) => !option.trim())) {
+      return `Question ${index + 1} needs all four answer options.`;
+    }
+    if (!Number.isInteger(question.points) || question.points < 1) {
+      return `Question ${index + 1} points must be a positive whole number.`;
+    }
+  }
   return null;
 };
 

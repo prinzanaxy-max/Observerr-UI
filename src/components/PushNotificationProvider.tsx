@@ -18,6 +18,10 @@ const PushNotificationToast = memo(({ toast, onDismiss }: PushNotificationToastP
   }, [onDismiss, toast]);
 
   if (!toast) return null;
+  const deepLink =
+    toast.deepLink?.startsWith('/') && !toast.deepLink.startsWith('//')
+      ? toast.deepLink
+      : null;
 
   return (
     <div
@@ -31,6 +35,15 @@ const PushNotificationToast = memo(({ toast, onDismiss }: PushNotificationToastP
         <div className="flex-1 min-w-0">
           <p className="text-student-body-lg font-student font-semibold text-student-on-surface">{toast.title}</p>
           <p className="text-student-body-md font-student text-student-on-surface-variant mt-1">{toast.body}</p>
+          {deepLink && (
+            <button
+              type="button"
+              onClick={() => window.location.assign(deepLink)}
+              className="mt-2 text-student-label-md font-student font-semibold text-student-primary hover:underline"
+            >
+              View details
+            </button>
+          )}
         </div>
         <button
           type="button"

@@ -34,6 +34,7 @@ export type LecturerExamDto = {
   activeFlagsCount?: number;
   startAt: string;
   durationMinutes: number;
+  studentInstitutionalIds: string[];
   security: ExamSecuritySettings;
   detail: ExamDetail | null;
 };
@@ -49,8 +50,29 @@ export type CreateExamRequest = {
   startAt: string;
   durationMinutes: number;
   security: ExamSecuritySettings;
+  questions: {
+    text: string;
+    options: Record<'A' | 'B' | 'C' | 'D', string>;
+    correctAnswer: 'A' | 'B' | 'C' | 'D';
+    points: number;
+  }[];
   publish: boolean;
 };
+
+export type LecturerExamResultItem = {
+  id: number;
+  studentId: number;
+  studentName: string;
+  submittedAt: string;
+  academicScore: number;
+  maxScore: number;
+  percentage: number;
+  integrityScore: number;
+  requiresReview: boolean;
+  status: 'PENDING' | 'RELEASED';
+};
+
+export type LecturerExamResultsResponse = LecturerExamResultItem[];
 
 export type ExamOverview = {
   id: number;

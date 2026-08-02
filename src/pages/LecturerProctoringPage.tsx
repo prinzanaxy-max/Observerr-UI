@@ -148,7 +148,6 @@ const LecturerProctoringPage = () => {
                 audioMuted={audioMuted}
                 onToggleAudio={handleToggleAudio}
                 onViewTimeline={handleViewTimeline}
-                onWarn={() => {}}
                 participant={
                   liveRoom.participants.get(
                     selectedFeed.participantIdentity ??

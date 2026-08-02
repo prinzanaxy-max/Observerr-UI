@@ -41,7 +41,7 @@ const ExamOverviewCard = memo(({ exam, onPrimaryAction, onSelect }: ExamOverview
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-student-primary-fixed to-student-secondary-fixed opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
       )}
 
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex items-start mb-4">
         {isLive ? (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-student-primary text-student-on-primary text-student-label-md font-student">
             <span className="w-2 h-2 rounded-full bg-student-on-primary animate-pulse" />
@@ -52,16 +52,6 @@ const ExamOverviewCard = memo(({ exam, onPrimaryAction, onSelect }: ExamOverview
             {exam.status}
           </span>
         )}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-          className="text-student-on-surface-variant hover:text-student-primary transition-colors"
-          aria-label={`More options for ${exam.title}`}
-        >
-          <Icon name="more_vert" />
-        </button>
       </div>
 
       <h3 className="text-student-headline-sm font-student text-student-on-surface mb-1">{exam.title}</h3>
@@ -120,18 +110,6 @@ const ExamOverviewCard = memo(({ exam, onPrimaryAction, onSelect }: ExamOverview
             View Results
           </button>
         )}
-        <button
-          type="button"
-          onClick={(e) => e.stopPropagation()}
-          className={`flex-none px-4 py-2.5 rounded-full border-[1.5px] transition-colors ${
-            isLive
-              ? 'border-student-primary text-student-primary hover:bg-student-primary/5'
-              : 'border-student-outline text-student-on-surface-variant hover:border-student-primary hover:text-student-primary'
-          }`}
-          aria-label={`Edit ${exam.title}`}
-        >
-          <Icon name="edit" />
-        </button>
       </div>
     </article>
   );

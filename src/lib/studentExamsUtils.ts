@@ -13,25 +13,6 @@ const DEFAULT_INSTRUCTIONS = [
   'Have a valid photo ID ready for verification.',
 ];
 
-/** Placeholder until backend exposes exam questions. */
-export const DEFAULT_LIVE_EXAM_QUESTIONS: ExamQuestion[] = [
-  {
-    id: 1,
-    number: 1,
-    text: 'Answer the following based on the course material covered in this exam.',
-    type: 'short-answer',
-    points: 10,
-  },
-  {
-    id: 2,
-    number: 2,
-    text: 'Select the best answer for this assessment item.',
-    type: 'multiple-choice',
-    options: ['Option A', 'Option B', 'Option C', 'Option D'],
-    points: 5,
-  },
-];
-
 const parseScheduleParts = (schedule: string, startAt: string, endAt: string) => {
   const start = new Date(startAt);
   const end = new Date(endAt);
@@ -110,6 +91,7 @@ export function mapStudentExamDtoToCard(dto: StudentExamDto): StudentExam {
     action,
     tab: mapToTab(status),
     highlight,
+    resultId: dto.resultId,
   };
 }
 
@@ -141,7 +123,18 @@ export function mapStudentExamDtoToDetail(dto: StudentExamDto): StudentExamDetai
     availableAtLabel,
     beginLabel,
     instructions: DEFAULT_INSTRUCTIONS,
-    questions: DEFAULT_LIVE_EXAM_QUESTIONS,
+    questions: (dto.questions ?? [])
+      .slice()
+      .sort((a, b) => a.order - b.order)
+      .map((question, index): ExamQuestion => ({
+        id: question.id,
+        number: index + 1,
+        text: question.text,
+        type: 'multiple-choice',
+        options: question.options.map((option) => option.text),
+        optionKeys: question.options.map((option) => option.key),
+        points: question.points,
+      })),
     date,
     timeRange,
   };

@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { Link } from 'react-router-dom';
 import Icon from '../student/Icon';
 
 type StudentTimelineTopBarProps = {
@@ -22,19 +23,16 @@ const StudentTimelineTopBar = memo(({ initials, searchQuery, onSearchChange }: S
     </div>
 
     <div className="flex items-center gap-4 sm:gap-6">
-      <button
-        type="button"
+      <Link
+        to="/lecturer/exams"
         className="px-5 sm:px-6 py-2 bg-student-error-container text-student-on-error-container rounded-full font-student font-bold text-student-body-md hover:bg-student-error hover:text-student-on-error transition-colors flex items-center gap-2"
       >
         <Icon name="radio_button_checked" filled className="text-[18px]" />
         Go Live
-      </button>
-      <button type="button" className="text-student-on-surface-variant hover:text-student-primary transition-colors p-1" aria-label="Notifications">
-        <Icon name="notifications" />
-      </button>
-      <button type="button" className="text-student-on-surface-variant hover:text-student-primary transition-colors p-1" aria-label="Account">
+      </Link>
+      <Link to="/lecturer/settings" className="text-student-on-surface-variant hover:text-student-primary transition-colors p-1" aria-label="Account settings">
         <Icon name="account_circle" />
-      </button>
+      </Link>
       <div
         className="w-8 h-8 rounded-full shrink-0 bg-student-primary-container flex items-center justify-center text-student-on-primary-container text-xs font-bold border border-student-outline-variant"
         aria-hidden="true"

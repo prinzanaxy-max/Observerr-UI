@@ -1,10 +1,10 @@
 import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../Icon';
-import type { StudentResult } from '../../../data/studentResultsData';
+import type { StudentResultRow } from '../../../types/studentResults';
 
 type ProfileRecentResultsProps = {
-  results: StudentResult[];
+  results: StudentResultRow[];
 };
 
 const integrityColor = (score: number) =>
@@ -46,8 +46,11 @@ const ProfileRecentResults = memo(({ results }: ProfileRecentResultsProps) => (
               </p>
             </div>
             <div className="text-right shrink-0">
+              <p className="text-student-body-md font-student font-bold text-student-on-surface">
+                {result.score === null ? 'Pending' : `${result.score}/${result.maxScore}`}
+              </p>
               <p className={`text-student-body-lg font-student font-bold ${integrityColor(result.integrityScore)}`}>
-                {result.integrityScore}%
+                {result.integrityScore}% integrity
               </p>
               <p className="text-student-label-md font-student text-student-on-surface-variant">{result.status}</p>
             </div>

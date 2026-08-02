@@ -54,3 +54,34 @@ export type LecturerAnalyticsOverviewResponse = {
   trends: AnalyticsTrends;
   topBehaviors: AnalyticsTopBehavior[];
 };
+
+export type IntegrityReportEvent = {
+  id: string | number;
+  sessionId: string | number;
+  studentId: string | number;
+  studentName: string;
+  examId: string | number;
+  examTitle: string;
+  eventType: string;
+  severity: 'SUCCESS' | 'WARNING' | 'DANGER' | 'NEUTRAL';
+  occurredAt: string;
+  pointsDeducted: number | null;
+};
+
+export type IntegrityReportPage = {
+  content: IntegrityReportEvent[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  eventTypes: string[];
+};
+
+export type IntegrityReportFilters = {
+  period: AnalyticsPeriod;
+  page?: number;
+  size?: number;
+  search?: string;
+  eventType?: string;
+  severity?: IntegrityReportEvent['severity'] | '';
+};

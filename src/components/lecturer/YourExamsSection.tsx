@@ -85,13 +85,10 @@ const YourExamsSection = memo(({ exams, activeTab, loading = false, onTabChange 
                 exam.status !== 'live' ? 'opacity-80' : ''
               }`}
             >
-              <div className="flex justify-between items-start mb-4">
+              <div className="flex items-start mb-4">
                 <span className={`px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${statusBadge[exam.status]}`}>
                   {statusLabel[exam.status]}
                 </span>
-                <button type="button" className="text-student-on-surface-variant hover:text-student-primary transition-colors" aria-label="More options">
-                  <Icon name="more_vert" />
-                </button>
               </div>
               <h4 className="text-student-body-lg font-student font-bold text-student-on-surface mb-2">{exam.title}</h4>
               <p className="text-student-label-md font-student text-student-on-surface-variant mb-auto">{exam.date}</p>
@@ -105,7 +102,7 @@ const YourExamsSection = memo(({ exams, activeTab, loading = false, onTabChange 
                   onClick={() => handleExamAction(exam)}
                   className="text-student-primary font-student font-bold text-student-body-md"
                 >
-                  {exam.status === 'live' ? 'Manage' : exam.status === 'upcoming' ? 'Edit' : 'View'}
+                  {exam.status === 'live' ? 'Manage' : 'Open'}
                 </button>
               </div>
             </div>

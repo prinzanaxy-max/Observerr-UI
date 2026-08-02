@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { Link } from 'react-router-dom';
 import Icon from '../student/Icon';
 
 type IntegrityReportsPageHeaderProps = {
@@ -18,21 +19,21 @@ const IntegrityReportsPageHeader = memo(({ initials, onGoLive }: IntegrityReport
         Go Live
       </button>
 
-      <button
-        type="button"
+      <Link
+        to="/lecturer/settings"
         className="p-2 text-student-on-surface-variant hover:text-student-primary transition-colors hover:bg-student-surface-container rounded-full"
-        aria-label="Notifications"
+        aria-label="Notification settings"
       >
         <Icon name="notifications" />
-      </button>
+      </Link>
 
-      <button
-        type="button"
+      <Link
+        to="/lecturer/settings"
         className="p-2 text-student-on-surface-variant hover:text-student-primary transition-colors hover:bg-student-surface-container rounded-full"
-        aria-label="Account"
+        aria-label="Account settings"
       >
         <Icon name="account_circle" />
-      </button>
+      </Link>
 
       <div
         className="w-8 h-8 rounded-full shrink-0 bg-student-primary-container flex items-center justify-center text-student-on-primary-container text-xs font-bold border border-student-outline-variant ml-1"

@@ -43,6 +43,7 @@ const ExamSecuritySettingsPanel = memo(({
               type="checkbox"
               checked={security[setting.key]}
               onChange={() => onToggle(setting.key)}
+              aria-label={setting.label}
               className="sr-only peer"
             />
             <div className="w-11 h-6 bg-student-surface-container-highest rounded-full peer peer-checked:bg-student-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full peer-checked:after:border-white" />

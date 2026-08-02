@@ -17,6 +17,8 @@ export function useLecturerLiveSessions(examId: number | null) {
   const [error, setError] = useState('');
   const [forbidden, setForbidden] = useState(false);
   const [notFound, setNotFound] = useState(false);
+  const [actionError, setActionError] = useState('');
+  const [pendingStudentId, setPendingStudentId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (examId === null) {
@@ -57,5 +59,44 @@ export function useLecturerLiveSessions(examId: number | null) {
     void load();
   }, [load]);
 
-  return { students, stats, loading, error, forbidden, notFound, reload: load };
+  const setStudentBlocked = useCallback(async (
+    studentId: string,
+    blocked: boolean,
+    reason = '',
+  ) => {
+    if (examId === null || pendingStudentId) return false;
+    setPendingStudentId(studentId);
+    setActionError('');
+    try {
+      if (blocked) {
+        await lecturerLiveSessionsService.blockExamStudent(examId, studentId, reason);
+      } else {
+        await lecturerLiveSessionsService.unblockExamStudent(examId, studentId);
+      }
+      setStudents((current) => current.map((student) =>
+        student.id === studentId
+          ? { ...student, blocked, blockReason: blocked ? reason : null }
+          : student,
+      ));
+      return true;
+    } catch {
+      setActionError(`Could not ${blocked ? 'block' : 'unblock'} this student.`);
+      return false;
+    } finally {
+      setPendingStudentId(null);
+    }
+  }, [examId, pendingStudentId]);
+
+  return {
+    students,
+    stats,
+    loading,
+    error,
+    forbidden,
+    notFound,
+    actionError,
+    pendingStudentId,
+    reload: load,
+    setStudentBlocked,
+  };
 }

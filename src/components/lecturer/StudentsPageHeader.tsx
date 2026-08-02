@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { Link } from 'react-router-dom';
 import Icon from '../student/Icon';
 import type { CourseFilterOption } from '../../types/lecturerStudents';
 
@@ -60,10 +61,9 @@ const StudentsPageHeader = memo(({
       </button>
 
       <div className="flex items-center gap-3 sm:gap-4 border-l border-student-surface-variant pl-4 shrink-0">
-        <button type="button" className="relative text-student-on-surface-variant hover:text-student-primary transition-colors p-1" aria-label="Notifications">
+        <Link to="/lecturer/settings" className="relative text-student-on-surface-variant hover:text-student-primary transition-colors p-1" aria-label="Notification settings">
           <Icon name="notifications" />
-          <span className="absolute top-0 right-0 w-2 h-2 bg-student-error rounded-full" />
-        </button>
+        </Link>
         <div
           className="w-8 h-8 rounded-full shrink-0 bg-student-primary-container flex items-center justify-center text-student-on-primary-container text-xs font-bold border border-student-outline-variant"
           aria-hidden="true"

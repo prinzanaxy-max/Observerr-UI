@@ -12,6 +12,7 @@ import MonitoringStudentTable from '../components/lecturer/MonitoringStudentTabl
 import Icon from '../components/student/Icon';
 import type { MonitoredStudent, RiskFilter } from '../data/liveMonitoringData';
 import { CREATE_EXAM_PATH } from '../data/createExamData';
+import { endLecturerExam } from '../services/lecturerLiveSessionsService';
 
 const LecturerLiveMonitoringPage = () => {
   const { examId: examIdParam } = useParams<{ examId: string }>();
@@ -21,6 +22,10 @@ const LecturerLiveMonitoringPage = () => {
   const [riskFilter, setRiskFilter] = useState<RiskFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [endConfirm, setEndConfirm] = useState(false);
+  const [endingExam, setEndingExam] = useState(false);
+  const [endError, setEndError] = useState('');
+  const [blockTarget, setBlockTarget] = useState<MonitoredStudent | null>(null);
+  const [blockReason, setBlockReason] = useState('');
 
   const examId = useMemo(() => {
     const parsed = Number(examIdParam);
@@ -36,6 +41,9 @@ const LecturerLiveMonitoringPage = () => {
     forbidden: sessionsForbidden,
     notFound: sessionsNotFound,
     reload: reloadSessions,
+    actionError,
+    pendingStudentId,
+    setStudentBlocked,
   } = useLecturerLiveSessions(examId);
 
   const loading = examLoading || sessionsLoading;
@@ -69,15 +77,37 @@ const LecturerLiveMonitoringPage = () => {
     });
   }, [monitoredStudents, riskFilter, searchQuery]);
 
-  const handleEndExam = useCallback(() => setEndConfirm(true), []);
-  const confirmEndExam = useCallback(() => navigate('/lecturer/exams'), [navigate]);
+  const riskCounts = useMemo(() => ({
+    all: monitoredStudents.length,
+    high: monitoredStudents.filter((student) => student.risk === 'high').length,
+    medium: monitoredStudents.filter((student) => student.risk === 'medium').length,
+    low: monitoredStudents.filter((student) => student.risk === 'low').length,
+  }), [monitoredStudents]);
+
+  const handleEndExam = useCallback(() => {
+    setEndError('');
+    setEndConfirm(true);
+  }, []);
+  const confirmEndExam = useCallback(async () => {
+    if (examId === null || endingExam) return;
+    setEndingExam(true);
+    setEndError('');
+    try {
+      await endLecturerExam(examId);
+      navigate('/lecturer/exams');
+    } catch {
+      setEndError('Could not end this exam. It may already be ended, or the request failed.');
+    } finally {
+      setEndingExam(false);
+    }
+  }, [endingExam, examId, navigate]);
   const handleViewTimeline = useCallback(
     (student: MonitoredStudent) => {
       if (student.latestSessionId) {
         navigate(`/lecturer/students/sessions/${student.latestSessionId}`);
         return;
       }
-      navigate(`/lecturer/students/${student.id}/timeline`);
+      navigate('/lecturer/students');
     },
     [navigate],
   );
@@ -89,6 +119,31 @@ const LecturerLiveMonitoringPage = () => {
   );
   const handleFilterChange = useCallback((filter: RiskFilter) => setRiskFilter(filter), []);
   const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
+  const handleToggleBlock = useCallback((student: MonitoredStudent) => {
+    if (student.blocked) {
+      void setStudentBlocked(student.id, false);
+      return;
+    }
+    setBlockReason('');
+    setBlockTarget(student);
+  }, [setStudentBlocked]);
+  const confirmBlock = useCallback(async () => {
+    if (!blockTarget || !blockReason.trim()) return;
+    const updated = await setStudentBlocked(blockTarget.id, true, blockReason.trim());
+    if (updated) setBlockTarget(null);
+  }, [blockReason, blockTarget, setStudentBlocked]);
+
+  useEffect(() => {
+    if (!endConfirm && !blockTarget) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !endingExam && !pendingStudentId) {
+        setEndConfirm(false);
+        setBlockTarget(null);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [blockTarget, endConfirm, endingExam, pendingStudentId]);
 
   if (!examIdParam || examId === null) {
     return <Navigate to="/lecturer/exams" replace />;
@@ -146,11 +201,15 @@ const LecturerLiveMonitoringPage = () => {
               searchQuery={searchQuery}
               onFilterChange={handleFilterChange}
               onSearchChange={handleSearchChange}
+              counts={riskCounts}
             />
+            {actionError && <p role="alert" className="text-student-error font-student">{actionError}</p>}
             <MonitoringStudentTable
               students={filteredStudents}
               onViewTimeline={handleViewTimeline}
               onWatchFeed={handleWatchFeed}
+              onToggleBlock={handleToggleBlock}
+              pendingStudentId={pendingStudentId}
             />
           </>
         )}
@@ -166,6 +225,7 @@ const LecturerLiveMonitoringPage = () => {
             className="bg-white w-full max-w-sm rounded-brand p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
+            aria-modal="true"
             aria-labelledby="end-exam-title"
           >
             <h3 id="end-exam-title" className="text-student-headline-sm font-student font-bold text-student-on-surface mb-2">
@@ -174,9 +234,11 @@ const LecturerLiveMonitoringPage = () => {
             <p className="text-student-body-md font-student text-student-on-surface-variant mb-6">
               All students will be submitted automatically. This cannot be undone.
             </p>
+            {endError && <p role="alert" className="text-student-error text-sm mb-4">{endError}</p>}
             <div className="flex gap-3">
               <button
                 type="button"
+                disabled={endingExam}
                 onClick={() => setEndConfirm(false)}
                 className="flex-1 py-2.5 rounded-xl border border-student-outline-variant font-student font-semibold hover:bg-student-surface-container-low transition-colors"
               >
@@ -184,10 +246,42 @@ const LecturerLiveMonitoringPage = () => {
               </button>
               <button
                 type="button"
-                onClick={confirmEndExam}
+                disabled={endingExam}
+                onClick={() => void confirmEndExam()}
                 className="flex-1 py-2.5 rounded-xl bg-student-error text-white font-student font-bold hover:opacity-90 transition-opacity"
               >
-                End Exam
+                {endingExam ? 'Ending…' : 'End Exam'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {blockTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" role="presentation" onClick={() => setBlockTarget(null)}>
+          <div className="bg-white w-full max-w-md rounded-brand p-6 shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="block-student-title" onClick={(event) => event.stopPropagation()}>
+            <h3 id="block-student-title" className="text-student-headline-sm font-student font-bold mb-2">
+              Block {blockTarget.name}?
+            </h3>
+            <p className="text-student-body-md text-student-on-surface-variant mb-4">
+              Their active attempt will end. This block applies only to this exam and can be reversed.
+            </p>
+            <label className="block font-student text-student-label-md mb-4">
+              Reason
+              <textarea
+                autoFocus
+                value={blockReason}
+                onChange={(event) => setBlockReason(event.target.value)}
+                rows={3}
+                maxLength={500}
+                className="mt-1 w-full rounded-xl border border-student-outline-variant p-3"
+                required
+              />
+            </label>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setBlockTarget(null)} className="flex-1 py-2.5 rounded-xl border border-student-outline-variant">Cancel</button>
+              <button type="button" disabled={!blockReason.trim() || pendingStudentId === blockTarget.id} onClick={() => void confirmBlock()} className="flex-1 py-2.5 rounded-xl bg-student-error text-white disabled:opacity-50">
+                {pendingStudentId === blockTarget.id ? 'Blocking…' : 'Block student'}
               </button>
             </div>
           </div>

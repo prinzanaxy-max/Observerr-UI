@@ -1,90 +1,70 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StudentPortalLayout from '../components/student/StudentPortalLayout';
 import NotificationsHeader from '../components/student/notifications/NotificationsHeader';
 import NotificationCard from '../components/student/notifications/NotificationCard';
 import Icon from '../components/student/Icon';
-import {
-  cloneNotifications,
-  countUnreadNotifications,
-  filterNotifications,
-  type StudentNotification,
-} from '../data/studentNotificationsData';
+import { useNotifications } from '../hooks/useNotifications';
+import type { NotificationCategory, NotificationItem } from '../types/pushNotifications';
 
-const DISMISS_ANIMATION_MS = 400;
-const STAGGER_MS = 55;
+const CATEGORY_OPTIONS: { value: '' | NotificationCategory; label: string }[] = [
+  { value: '', label: 'All' },
+  { value: 'EXAM', label: 'Exams' },
+  { value: 'INTEGRITY', label: 'Integrity' },
+  { value: 'RESULT', label: 'Results' },
+  { value: 'SYSTEM', label: 'System' },
+];
 
 const StudentNotificationsPage = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [notifications, setNotifications] = useState(cloneNotifications);
-  const [dismissingIds, setDismissingIds] = useState<Set<number>>(() => new Set());
-  const dismissTimers = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
+  const [category, setCategory] = useState<'' | NotificationCategory>('');
+  const {
+    notifications,
+    unreadCount,
+    loading,
+    loadingMore,
+    error,
+    pendingIds,
+    markAllPending,
+    hasMore,
+    reload,
+    loadMore,
+    markRead,
+    dismiss,
+    markAllRead,
+  } = useNotifications(category || undefined);
 
   useEffect(() => {
     document.title = 'Notifications — Observerr';
   }, []);
 
-  useEffect(() => {
-    const timers = dismissTimers.current;
-    return () => {
-      timers.forEach((timer) => clearTimeout(timer));
-      timers.clear();
-    };
-  }, []);
-
-  const unreadCount = useMemo(
-    () => countUnreadNotifications(notifications),
-    [notifications],
-  );
-
   const filteredNotifications = useMemo(
-    () => filterNotifications(notifications, searchQuery),
+    () => {
+      const query = searchQuery.trim().toLowerCase();
+      if (!query) return notifications;
+      return notifications.filter((notification) =>
+        `${notification.title} ${notification.message}`.toLowerCase().includes(query),
+      );
+    },
     [notifications, searchQuery],
   );
 
   const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
 
-  const dismissNotification = useCallback((id: number) => {
-    if (dismissTimers.current.has(id)) return;
-
-    setDismissingIds((prev) => new Set(prev).add(id));
-
-    const timer = setTimeout(() => {
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
-      setDismissingIds((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-      dismissTimers.current.delete(id);
-    }, DISMISS_ANIMATION_MS);
-
-    dismissTimers.current.set(id, timer);
-  }, []);
-
-  const dismissNotifications = useCallback((ids: number[]) => {
-    ids.forEach((id, index) => {
-      setTimeout(() => dismissNotification(id), index * STAGGER_MS);
-    });
-  }, [dismissNotification]);
-
-  const handleMarkAllRead = useCallback(() => {
-    const unreadIds = notifications.filter((n) => !n.read).map((n) => n.id);
-    if (unreadIds.length === 0) return;
-
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    dismissNotifications(unreadIds);
-  }, [dismissNotifications, notifications]);
-
-  const handleSelect = useCallback((notification: StudentNotification) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n)),
-    );
-    if (notification.linkTo) {
-      navigate(notification.linkTo);
+  const handleSelect = useCallback(async (notification: NotificationItem) => {
+    try {
+      await markRead(notification);
+    } catch {
+      return;
     }
-  }, [navigate]);
+    if (
+      notification.deepLink?.startsWith('/') &&
+      !notification.deepLink.startsWith('//')
+    ) {
+      navigate(notification.deepLink);
+    }
+  }, [markRead, navigate]);
 
   return (
     <StudentPortalLayout
@@ -93,7 +73,11 @@ const StudentNotificationsPage = () => {
       searchPlaceholder="Search notifications..."
       contentClassName="student-notifications-bg relative"
       header={
-        <NotificationsHeader unreadCount={unreadCount} onMarkAllRead={handleMarkAllRead} />
+        <NotificationsHeader
+          unreadCount={unreadCount}
+          markingAllRead={markAllPending}
+          onMarkAllRead={() => void markAllRead()}
+        />
       }
     >
       <div className="pointer-events-none fixed top-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-student-primary-container opacity-[0.07] blur-[100px] z-0" />
@@ -107,10 +91,11 @@ const StudentNotificationsPage = () => {
           {unreadCount > 0 && (
             <button
               type="button"
-              onClick={handleMarkAllRead}
-              className="text-student-label-md font-student text-student-primary py-1.5 px-3 rounded-full border border-student-primary"
+              disabled={markAllPending}
+              onClick={() => void markAllRead()}
+              className="text-student-label-md font-student text-student-primary py-1.5 px-3 rounded-full border border-student-primary disabled:opacity-50"
             >
-              Mark all read
+              {markAllPending ? 'Marking…' : 'Mark all read'}
             </button>
           )}
         </div>
@@ -121,15 +106,45 @@ const StudentNotificationsPage = () => {
           </p>
         )}
 
-        {filteredNotifications.length > 0 ? (
+        <div className="flex flex-wrap gap-2 mb-5" aria-label="Notification category">
+          {CATEGORY_OPTIONS.map((option) => (
+            <button
+              key={option.value || 'all'}
+              type="button"
+              aria-pressed={category === option.value}
+              onClick={() => setCategory(option.value)}
+              className={`px-4 py-2 rounded-full font-student text-student-label-md border ${
+                category === option.value
+                  ? 'bg-student-primary text-student-on-primary border-student-primary'
+                  : 'border-student-outline-variant text-student-on-surface-variant'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+
+        {error && !loading ? (
+          <div role="alert" className="text-center py-12 px-6 rounded-2xl student-exam-glass-card">
+            <Icon name="error" className="text-[48px] text-student-error mb-4 mx-auto" />
+            <p className="text-student-body-md font-student text-student-on-surface-variant mb-4">{error}</p>
+            <button type="button" onClick={reload} className="px-5 py-2 rounded-full border border-student-primary text-student-primary">Retry</button>
+          </div>
+        ) : loading ? (
+          <div className="space-y-4 animate-pulse" aria-label="Loading notifications">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="h-28 rounded-xl bg-student-surface-container-high" />
+            ))}
+          </div>
+        ) : filteredNotifications.length > 0 ? (
           <div className="flex flex-col gap-5">
             {filteredNotifications.map((notification) => (
               <NotificationCard
                 key={notification.id}
                 notification={notification}
                 onSelect={handleSelect}
-                onDismiss={dismissNotification}
-                dismissing={dismissingIds.has(notification.id)}
+                onDismiss={(id) => void dismiss(id)}
+                dismissing={pendingIds.has(notification.id)}
               />
             ))}
           </div>
@@ -142,6 +157,19 @@ const StudentNotificationsPage = () => {
                 ? 'Try a different search term.'
                 : 'You are all caught up. New alerts will appear here.'}
             </p>
+          </div>
+        )}
+
+        {hasMore && !loading && (
+          <div className="mt-6 text-center">
+            <button
+              type="button"
+              disabled={loadingMore}
+              onClick={loadMore}
+              className="px-6 py-2.5 rounded-full border border-student-primary text-student-primary disabled:opacity-50"
+            >
+              {loadingMore ? 'Loading…' : 'Load more'}
+            </button>
           </div>
         )}
       </div>

@@ -6,7 +6,7 @@ import {
   getVapidKey,
   isFirebaseConfigured,
 } from '../lib/firebase';
-import { registerDeviceToken } from '../services/deviceTokenService';
+import { registerDeviceToken, unregisterDeviceToken } from '../services/deviceTokenService';
 import type { ForegroundPushPayload, PushPermissionStatus } from '../types/pushNotifications';
 import useAuthStore from '../store/authStore';
 
@@ -46,6 +46,7 @@ const payloadToForeground = (payload: MessagePayload): ForegroundPushPayload => 
   title: payload.notification?.title ?? 'Observerr',
   body: payload.notification?.body ?? 'You have a new notification',
   data: payload.data as Record<string, string> | undefined,
+  deepLink: payload.data?.deepLink ?? payload.data?.link,
 });
 
 /**
@@ -161,18 +162,31 @@ export function usePushNotifications() {
     }
   }, [fetchAndRegisterToken]);
 
-  const disablePushNotifications = useCallback(() => {
+  const disablePushNotifications = useCallback(async () => {
+    const token = lastTokenRef.current;
     setPushEnabled(false);
     writePushEnabled(false);
     lastTokenRef.current = null;
     setErrorMessage('');
 
-    if (Notification.permission === 'denied') {
+    if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
       setStatus('denied');
     } else {
       setStatus('idle');
     }
-  }, []);
+
+    if (token && isAuthenticated) {
+      try {
+        await unregisterDeviceToken(token);
+      } catch (err) {
+        setErrorMessage(
+          err instanceof Error
+            ? err.message
+            : 'Push was disabled locally, but the device could not be unregistered.',
+        );
+      }
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (!pushEnabled || status !== 'granted') {

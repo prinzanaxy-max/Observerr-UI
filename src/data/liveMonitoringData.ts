@@ -12,6 +12,8 @@ export type MonitoredStudent = {
   lastEvent: string | null;
   highlighted?: boolean;
   latestSessionId?: string | number | null;
+  blocked?: boolean;
+  blockReason?: string | null;
 };
 
 export type LiveSessionStats = {
@@ -78,13 +80,6 @@ export const MONITORED_STUDENTS: MonitoredStudent[] = [
     lastEvent: 'Clipboard paste detected (5m ago)',
   },
 ];
-
-export const RISK_FILTER_COUNTS = {
-  all: 142,
-  high: 3,
-  medium: 9,
-  low: 130,
-};
 
 export const liveStatusDot = {
   focused: 'bg-student-primary',

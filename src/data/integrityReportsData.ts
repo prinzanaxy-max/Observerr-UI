@@ -36,7 +36,6 @@ export const DATE_RANGE_OPTIONS: { key: DateRangeKey; label: string }[] = [
   { key: '7d', label: '7D' },
   { key: '30d', label: '30D' },
   { key: '3m', label: '3M' },
-  { key: 'custom', label: 'Custom' },
 ];
 
 export const trendIcon = (direction: TrendDirection) => {

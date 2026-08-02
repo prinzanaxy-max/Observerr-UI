@@ -42,13 +42,13 @@ const StudentTopBar = memo(({
         >
           <Icon name="notifications" className="text-[24px]" />
         </Link>
-        <button
-          type="button"
+        <Link
+          to="/student/documentation"
           className="p-2 rounded-full text-student-on-surface-variant hover:bg-student-surface-container-highest/50 transition-colors"
           aria-label="Help"
         >
           <Icon name="help" className="text-[24px]" />
-        </button>
+        </Link>
       </div>
     </div>
   </header>

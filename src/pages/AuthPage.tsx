@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
-import type { ApiError, UserRole } from '../types/auth';
+import type { ApiError } from '../types/auth';
 import AuthBrandMark, { AuthField } from '../components/auth/AuthBrandMark';
 import AuthImagePanel, { PasswordToggle } from '../components/auth/AuthImagePanel';
-import AuthRoleSelector from '../components/auth/AuthRoleSelector';
 import Icon from '../components/student/Icon';
 
 const AuthSubmitButton = ({
@@ -66,7 +65,6 @@ const AuthPage = () => {
   const [suInstitutionalId, setSuInstitutionalId] = useState('');
   const [suEmail, setSuEmail] = useState('');
   const [suPassword, setSuPassword] = useState('');
-  const [suRole, setSuRole] = useState<'student' | 'lecturer' | null>(null);
   const [suShowPw, setSuShowPw] = useState(false);
   const [suErrors, setSuErrors] = useState<Record<string, string>>({});
   const [suLoading, setSuLoading] = useState(false);
@@ -140,7 +138,6 @@ const AuthPage = () => {
     if (!suInstitutionalId.trim()) errs.institutionalId = 'Institutional ID is required';
     if (!suEmail.trim()) errs.email = 'Email is required';
     else if (!isValidEmail(suEmail)) errs.email = 'Enter a valid email address';
-    if (!suRole) errs.role = 'Please select your role';
     if (!suPassword) errs.password = 'Password is required';
     else if (suPassword.length < 8) errs.password = 'Password must be at least 8 characters';
     setSuErrors(errs);
@@ -152,7 +149,7 @@ const AuthPage = () => {
         institutionalId: suInstitutionalId.trim(),
         email: suEmail.trim(),
         password: suPassword,
-        role: suRole!.toUpperCase() as UserRole,
+        role: 'STUDENT',
       });
       const role = useAuthStore.getState().role;
       navigate(
@@ -168,7 +165,6 @@ const AuthPage = () => {
           ...(apiErr.errors.institutionalId ? { institutionalId: apiErr.errors.institutionalId } : {}),
           ...(apiErr.errors.email ? { email: apiErr.errors.email } : {}),
           ...(apiErr.errors.password ? { password: apiErr.errors.password } : {}),
-          ...(apiErr.errors.role ? { role: apiErr.errors.role } : {}),
         });
       } else if (apiErr.error === 'NETWORK_ERROR') {
         setSuErrors({ institutionalId: apiErr.message });
@@ -208,13 +204,10 @@ const AuthPage = () => {
         </div>
 
         <div>
-          <div className="flex items-center justify-between mb-1">
+          <div className="mb-1">
             <label htmlFor="signin-password" className="block text-student-label-md font-student text-student-on-surface-variant uppercase tracking-wider">
               Password
             </label>
-            <a href="#" className="text-student-label-md font-student text-student-primary hover:underline">
-              Forgot password?
-            </a>
           </div>
           <AuthField
             id="signin-password"
@@ -286,11 +279,9 @@ const AuthPage = () => {
           error={suErrors.email}
         />
 
-        <AuthRoleSelector
-          selected={suRole}
-          onSelect={(r) => { setSuRole(r); setSuErrors((e) => ({ ...e, role: '' })); }}
-          error={suErrors.role}
-        />
+        <p className="rounded-xl bg-student-surface-container-low px-4 py-3 text-student-body-sm text-student-on-surface-variant">
+          Public registration creates a student account. Lecturer accounts are provisioned by your institution.
+        </p>
 
         <AuthField
           id="signup-password"

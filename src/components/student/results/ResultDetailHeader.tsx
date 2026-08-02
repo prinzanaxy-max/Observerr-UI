@@ -40,13 +40,12 @@ const ResultDetailHeader = memo(({ title, completedLabel, integrityScore }: Resu
           </div>
 
           <div className="hidden sm:flex items-center gap-2">
-            <button type="button" className="w-10 h-10 rounded-full hover:bg-student-surface-container-highest/50 flex items-center justify-center transition-colors relative text-student-primary" aria-label="Notifications">
+            <Link to="/student/notifications" className="w-10 h-10 rounded-full hover:bg-student-surface-container-highest/50 flex items-center justify-center transition-colors relative text-student-primary" aria-label="Notifications">
               <Icon name="notifications" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-student-error rounded-full border-2 border-student-surface" />
-            </button>
-            <button type="button" className="w-10 h-10 rounded-full hover:bg-student-surface-container-highest/50 flex items-center justify-center transition-colors text-student-primary" aria-label="Help">
+            </Link>
+            <Link to="/student/documentation" className="w-10 h-10 rounded-full hover:bg-student-surface-container-highest/50 flex items-center justify-center transition-colors text-student-primary" aria-label="Help">
               <Icon name="help" />
-            </button>
+            </Link>
             <Link to="/student/profile" aria-label="View profile">
               <StudentAvatar src={profilePictureUrl} initials={initials} size="sm" />
             </Link>

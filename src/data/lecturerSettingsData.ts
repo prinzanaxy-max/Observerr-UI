@@ -43,17 +43,17 @@ export const LECTURER_NOTIFICATION_TOGGLES: {
   description: string;
 }[] = [
   {
-    key: 'examGraded',
+    key: 'examEvents',
     label: 'Live session alerts',
     description: 'Notify me when students start, disconnect, or finish a proctored session.',
   },
   {
-    key: 'examReminders',
-    label: 'Scheduled exam reminders',
-    description: 'Reminders before exams you publish or proctor go live.',
+    key: 'resultUpdates',
+    label: 'Result activity',
+    description: 'Notify me when grading or result-release actions require attention.',
   },
   {
-    key: 'systemMaintenance',
+    key: 'systemUpdates',
     label: 'System maintenance',
     description: 'Alerts about scheduled downtime and portal maintenance windows.',
   },
@@ -61,11 +61,6 @@ export const LECTURER_NOTIFICATION_TOGGLES: {
     key: 'integrityAlerts',
     label: 'Integrity flags',
     description: 'Updates when sessions are flagged or require review.',
-  },
-  {
-    key: 'emailDigest',
-    label: 'Weekly email digest',
-    description: 'Summary of exam activity and integrity trends sent every Monday.',
   },
 ];
 
@@ -108,11 +103,10 @@ export const filterLecturerSettingsTabs = (query: string): LecturerSettingsTab[]
 };
 
 export const DEFAULT_LECTURER_NOTIFICATION_PREFERENCES: NotificationPreferences = {
-  examGraded: true,
-  examReminders: true,
-  systemMaintenance: true,
+  examEvents: true,
+  resultUpdates: true,
+  systemUpdates: true,
   integrityAlerts: true,
-  emailDigest: false,
 };
 
 export type StoredLecturerSettings = {

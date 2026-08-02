@@ -1,11 +1,11 @@
 import { memo } from 'react';
 import Icon from '../Icon';
-import type { NotificationAccent, StudentNotification } from '../../../data/studentNotificationsData';
+import type { NotificationItem } from '../../../types/pushNotifications';
 
 type NotificationCardProps = {
-  notification: StudentNotification;
-  onSelect: (notification: StudentNotification) => void;
-  onDismiss: (id: number) => void;
+  notification: NotificationItem;
+  onSelect: (notification: NotificationItem) => void;
+  onDismiss: (id: NotificationItem['id']) => void;
   dismissing?: boolean;
 };
 
@@ -18,7 +18,7 @@ type AccentStyles = {
   cardOpacity: string;
 };
 
-const unreadStyles: Record<Exclude<NotificationAccent, 'neutral'>, AccentStyles> = {
+const unreadStyles: Record<'success' | 'warning', AccentStyles> = {
   success: {
     cardBg: 'bg-student-primary-container/10',
     bar: 'bg-student-primary',
@@ -46,11 +46,22 @@ const readStyles: AccentStyles = {
   cardOpacity: 'opacity-75 hover:opacity-100',
 };
 
-const getStyles = (notification: StudentNotification): AccentStyles => {
-  if (notification.read || notification.accent === 'neutral') {
+const getStyles = (notification: NotificationItem): AccentStyles => {
+  if (notification.read || notification.category === 'SYSTEM') {
     return readStyles;
   }
-  return unreadStyles[notification.accent];
+  return notification.category === 'INTEGRITY'
+    ? unreadStyles.warning
+    : unreadStyles.success;
+};
+
+const categoryIcon = (notification: NotificationItem) => {
+  switch (notification.category) {
+    case 'EXAM': return 'event';
+    case 'INTEGRITY': return 'shield';
+    case 'RESULT': return 'grading';
+    default: return 'notifications';
+  }
 };
 
 const NotificationCard = memo(({
@@ -73,14 +84,17 @@ const NotificationCard = memo(({
         className="flex-1 min-w-0 text-left p-6 flex gap-4 cursor-pointer"
       >
         <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${styles.iconWrap}`}>
-          <Icon name={notification.icon} filled={notification.filled} />
+          <Icon name={categoryIcon(notification)} filled={!notification.read} />
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 mb-1">
             <h3 className={`${styles.titleClass} pr-2`}>{notification.title}</h3>
             <span className={`text-student-label-md font-student shrink-0 ${styles.time}`}>
-              {notification.timeLabel}
+              {new Intl.DateTimeFormat(undefined, {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+              }).format(new Date(notification.createdAt))}
             </span>
           </div>
           <p className="text-student-body-md font-student text-student-on-surface-variant">{notification.message}</p>

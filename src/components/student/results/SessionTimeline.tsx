@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import Icon from '../Icon';
-import type { TimelineEvent } from '../../../data/studentResultDetailData';
+import type { TimelineEvent } from '../../../types/studentResults';
 
 type SessionTimelineProps = {
   events: TimelineEvent[];

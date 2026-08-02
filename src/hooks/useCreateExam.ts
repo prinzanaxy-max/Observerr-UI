@@ -1,5 +1,5 @@
 import { AxiosError } from 'axios';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { CreateExamFormState } from '../data/createExamData';
 import { buildCreateExamRequest, validateCreateExamForm } from '../lib/lecturerExamsUtils';
@@ -13,15 +13,18 @@ export function useCreateExam() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [forbidden, setForbidden] = useState(false);
+  const submittingRef = useRef(false);
 
   const publishExam = useCallback(
     async (form: CreateExamFormState) => {
+      if (submittingRef.current) return false;
       const validationError = validateCreateExamForm(form);
       if (validationError) {
         setError(validationError);
         return false;
       }
 
+      submittingRef.current = true;
       setSubmitting(true);
       setError('');
       setForbidden(false);
@@ -56,6 +59,7 @@ export function useCreateExam() {
         setError('Could not publish exam. Please try again.');
         return false;
       } finally {
+        submittingRef.current = false;
         setSubmitting(false);
       }
     },

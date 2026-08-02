@@ -8,8 +8,7 @@ import ProfileQuickLinks from '../components/student/profile/ProfileQuickLinks';
 import SettingsAlert from '../components/student/settings/SettingsAlert';
 import {
   PROFILE_QUICK_LINKS,
-  VERIFICATION_ITEMS,
-  filterProfileResults,
+  buildVerificationItems,
   formatMemberSince,
 } from '../data/studentProfileData';
 import { useAuthProfile } from '../hooks/useAuthProfile';
@@ -18,6 +17,7 @@ import { useStudentSettings } from '../hooks/useStudentSettings';
 import { useResultsSummary } from '../hooks/useResultsSummary';
 import { getInitialsFromName } from '../lib/profileUtils';
 import type { SaveStatus } from '../hooks/useAccountSettings';
+import { useStudentResults } from '../hooks/useStudentResults';
 
 const StudentProfilePage = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,8 +26,17 @@ const StudentProfilePage = () => {
 
   const { institutionalId, email, user } = useAuthProfile();
   const { displayName, settings } = useStudentSettings();
-  const profilePicture = useProfilePicture();
+  const {
+    profilePictureUrl,
+    uploading,
+    removing,
+    photoError,
+    clearPhotoError,
+    uploadProfilePicture,
+    removeProfilePicture,
+  } = useProfilePicture();
   const { stats, summaryCards, loading: statsLoading } = useResultsSummary();
+  const { rows: resultRows } = useStudentResults();
 
   const initials = useMemo(
     () =>
@@ -47,21 +56,18 @@ const StudentProfilePage = () => {
   const memberSince = useMemo(() => formatMemberSince(user?.createdAt), [user?.createdAt]);
 
   const verificationItems = useMemo(
-    () =>
-      VERIFICATION_ITEMS.map((item) =>
-        item.id === 'integrity'
-          ? {
-              ...item,
-              description: `Overall score ${integrityScore}% — consistent adherence to testing protocols.`,
-            }
-          : item,
-      ),
+    () => buildVerificationItems(integrityScore),
     [integrityScore],
   );
 
   const recentResults = useMemo(
-    () => filterProfileResults(searchQuery),
-    [searchQuery],
+    () => {
+      const query = searchQuery.trim().toLowerCase();
+      return resultRows
+        .filter((result) => !query || `${result.courseName} ${result.courseCode} ${result.examLabel}`.toLowerCase().includes(query))
+        .slice(0, 4);
+    },
+    [resultRows, searchQuery],
   );
 
   const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
@@ -74,25 +80,25 @@ const StudentProfilePage = () => {
   const handleUploadPhoto = useCallback(
     async (file: File) => {
       clearStatus();
-      profilePicture.clearPhotoError();
-      const result = await profilePicture.uploadProfilePicture(file);
+      clearPhotoError();
+      const result = await uploadProfilePicture(file);
       if (result === false) return false;
       setSaveStatus('success');
       setSaveMessage('Profile picture updated.');
       return true;
     },
-    [clearStatus, profilePicture.clearPhotoError, profilePicture.uploadProfilePicture],
+    [clearPhotoError, clearStatus, uploadProfilePicture],
   );
 
   const handleRemovePhoto = useCallback(async () => {
     clearStatus();
-    profilePicture.clearPhotoError();
-    const ok = await profilePicture.removeProfilePicture();
+    clearPhotoError();
+    const ok = await removeProfilePicture();
     if (!ok) return false;
     setSaveStatus('success');
     setSaveMessage('Profile picture removed.');
     return true;
-  }, [clearStatus, profilePicture.clearPhotoError, profilePicture.removeProfilePicture]);
+  }, [clearPhotoError, clearStatus, removeProfilePicture]);
 
   return (
     <StudentPortalLayout
@@ -117,14 +123,14 @@ const StudentProfilePage = () => {
             institutionalId={institutionalId}
             email={email}
             initials={initials}
-            avatarUrl={profilePicture.profilePictureUrl}
+            avatarUrl={profilePictureUrl}
             memberSince={memberSince}
             integrityScore={integrityScore}
             onUploadPhoto={handleUploadPhoto}
             onRemovePhoto={handleRemovePhoto}
-            uploadingPhoto={profilePicture.uploading}
-            removingPhoto={profilePicture.removing}
-            photoError={profilePicture.photoError}
+            uploadingPhoto={uploading}
+            removingPhoto={removing}
+            photoError={photoError}
           />
 
           <ResultsSummaryCards cards={summaryCards} loading={statsLoading} />

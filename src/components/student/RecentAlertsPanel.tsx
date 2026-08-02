@@ -5,6 +5,7 @@ import type { AlertItem } from '../../data/studentDashboardData';
 
 type RecentAlertsPanelProps = {
   alerts: AlertItem[];
+  onSelect?: (alert: AlertItem) => void;
 };
 
 const iconWrapTone = {
@@ -12,7 +13,7 @@ const iconWrapTone = {
   secondary: 'bg-student-secondary-container/30 text-student-on-secondary-container',
 };
 
-const RecentAlertsPanel = memo(({ alerts }: RecentAlertsPanelProps) => (
+const RecentAlertsPanel = memo(({ alerts, onSelect }: RecentAlertsPanelProps) => (
   <div className="student-glass-card p-6">
     <div className="flex justify-between items-center mb-6">
       <h3 className="text-student-headline-sm font-student text-student-on-surface">Recent Alerts</h3>
@@ -29,6 +30,7 @@ const RecentAlertsPanel = memo(({ alerts }: RecentAlertsPanelProps) => (
         <button
           key={alert.id}
           type="button"
+          onClick={() => onSelect?.(alert)}
           className="flex items-start p-3 hover:bg-student-surface-container-low rounded-xl transition-colors cursor-pointer -mx-3 w-[calc(100%+1.5rem)] text-left"
         >
           <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mr-3 mt-0.5 ${iconWrapTone[alert.tone]}`}>

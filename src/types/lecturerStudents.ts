@@ -2,6 +2,27 @@ export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH';
 
 export type SessionEventSeverity = 'SUCCESS' | 'WARNING' | 'DANGER' | 'NEUTRAL';
 
+export type TimelineEventType = 'start' | 'minor' | 'critical' | 'end';
+
+export type TimelineEvent = {
+  id: string;
+  time: string;
+  title: string;
+  type: TimelineEventType;
+  points?: number;
+  message: string;
+  icon: string;
+  evidenceLabel?: string;
+  pulse?: boolean;
+};
+
+export type SessionStatistics = {
+  duration: string;
+  totalFlags: number;
+  deviceFlags: number;
+  absenceFlags: number;
+};
+
 export type LecturerStudentItem = {
   id: number;
   studentNumber: string;

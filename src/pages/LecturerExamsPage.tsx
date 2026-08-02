@@ -9,6 +9,7 @@ import ExamOverviewCard from '../components/lecturer/ExamOverviewCard';
 import Icon from '../components/student/Icon';
 import type { ExamFilterTab, ExamOverview } from '../types/lecturerExams';
 import { CREATE_EXAM_PATH } from '../data/createExamData';
+import { lecturerExamPath } from '../lib/examResultNavigation';
 
 const ExamCardSkeleton = () => (
   <div className="bg-student-surface rounded-[24px] p-6 lecturer-card-elevation animate-pulse h-[320px]">
@@ -42,9 +43,8 @@ const LecturerExamsPage = () => {
 
   const openExam = useCallback(
     (exam: ExamOverview) => {
-      if (exam.status === 'live') {
-        navigate(`/lecturer/exams/${exam.id}/live`);
-      }
+      const path = lecturerExamPath(exam.id, exam.status);
+      if (path) navigate(path);
     },
     [navigate],
   );
@@ -111,7 +111,7 @@ const LecturerExamsPage = () => {
                 key={exam.id}
                 exam={exam}
                 onPrimaryAction={handlePrimaryAction}
-                onSelect={exam.status === 'live' ? openExam : undefined}
+                onSelect={exam.status !== 'upcoming' ? openExam : undefined}
               />
             ))}
           </div>

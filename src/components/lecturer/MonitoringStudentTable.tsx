@@ -7,9 +7,17 @@ type MonitoringStudentTableProps = {
   students: MonitoredStudent[];
   onViewTimeline: (student: MonitoredStudent) => void;
   onWatchFeed?: (student: MonitoredStudent) => void;
+  onToggleBlock?: (student: MonitoredStudent) => void;
+  pendingStudentId?: string | null;
 };
 
-const MonitoringStudentTable = memo(({ students, onViewTimeline, onWatchFeed }: MonitoringStudentTableProps) => (
+const MonitoringStudentTable = memo(({
+  students,
+  onViewTimeline,
+  onWatchFeed,
+  onToggleBlock,
+  pendingStudentId,
+}: MonitoringStudentTableProps) => (
   <div className="bg-student-surface-container-lowest rounded-brand lecturer-card-elevation border border-student-outline-variant/20 overflow-hidden">
     <div className="overflow-x-auto">
       <table className="w-full min-w-[800px] text-left border-collapse">
@@ -76,6 +84,24 @@ const MonitoringStudentTable = memo(({ students, onViewTimeline, onWatchFeed }: 
                     >
                       <Icon name="videocam" className="text-[16px]" />
                       Watch Feed
+                    </button>
+                  )}
+                  {onToggleBlock && (
+                    <button
+                      type="button"
+                      disabled={pendingStudentId === student.id}
+                      onClick={() => onToggleBlock(student)}
+                      className={`inline-flex items-center gap-1 font-student font-semibold text-student-body-md disabled:opacity-50 ${
+                        student.blocked
+                          ? 'text-student-primary'
+                          : 'text-student-error'
+                      }`}
+                      aria-label={`${student.blocked ? 'Unblock' : 'Block'} ${student.name} for this exam`}
+                    >
+                      <Icon name={student.blocked ? 'lock_open' : 'block'} className="text-[16px]" />
+                      {pendingStudentId === student.id
+                        ? 'Updating…'
+                        : student.blocked ? 'Unblock' : 'Block'}
                     </button>
                   )}
                   <button

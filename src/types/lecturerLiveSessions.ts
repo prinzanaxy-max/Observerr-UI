@@ -18,6 +18,18 @@ export type LiveSessionStudentDto = {
   latestSessionId: string | number | null;
   integrityScore: number;
   highlighted?: boolean;
+  blocked?: boolean;
+  blockReason?: string | null;
+};
+
+export type EndExamResponse = {
+  examId: number;
+  status: 'COMPLETED';
+  endedAt: string;
+};
+
+export type ExamStudentBlockRequest = {
+  reason: string;
 };
 
 export type LecturerLiveSessionsResponse = {

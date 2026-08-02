@@ -7,7 +7,6 @@ import StudentTimelineTopBar from '../components/lecturer/StudentTimelineTopBar'
 import StudentProfileHeader from '../components/lecturer/StudentProfileHeader';
 import SessionEventTimeline from '../components/lecturer/SessionEventTimeline';
 import SessionStatisticsPanel from '../components/lecturer/SessionStatisticsPanel';
-import StudentReportActions from '../components/lecturer/StudentReportActions';
 import Icon from '../components/student/Icon';
 import { CREATE_EXAM_PATH } from '../data/createExamData';
 
@@ -119,7 +118,6 @@ const LecturerSessionDetailPage = () => {
                 ) : loading ? (
                   <div className="h-48 rounded-[24px] bg-student-surface-container-high animate-pulse" />
                 ) : null}
-                {session && <StudentReportActions studentName={session.studentName} />}
               </div>
             </div>
           </>

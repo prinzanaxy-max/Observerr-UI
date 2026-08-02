@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import StudentPortalLayout from '../components/student/StudentPortalLayout';
 import SettingsNav from '../components/student/settings/SettingsNav';
 import SettingsAlert from '../components/student/settings/SettingsAlert';
@@ -16,6 +16,7 @@ const StudentSettingsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<SettingsTab>('account');
   const [savingNotifications, setSavingNotifications] = useState(false);
+  const savingNotificationsRef = useRef(false);
 
   const accountSettings = useAccountSettings();
   const pushNotifications = usePushNotifications();
@@ -48,10 +49,13 @@ const StudentSettingsPage = () => {
   const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
 
   const handleSaveNotifications = useCallback(async (...args: Parameters<typeof saveAllNotifications>) => {
+    if (savingNotificationsRef.current) return false;
+    savingNotificationsRef.current = true;
     setSavingNotifications(true);
     try {
       return await saveAllNotifications(...args);
     } finally {
+      savingNotificationsRef.current = false;
       setSavingNotifications(false);
     }
   }, [saveAllNotifications]);

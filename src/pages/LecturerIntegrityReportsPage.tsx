@@ -8,14 +8,26 @@ import AnalyticsDateRangeFilter from '../components/lecturer/AnalyticsDateRangeF
 import IntegritySummaryCards from '../components/lecturer/IntegritySummaryCards';
 import IntegrityEventTrendsChart from '../components/lecturer/IntegrityEventTrendsChart';
 import IntegrityFlaggedBehaviorsCard from '../components/lecturer/IntegrityFlaggedBehaviorsCard';
+import IntegrityFullReportPanel from '../components/lecturer/IntegrityFullReportPanel';
 import type { DateRangeKey } from '../data/integrityReportsData';
 import { CREATE_EXAM_PATH } from '../data/createExamData';
+import { UI_PERIOD_TO_API } from '../lib/lecturerAnalyticsUtils';
+import { fetchIntegrityReport } from '../services/lecturerAnalyticsService';
+import type { IntegrityReportEvent, IntegrityReportPage } from '../types/lecturerAnalytics';
 
 const LecturerIntegrityReportsPage = () => {
   const navigate = useNavigate();
   const { institutionalId, email, initials } = useAuthProfile();
 
   const [dateRange, setDateRange] = useState<DateRangeKey>('7d');
+  const [showFullReport, setShowFullReport] = useState(false);
+  const [reportPage, setReportPage] = useState(0);
+  const [reportSearch, setReportSearch] = useState('');
+  const [reportEventType, setReportEventType] = useState('');
+  const [reportSeverity, setReportSeverity] = useState<'' | IntegrityReportEvent['severity']>('');
+  const [fullReport, setFullReport] = useState<IntegrityReportPage | null>(null);
+  const [fullReportLoading, setFullReportLoading] = useState(false);
+  const [fullReportError, setFullReportError] = useState('');
   const { report, loading, error, errorHint, forbidden, reload } = useLecturerAnalyticsOverview(dateRange);
 
   useEffect(() => {
@@ -25,11 +37,34 @@ const LecturerIntegrityReportsPage = () => {
   const handleDateRangeChange = useCallback((value: DateRangeKey) => setDateRange(value), []);
   const handleGoLive = useCallback(() => navigate('/lecturer/exams'), [navigate]);
   const handleNewExam = useCallback(() => navigate(CREATE_EXAM_PATH), [navigate]);
-  const handleViewFullReport = useCallback(() => {
-    // Placeholder for future full report download
-  }, []);
+  const handleViewFullReport = useCallback(() => setShowFullReport(true), []);
 
-  const showCustomNotice = dateRange === 'custom';
+  const loadFullReport = useCallback(async () => {
+    if (!showFullReport || dateRange === 'custom') return;
+    setFullReportLoading(true);
+    setFullReportError('');
+    try {
+      setFullReport(await fetchIntegrityReport({
+        period: UI_PERIOD_TO_API[dateRange],
+        page: reportPage,
+        size: 20,
+        search: reportSearch.trim() || undefined,
+        eventType: reportEventType || undefined,
+        severity: reportSeverity,
+      }));
+    } catch {
+      setFullReportError('Could not load the full integrity report.');
+    } finally {
+      setFullReportLoading(false);
+    }
+  }, [dateRange, reportEventType, reportPage, reportSearch, reportSeverity, showFullReport]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadFullReport(), 250);
+    return () => window.clearTimeout(timer);
+  }, [loadFullReport]);
+
+  useEffect(() => setReportPage(0), [dateRange, reportEventType, reportSearch, reportSeverity]);
 
   return (
     <LecturerPortalLayout
@@ -50,12 +85,6 @@ const LecturerIntegrityReportsPage = () => {
           </div>
           <AnalyticsDateRangeFilter value={dateRange} onChange={handleDateRangeChange} />
         </div>
-
-        {showCustomNotice && (
-          <div className="rounded-xl border border-student-outline-variant/40 bg-student-surface-container-low px-4 py-3 font-student text-student-body-md text-student-on-surface-variant">
-            Custom date ranges are coming soon. Select 7D, 30D, or 3M to load live analytics.
-          </div>
-        )}
 
         {(error || forbidden) && !loading && (
           <div className="rounded-xl border border-student-error-container bg-student-error-container/30 px-4 py-3 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -94,6 +123,24 @@ const LecturerIntegrityReportsPage = () => {
             loading={loading}
           />
         </div>
+
+        {showFullReport && (
+          <IntegrityFullReportPanel
+            report={fullReport}
+            loading={fullReportLoading}
+            error={fullReportError}
+            search={reportSearch}
+            eventType={reportEventType}
+            severity={reportSeverity}
+            onSearchChange={setReportSearch}
+            onEventTypeChange={setReportEventType}
+            onSeverityChange={setReportSeverity}
+            onPageChange={setReportPage}
+            onOpenTimeline={(sessionId) => navigate(`/lecturer/students/sessions/${sessionId}`)}
+            onRetry={() => void loadFullReport()}
+            onClose={() => setShowFullReport(false)}
+          />
+        )}
       </div>
     </LecturerPortalLayout>
   );

@@ -1,12 +1,12 @@
 import { memo } from 'react';
 import { Link } from 'react-router-dom';
-import type { ExamResult } from '../../data/studentDashboardData';
+import type { StudentResultRow } from '../../types/studentResults';
 
 const integrityColor = (score: number) =>
   score >= 90 ? 'text-student-primary' : 'text-student-secondary';
 
 type RecentResultsSectionProps = {
-  results: ExamResult[];
+  results: StudentResultRow[];
 };
 
 const RecentResultsSection = memo(({ results }: RecentResultsSectionProps) => (
@@ -41,10 +41,12 @@ const RecentResultsSection = memo(({ results }: RecentResultsSectionProps) => (
                   index < results.length - 1 ? 'border-b border-student-surface-variant/30' : ''
                 }`}
               >
-                <td className="py-4 px-6 text-student-body-md font-student text-student-on-surface">{row.course}</td>
-                <td className="py-4 px-6 text-sm text-student-on-surface-variant">{row.date}</td>
+                <td className="py-4 px-6 text-student-body-md font-student text-student-on-surface">
+                  <Link to={`/student/results/${row.id}`} className="hover:text-student-primary">{row.courseName}</Link>
+                </td>
+                <td className="py-4 px-6 text-sm text-student-on-surface-variant">{row.dateTaken}</td>
                 <td className="py-4 px-6">
-                  <span className={`${integrityColor(row.integrity)} font-medium`}>{row.integrity}%</span>
+                  <span className={`${integrityColor(row.integrityScore)} font-medium`}>{row.integrityScore}%</span>
                 </td>
                 <td className="py-4 px-6">
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-student-tertiary-container/50 text-student-on-tertiary-container border border-student-tertiary-container">

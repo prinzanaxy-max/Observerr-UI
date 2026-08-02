@@ -52,7 +52,6 @@ export const MOBILE_LECTURER_NAV = LECTURER_NAV.filter((item) =>
 
 export const QUICK_ACTIONS: QuickAction[] = [
   { id: 'new-exam', label: 'New Exam', icon: 'add_task' },
-  { id: 'q-bank', label: 'Q-Bank', icon: 'database' },
   { id: 'reports', label: 'Reports', icon: 'summarize' },
   { id: 'analytics', label: 'Analytics', icon: 'monitoring' },
 ];

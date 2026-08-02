@@ -4,7 +4,10 @@ import {
   getDefaultLecturerSettings,
   type StoredLecturerSettings,
 } from '../data/lecturerSettingsData';
-import { notifyStudentSettingsChanged, STUDENT_SETTINGS_CHANGED } from '../lib/studentSettingsEvents';
+import {
+  fetchNotificationPreferences,
+  updateNotificationPreferences,
+} from '../services/notificationService';
 import { useAuthProfile } from './useAuthProfile';
 
 const storageKey = (institutionalId: string) => `observerr:lecturer-settings:${institutionalId}`;
@@ -27,12 +30,6 @@ const readStoredSettings = (institutionalId: string): StoredLecturerSettings => 
   }
 };
 
-const writeStoredSettings = (institutionalId: string, settings: StoredLecturerSettings) => {
-  if (!institutionalId || institutionalId === '—') return;
-  localStorage.setItem(storageKey(institutionalId), JSON.stringify(settings));
-  notifyStudentSettingsChanged(institutionalId);
-};
-
 export type SaveStatus = 'idle' | 'success' | 'error';
 
 export function useLecturerSettings() {
@@ -48,15 +45,21 @@ export function useLecturerSettings() {
   }, [institutionalId]);
 
   useEffect(() => {
-    const handler = (event: Event) => {
-      const detail = (event as CustomEvent<{ institutionalId: string }>).detail;
-      if (detail?.institutionalId === institutionalId) {
-        setSettings(readStoredSettings(institutionalId));
-      }
+    let cancelled = false;
+    void fetchNotificationPreferences()
+      .then((notifications) => {
+        if (!cancelled) setSettings({ notifications });
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSaveStatus('error');
+          setSaveMessage('Could not load notification preferences.');
+        }
+      });
+    return () => {
+      cancelled = true;
     };
-    window.addEventListener(STUDENT_SETTINGS_CHANGED, handler);
-    return () => window.removeEventListener(STUDENT_SETTINGS_CHANGED, handler);
-  }, [institutionalId]);
+  }, []);
 
   const clearStatus = useCallback(() => {
     setSaveStatus('idle');
@@ -75,24 +78,26 @@ export function useLecturerSettings() {
         ...settings,
         notifications: { ...settings.notifications, [key]: value },
       };
-      writeStoredSettings(institutionalId, next);
       setSettings(next);
-      showSuccess('Notification preferences updated.');
     },
-    [clearStatus, institutionalId, settings, showSuccess],
+    [clearStatus, settings],
   );
 
   const saveAllNotifications = useCallback(
     async (notifications: NotificationPreferences) => {
       clearStatus();
-      const next: StoredLecturerSettings = { ...settings, notifications };
-      writeStoredSettings(institutionalId, next);
-      setSettings(next);
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      showSuccess('Notification preferences saved.');
-      return true;
+      try {
+        const saved = await updateNotificationPreferences(notifications);
+        setSettings({ notifications: saved });
+        showSuccess('Notification preferences saved.');
+        return true;
+      } catch {
+        setSaveStatus('error');
+        setSaveMessage('Could not save notification preferences. Please try again.');
+        return false;
+      }
     },
-    [clearStatus, institutionalId, settings, showSuccess],
+    [clearStatus, showSuccess],
   );
 
   return {

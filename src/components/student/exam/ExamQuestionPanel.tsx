@@ -24,8 +24,9 @@ const ExamQuestionPanel = memo(({ question, answer, onAnswerChange }: ExamQuesti
 
     {question.type === 'multiple-choice' && question.options ? (
       <div className="space-y-3" role="radiogroup" aria-label={`Question ${question.number}`}>
-        {question.options.map((option) => {
-          const selected = answer === option;
+        {question.options.map((option, index) => {
+          const answerKey = question.optionKeys?.[index] ?? option;
+          const selected = answer === answerKey;
           return (
             <label
               key={option}
@@ -38,9 +39,9 @@ const ExamQuestionPanel = memo(({ question, answer, onAnswerChange }: ExamQuesti
               <input
                 type="radio"
                 name={`question-${question.id}`}
-                value={option}
+                value={answerKey}
                 checked={selected}
-                onChange={() => onAnswerChange(option)}
+                onChange={() => onAnswerChange(answerKey)}
                 className="w-4 h-4 text-student-primary focus:ring-student-primary"
               />
               <span className="text-student-body-lg font-student text-student-on-surface">{option}</span>

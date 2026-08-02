@@ -1,5 +1,4 @@
 import { memo } from 'react';
-import Icon from '../student/Icon';
 import type { TrendDay } from '../../data/integrityReportsData';
 
 type IntegrityEventTrendsChartProps = {
@@ -38,13 +37,6 @@ const IntegrityEventTrendsChart = memo(({
           {subtitle}
         </p>
       </div>
-      <button
-        type="button"
-        className="p-2 text-student-on-surface-variant hover:bg-student-surface-container rounded-full transition-colors shrink-0"
-        aria-label="Chart options"
-      >
-        <Icon name="more_vert" />
-      </button>
     </div>
 
     <div className="flex-1 relative flex items-end gap-2 sm:gap-4 justify-between mt-4 border-b border-student-surface-variant/50 pb-8 min-h-[220px]">

@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthProfile } from '../hooks/useAuthProfile';
 import { useCreateExam } from '../hooks/useCreateExam';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
 import CreateExamPageHeader from '../components/lecturer/CreateExamPageHeader';
 import ExamDetailsForm from '../components/lecturer/ExamDetailsForm';
-import ExamQuestionsPlaceholder from '../components/lecturer/ExamQuestionsPlaceholder';
+import ExamQuestionEditor from '../components/lecturer/ExamQuestionEditor';
 import ExamSecuritySettingsPanel from '../components/lecturer/ExamSecuritySettingsPanel';
 import Icon from '../components/student/Icon';
 import {
@@ -14,6 +14,7 @@ import {
   type CreateExamFormState,
   type SecuritySettingKey,
 } from '../data/createExamData';
+import { clearExamDraft, readExamDraft, writeExamDraft } from '../lib/examDraft';
 
 const formatDraftLabel = (savedAt: Date | null) => {
   if (!savedAt) return 'Draft not saved yet';
@@ -28,11 +29,41 @@ const LecturerCreateExamPage = () => {
 
   const [form, setForm] = useState<CreateExamFormState>(DEFAULT_FORM_STATE);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [draftError, setDraftError] = useState('');
   const [, setTick] = useState(0);
+  const skipAutosaveRef = useRef(true);
+  const draftOwnerRef = useRef(institutionalId);
 
   useEffect(() => {
     document.title = 'Create New Exam — Observerr Lecturer';
   }, []);
+
+  useEffect(() => {
+    const draft = readExamDraft(localStorage, institutionalId);
+    draftOwnerRef.current = institutionalId;
+    skipAutosaveRef.current = true;
+    if (draft) {
+      setForm(draft.form);
+      setLastSavedAt(draft.savedAt);
+    }
+  }, [institutionalId]);
+
+  useEffect(() => {
+    if (skipAutosaveRef.current) {
+      skipAutosaveRef.current = false;
+      return undefined;
+    }
+    const timer = window.setTimeout(() => {
+      try {
+        setLastSavedAt(writeExamDraft(localStorage, institutionalId, form));
+        draftOwnerRef.current = institutionalId;
+        setDraftError('');
+      } catch {
+        setDraftError('This draft could not be saved in this browser.');
+      }
+    }, 750);
+    return () => window.clearTimeout(timer);
+  }, [form, institutionalId]);
 
   useEffect(() => {
     if (!lastSavedAt) return undefined;
@@ -58,15 +89,24 @@ const LecturerCreateExamPage = () => {
   }, []);
 
   const handleSaveDraft = useCallback(() => {
-    setLastSavedAt(new Date());
-  }, []);
+    try {
+      setLastSavedAt(writeExamDraft(localStorage, institutionalId, form));
+      draftOwnerRef.current = institutionalId;
+      setDraftError('');
+    } catch {
+      setDraftError('This draft could not be saved in this browser.');
+    }
+  }, [form, institutionalId]);
 
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
       e.preventDefault();
-      await publishExam(form);
+      if (await publishExam(form)) {
+        clearExamDraft(localStorage, draftOwnerRef.current);
+        if (draftOwnerRef.current !== institutionalId) clearExamDraft(localStorage, institutionalId);
+      }
     },
-    [form, publishExam],
+    [form, institutionalId, publishExam],
   );
 
   return (
@@ -104,11 +144,15 @@ const LecturerCreateExamPage = () => {
             <p className="text-student-body-md font-student text-student-on-error-container">{error}</p>
           </div>
         )}
+        {draftError && <p role="alert" className="mb-6 text-student-error">{draftError}</p>}
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-8 flex flex-col gap-6">
             <ExamDetailsForm form={form} onChange={handleFormChange} />
-            <ExamQuestionsPlaceholder />
+            <ExamQuestionEditor
+              questions={form.questions}
+              onChange={(questions) => handleFormChange({ questions })}
+            />
           </div>
 
           <div className="lg:col-span-4">

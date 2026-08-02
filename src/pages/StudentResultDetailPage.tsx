@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import StudentPortalLayout from '../components/student/StudentPortalLayout';
 import ResultDetailHeader from '../components/student/results/ResultDetailHeader';
@@ -6,12 +6,26 @@ import SessionTimeline from '../components/student/results/SessionTimeline';
 import ScoreBreakdownCard from '../components/student/results/ScoreBreakdownCard';
 import SessionFeedbackCard from '../components/student/results/SessionFeedbackCard';
 import Icon from '../components/student/Icon';
-import { getStudentResultDetail } from '../data/studentResultDetailData';
+import { fetchResultDetail } from '../services/studentResultsService';
+import type { StudentResultDetailResponse } from '../types/studentResults';
 
 const StudentResultDetailPage = () => {
   const { resultId } = useParams<{ resultId: string }>();
   const id = Number(resultId);
-  const detail = Number.isFinite(id) ? getStudentResultDetail(id) : undefined;
+  const [detail, setDetail] = useState<StudentResultDetailResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!Number.isFinite(id)) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    fetchResultDetail(id)
+      .then(setDetail)
+      .catch(() => setDetail(null))
+      .finally(() => setLoading(false));
+  }, [id]);
 
   useEffect(() => {
     document.title = detail
@@ -20,8 +34,30 @@ const StudentResultDetailPage = () => {
   }, [detail]);
 
   const handleDownload = useCallback(() => {
-    window.alert('Report download will be available once connected to the backend.');
-  }, []);
+    if (!detail) return;
+    const lines = [
+      `${detail.assessmentType} — ${detail.courseCode}`,
+      detail.completedLabel,
+      `Academic score: ${detail.score ?? 'Pending'} / ${detail.maxScore}`,
+      `Integrity score: ${detail.integrityScore}%`,
+      '',
+      ...detail.timeline.map((item) => `${item.title}: ${item.description}`),
+    ];
+    const url = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/plain' }));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `observerr-result-${detail.id}.txt`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }, [detail]);
+
+  if (loading) {
+    return (
+      <StudentPortalLayout contentClassName="student-results-bg">
+        <div className="py-24 text-center text-student-on-surface-variant">Loading result…</div>
+      </StudentPortalLayout>
+    );
+  }
 
   if (!detail) {
     return (
@@ -44,9 +80,7 @@ const StudentResultDetailPage = () => {
     );
   }
 
-  const displayTitle = detail.examLabel
-    ? `${detail.courseName.replace(/ & Algorithms$/, '')}`
-    : detail.courseName;
+  const displayTitle = detail.courseName;
 
   return (
     <StudentPortalLayout
@@ -72,6 +106,12 @@ const StudentResultDetailPage = () => {
           <SessionTimeline events={detail.timeline} />
 
           <aside className="w-full md:w-[340px] flex flex-col gap-6 md:sticky md:top-24 shrink-0">
+            <div className="student-exam-glass-card rounded-[24px] p-6">
+              <p className="text-student-label-md uppercase tracking-wide text-student-on-surface-variant">Academic grade</p>
+              <p className="mt-2 text-student-headline-md font-bold text-student-on-surface">
+                {detail.score === null ? 'Pending' : `${detail.score} / ${detail.maxScore}`}
+              </p>
+            </div>
             <ScoreBreakdownCard
               baseScore={detail.baseScore}
               deductions={detail.deductions}

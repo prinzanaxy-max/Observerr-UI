@@ -1,7 +1,6 @@
 import { memo } from 'react';
 import Icon from '../student/Icon';
 import type { RiskFilter } from '../../data/liveMonitoringData';
-import { RISK_FILTER_COUNTS } from '../../data/liveMonitoringData';
 
 const FILTERS: { id: RiskFilter; label: string; style: string }[] = [
   { id: 'all', label: 'All Active', style: 'bg-student-primary text-student-on-primary' },
@@ -15,6 +14,7 @@ type MonitoringFilterBarProps = {
   searchQuery: string;
   onFilterChange: (filter: RiskFilter) => void;
   onSearchChange: (value: string) => void;
+  counts: Record<RiskFilter, number>;
 };
 
 const MonitoringFilterBar = memo(({
@@ -22,6 +22,7 @@ const MonitoringFilterBar = memo(({
   searchQuery,
   onFilterChange,
   onSearchChange,
+  counts,
 }: MonitoringFilterBarProps) => (
   <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
     <div className="flex flex-wrap gap-2">
@@ -36,7 +37,7 @@ const MonitoringFilterBar = memo(({
               isActive ? filter.style : 'border-2 border-student-outline-variant/50 text-student-on-surface-variant hover:border-student-primary/40'
             }`}
           >
-            {filter.label} ({RISK_FILTER_COUNTS[filter.id]})
+            {filter.label} ({counts[filter.id]})
           </button>
         );
       })}

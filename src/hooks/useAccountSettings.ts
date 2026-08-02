@@ -39,7 +39,16 @@ export function useAccountSettings() {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [saveMessage, setSaveMessage] = useState('');
 
-  const profilePicture = useProfilePicture(account?.profilePictureUrl);
+  const {
+    profilePictureUrl,
+    uploading,
+    removing,
+    photoError,
+    syncPictureUrl,
+    clearPhotoError,
+    uploadProfilePicture,
+    removeProfilePicture,
+  } = useProfilePicture(account?.profilePictureUrl);
 
   const initials = getInitialsFromName(
     account?.firstName,
@@ -62,7 +71,7 @@ export function useAccountSettings() {
         firstName: data.firstName ?? '',
         lastName: data.lastName ?? '',
       });
-      profilePicture.syncPictureUrl(data.profilePictureUrl ?? null);
+      syncPictureUrl(data.profilePictureUrl ?? null);
       updateProfilePicture(data.profilePictureUrl ?? null);
     } catch (err) {
       const mapped = mapAccountApiError(err);
@@ -75,7 +84,7 @@ export function useAccountSettings() {
     } finally {
       setLoading(false);
     }
-  }, [clearAuth, navigate, profilePicture.syncPictureUrl, updateProfilePicture]);
+  }, [clearAuth, navigate, syncPictureUrl, updateProfilePicture]);
 
   useEffect(() => {
     void loadAccount();
@@ -188,8 +197,8 @@ export function useAccountSettings() {
   const handleUploadProfilePicture = useCallback(
     async (file: File) => {
       clearStatus();
-      profilePicture.clearPhotoError();
-      const result = await profilePicture.uploadProfilePicture(file);
+      clearPhotoError();
+      const result = await uploadProfilePicture(file);
       if (result === false) return false;
       setAccount((prev) => (prev ? { ...prev, profilePictureUrl: result } : prev));
       setSaveStatus('success');
@@ -198,21 +207,21 @@ export function useAccountSettings() {
     },
     [
       clearStatus,
-      profilePicture.clearPhotoError,
-      profilePicture.uploadProfilePicture,
+      clearPhotoError,
+      uploadProfilePicture,
     ],
   );
 
   const handleRemoveProfilePicture = useCallback(async () => {
     clearStatus();
-    profilePicture.clearPhotoError();
-    const ok = await profilePicture.removeProfilePicture();
+    clearPhotoError();
+    const ok = await removeProfilePicture();
     if (!ok) return false;
     setAccount((prev) => (prev ? { ...prev, profilePictureUrl: null } : prev));
     setSaveStatus('success');
     setSaveMessage('Profile picture removed.');
     return true;
-  }, [clearStatus, profilePicture.clearPhotoError, profilePicture.removeProfilePicture]);
+  }, [clearPhotoError, clearStatus, removeProfilePicture]);
 
   return {
     account,
@@ -234,10 +243,10 @@ export function useAccountSettings() {
     handleSaveAccount,
     handleChangePassword,
     initials,
-    profilePictureUrl: profilePicture.profilePictureUrl,
-    uploadingPhoto: profilePicture.uploading,
-    removingPhoto: profilePicture.removing,
-    photoError: profilePicture.photoError,
+    profilePictureUrl,
+    uploadingPhoto: uploading,
+    removingPhoto: removing,
+    photoError,
     handleUploadProfilePicture,
     handleRemoveProfilePicture,
   };

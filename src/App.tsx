@@ -1,37 +1,38 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 import useAuthStore from './store/authStore';
 
-import LandingPage       from './pages/LandingPage';
-import AuthPage          from './pages/AuthPage';
-import DashboardPage     from './pages/DashboardPage';
-import StudentDashboard  from './pages/StudentDashboard';
-import StudentExamsPage  from './pages/StudentExamsPage';
-import StudentExamPrePage from './pages/StudentExamPrePage';
-import StudentExamSessionPage from './pages/StudentExamSessionPage';
-import StudentResultsPage from './pages/StudentResultsPage';
-import StudentResultDetailPage from './pages/StudentResultDetailPage';
-import StudentNotificationsPage from './pages/StudentNotificationsPage';
-import StudentSettingsPage from './pages/StudentSettingsPage';
-import StudentProfilePage from './pages/StudentProfilePage';
-import StudentDocumentationPage from './pages/StudentDocumentationPage';
-import LecturerDashboard from './pages/LecturerDashboard';
-import LecturerExamsPage from './pages/LecturerExamsPage';
-import LecturerLiveMonitoringPage from './pages/LecturerLiveMonitoringPage';
-import LecturerStudentTimelinePage from './pages/LecturerStudentTimelinePage';
-import LecturerStudentsPage from './pages/LecturerStudentsPage';
-import LecturerIntegrityReportsPage from './pages/LecturerIntegrityReportsPage';
-import LecturerProctoringPage from './pages/LecturerProctoringPage';
-import LecturerCreateExamPage from './pages/LecturerCreateExamPage';
-import LecturerSessionDetailPage from './pages/LecturerSessionDetailPage';
-import LecturerSettingsPage from './pages/LecturerSettingsPage';
-import LecturerSupportPage from './pages/LecturerSupportPage';
-import AccessDeniedPage  from './pages/AccessDeniedPage';
-import NotFoundPage      from './pages/NotFoundPage';
 import ProtectedRoute    from './components/ProtectedRoute';
 import RoleProtectedRoute from './components/RoleProtectedRoute';
 import PushNotificationProvider from './components/PushNotificationProvider';
+
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const AuthPage = lazy(() => import('./pages/AuthPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const StudentDashboard = lazy(() => import('./pages/StudentDashboard'));
+const StudentExamsPage = lazy(() => import('./pages/StudentExamsPage'));
+const StudentExamPrePage = lazy(() => import('./pages/StudentExamPrePage'));
+const StudentExamSessionPage = lazy(() => import('./pages/StudentExamSessionPage'));
+const StudentResultsPage = lazy(() => import('./pages/StudentResultsPage'));
+const StudentResultDetailPage = lazy(() => import('./pages/StudentResultDetailPage'));
+const StudentNotificationsPage = lazy(() => import('./pages/StudentNotificationsPage'));
+const StudentSettingsPage = lazy(() => import('./pages/StudentSettingsPage'));
+const StudentProfilePage = lazy(() => import('./pages/StudentProfilePage'));
+const StudentDocumentationPage = lazy(() => import('./pages/StudentDocumentationPage'));
+const LecturerDashboard = lazy(() => import('./pages/LecturerDashboard'));
+const LecturerExamsPage = lazy(() => import('./pages/LecturerExamsPage'));
+const LecturerLiveMonitoringPage = lazy(() => import('./pages/LecturerLiveMonitoringPage'));
+const LecturerStudentsPage = lazy(() => import('./pages/LecturerStudentsPage'));
+const LecturerIntegrityReportsPage = lazy(() => import('./pages/LecturerIntegrityReportsPage'));
+const LecturerProctoringPage = lazy(() => import('./pages/LecturerProctoringPage'));
+const LecturerCreateExamPage = lazy(() => import('./pages/LecturerCreateExamPage'));
+const LecturerSessionDetailPage = lazy(() => import('./pages/LecturerSessionDetailPage'));
+const LecturerSettingsPage = lazy(() => import('./pages/LecturerSettingsPage'));
+const LecturerSupportPage = lazy(() => import('./pages/LecturerSupportPage'));
+const LecturerExamResultsPage = lazy(() => import('./pages/LecturerExamResultsPage'));
+const AccessDeniedPage = lazy(() => import('./pages/AccessDeniedPage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 function App() {
   const bootstrapSession = useAuthStore((s) => s.bootstrapSession);
@@ -43,6 +44,7 @@ function App() {
   return (
     <PushNotificationProvider>
       <BrowserRouter>
+      <Suspense fallback={<div className="min-h-screen grid place-items-center">Loading…</div>}>
       <Routes>
         {/* Public */}
         <Route path="/"         element={<LandingPage />} />
@@ -77,10 +79,9 @@ function App() {
           <Route path="/lecturer/exams" element={<LecturerExamsPage />} />
           <Route path="/lecturer/exams/new" element={<LecturerCreateExamPage />} />
           <Route path="/lecturer/exams/:examId/live" element={<LecturerLiveMonitoringPage />} />
-          <Route path="/lecturer/exams/:examId/students/:studentId/timeline" element={<LecturerStudentTimelinePage />} />
+          <Route path="/lecturer/exams/:examId/results" element={<LecturerExamResultsPage />} />
           <Route path="/lecturer/students" element={<LecturerStudentsPage />} />
           <Route path="/lecturer/students/sessions/:sessionId" element={<LecturerSessionDetailPage />} />
-          <Route path="/lecturer/students/:studentId/timeline" element={<LecturerStudentTimelinePage />} />
           <Route path="/lecturer/reports" element={<LecturerIntegrityReportsPage />} />
           <Route path="/lecturer/proctoring" element={<LecturerProctoringPage />} />
           <Route path="/lecturer/settings" element={<LecturerSettingsPage />} />
@@ -91,6 +92,7 @@ function App() {
         <Route path="/403" element={<AccessDeniedPage />} />
         <Route path="*"    element={<NotFoundPage />} />
       </Routes>
+      </Suspense>
       </BrowserRouter>
     </PushNotificationProvider>
   );

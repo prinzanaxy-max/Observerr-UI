@@ -3,8 +3,8 @@ import type {
   RiskLevel,
   SessionEventSeverity,
   SessionTimelineEvent,
+  TimelineEvent,
 } from '../types/lecturerStudents';
-import type { TimelineEvent } from '../data/studentTimelineData';
 
 export const parseAvailableCourses = (courses: string[]): CourseFilterOption[] => {
   const options: CourseFilterOption[] = [{ value: 'ALL', label: 'All Courses' }];

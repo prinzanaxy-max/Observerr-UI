@@ -19,6 +19,13 @@ import { useIntegritySessionSync } from '../hooks/useIntegritySessionSync';
 import { useStudentExam } from '../hooks/useStudentExam';
 import type { IntegrityEvent } from '../types/integrityMonitoring';
 import { useStudentLiveKitPublisher } from '../hooks/useStudentLiveKitPublisher';
+import type { ExamQuestion } from '../data/studentExamSessionData';
+import {
+  fetchSessionQuestions,
+  restoreSessionAnswers,
+  saveSessionAnswer,
+  submitStudentExam,
+} from '../services/studentExamsService';
 
 const formatTime = (totalSeconds: number) => {
   const h = Math.floor(totalSeconds / 3600);
@@ -28,6 +35,25 @@ const formatTime = (totalSeconds: number) => {
     return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   }
   return `${m}:${String(s).padStart(2, '0')}`;
+};
+
+const saveAnswerWithRetry = async (
+  sessionId: string,
+  questionId: number,
+  selectedOption: 'A' | 'B' | 'C' | 'D',
+) => {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return await saveSessionAnswer(sessionId, questionId, selectedOption);
+    } catch (error) {
+      lastError = error;
+      if (attempt < 2) {
+        await new Promise((resolve) => window.setTimeout(resolve, 400 * 2 ** attempt));
+      }
+    }
+  }
+  throw lastError;
 };
 
 type ExamSessionWithMonitorProps = {
@@ -175,6 +201,12 @@ const StudentExamSessionPage = () => {
   const [calibrationDone, setCalibrationDone] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionQuestions, setSessionQuestions] = useState<ExamQuestion[]>([]);
+  const [questionsLoading, setQuestionsLoading] = useState(true);
+  const [questionsError, setQuestionsError] = useState('');
+  const answerSaveTimersRef = useRef(new Map<number, number>());
+  const questionsRequestRef = useRef(0);
+  const [submissionError, setSubmissionError] = useState('');
 
   const {
     score: integrityScore,
@@ -212,6 +244,14 @@ const StudentExamSessionPage = () => {
     getAuditLog,
     onSessionReady: handleSessionReady,
   });
+  const attemptBlocked = sessionError?.toLowerCase().includes('blocked') ?? false;
+
+  useEffect(() => {
+    if (!attemptBlocked) return;
+    answerSaveTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+    answerSaveTimersRef.current.clear();
+    void publisherDisconnectRef.current?.();
+  }, [attemptBlocked]);
 
   const finalizeSession = useCallback(async () => {
     if (!sessionEndedLoggedRef.current) {
@@ -220,20 +260,92 @@ const StudentExamSessionPage = () => {
     }
     await publisherDisconnectRef.current?.();
     const summary = buildSummary(proctoringAvailableRef.current);
-    return (await submitSession(summary, getAuditLog())) !== null;
-  }, [buildSummary, getAuditLog, logSessionEvent, submitSession]);
+    return (
+      (await submitSession(summary, getAuditLog(), (activeSessionId, completion) =>
+        submitStudentExam(activeSessionId, {
+          answers: Object.entries(answers).map(([questionId, selectedOption]) => ({
+            questionId: Number(questionId),
+            selectedOption: selectedOption as 'A' | 'B' | 'C' | 'D',
+          })),
+          completion,
+        }),
+      )) !== null
+    );
+  }, [answers, buildSummary, getAuditLog, logSessionEvent, submitSession]);
 
   const attemptFinalize = useCallback(async () => {
-    if (finalizing) return false;
+    if (finalizing || !sessionId) return false;
     setFinalizing(true);
+    setSubmissionError('');
     try {
       const completed = await finalizeSession();
       if (completed) setSubmitted(true);
       return completed;
+    } catch {
+      setSubmissionError('Your answers could not be submitted. Please retry before leaving this page.');
+      return false;
     } finally {
       setFinalizing(false);
     }
-  }, [finalizeSession, finalizing]);
+  }, [finalizeSession, finalizing, sessionId]);
+
+  const loadQuestions = useCallback(async () => {
+    if (!sessionId) return;
+    const requestId = ++questionsRequestRef.current;
+    setQuestionsLoading(true);
+    setQuestionsError('');
+    try {
+      const [questions, savedAnswers] = await Promise.all([
+        fetchSessionQuestions(sessionId),
+        restoreSessionAnswers(sessionId),
+      ]);
+      if (requestId !== questionsRequestRef.current) return;
+      setSessionQuestions(questions.map((question) => ({
+        id: question.id,
+        number: question.order,
+        text: question.text,
+        type: 'multiple-choice',
+        options: question.options.map((option) => option.text),
+        optionKeys: question.options.map((option) => option.key),
+        points: question.points,
+      })));
+      setAnswers(Object.fromEntries(
+        savedAnswers.map((answer) => [answer.questionId, answer.selectedOption]),
+      ));
+    } catch {
+      if (requestId === questionsRequestRef.current) {
+        setQuestionsError(
+          navigator.onLine
+            ? 'Questions could not be loaded. Please retry.'
+            : 'You are offline. Reconnect to continue loading this exam.',
+        );
+      }
+    } finally {
+      if (requestId === questionsRequestRef.current) setQuestionsLoading(false);
+    }
+  }, [sessionId]);
+
+  useEffect(() => {
+    void loadQuestions();
+    return () => {
+      questionsRequestRef.current += 1;
+    };
+  }, [loadQuestions]);
+
+  useEffect(() => {
+    if (!questionsError) return undefined;
+    const retryWhenOnline = () => void loadQuestions();
+    window.addEventListener('online', retryWhenOnline, { once: true });
+    return () => window.removeEventListener('online', retryWhenOnline);
+  }, [loadQuestions, questionsError]);
+
+  useEffect(
+    () => () => {
+      answerSaveTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+      answerSaveTimersRef.current.clear();
+    },
+    [],
+  );
 
   useEffect(() => {
     if (exam) {
@@ -260,7 +372,7 @@ const StudentExamSessionPage = () => {
     return () => window.clearInterval(timer);
   }, [attemptFinalize, exam, submitted, calibrationDone, sessionReady]);
 
-  const questions = useMemo(() => exam?.questions ?? [], [exam?.questions]);
+  const questions = useMemo(() => sessionQuestions, [sessionQuestions]);
   const currentQuestion = questions[currentIndex];
   const currentAnswer = currentQuestion ? answers[currentQuestion.id] ?? '' : '';
 
@@ -272,7 +384,20 @@ const StudentExamSessionPage = () => {
   const handleAnswerChange = useCallback((value: string) => {
     if (!currentQuestion) return;
     setAnswers((prev) => ({ ...prev, [currentQuestion.id]: value }));
-  }, [currentQuestion]);
+    if (sessionId && /^[A-D]$/.test(value)) {
+      const existing = answerSaveTimersRef.current.get(currentQuestion.id);
+      if (existing !== undefined) window.clearTimeout(existing);
+      const timer = window.setTimeout(() => {
+        answerSaveTimersRef.current.delete(currentQuestion.id);
+        void saveAnswerWithRetry(
+          sessionId,
+          currentQuestion.id,
+          value as 'A' | 'B' | 'C' | 'D',
+        ).catch(() => setSubmissionError('An answer could not be autosaved. Submission will retry it.'));
+      }, 500);
+      answerSaveTimersRef.current.set(currentQuestion.id, timer);
+    }
+  }, [currentQuestion, sessionId]);
 
   const handlePrevious = useCallback(() => {
     setCurrentIndex((i) => Math.max(0, i - 1));
@@ -319,6 +444,50 @@ const StudentExamSessionPage = () => {
 
   if (exam.availability !== 'ready') {
     return <Navigate to={`/student/exams/${exam.id}`} replace />;
+  }
+
+  if (attemptBlocked) {
+    return (
+      <div className="student-exam-pre h-dvh flex flex-col items-center justify-center gap-4 px-6 font-student text-center">
+        <Icon name="block" className="text-[48px] text-student-error" />
+        <h1 className="text-student-headline-md font-bold text-student-on-surface">
+          Attempt blocked by lecturer
+        </h1>
+        <p role="alert" className="max-w-md text-student-on-surface-variant">
+          {sessionError}
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate('/student/exams', { replace: true })}
+          className="rounded-full bg-student-primary px-6 py-3 font-semibold text-student-on-primary"
+        >
+          Return to exams
+        </button>
+      </div>
+    );
+  }
+
+  if (!sessionId || questionsLoading) {
+    return (
+      <div className="student-exam-pre h-dvh flex items-center justify-center font-student text-student-on-surface-variant">
+        Loading exam questions…
+      </div>
+    );
+  }
+
+  if (questionsError) {
+    return (
+      <div className="student-exam-pre h-dvh flex flex-col items-center justify-center gap-4 px-6 font-student text-center">
+        <p className="text-student-error">{questionsError}</p>
+        <button
+          type="button"
+          onClick={() => void loadQuestions()}
+          className="rounded-full bg-student-primary px-6 py-3 font-semibold text-student-on-primary"
+        >
+          Retry
+        </button>
+      </div>
+    );
   }
 
   if (submitted) {
@@ -394,6 +563,11 @@ const StudentExamSessionPage = () => {
               answer={currentAnswer}
               onAnswerChange={handleAnswerChange}
             />
+            {submissionError && (
+              <p role="alert" className="mt-4 text-center text-student-error font-student">
+                {submissionError}
+              </p>
+            )}
 
             <div className="mt-6 flex flex-wrap gap-2 justify-center">
               {questions.map((q, idx) => {

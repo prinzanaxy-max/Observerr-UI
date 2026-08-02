@@ -5,13 +5,8 @@ export type StudentSettingsProfile = {
   lastName: string;
 };
 
-export type NotificationPreferences = {
-  examGraded: boolean;
-  examReminders: boolean;
-  systemMaintenance: boolean;
-  integrityAlerts: boolean;
-  emailDigest: boolean;
-};
+export type { NotificationPreferences } from '../types/pushNotifications';
+import type { NotificationPreferences } from '../types/pushNotifications';
 
 export type StoredStudentSettings = {
   profile: StudentSettingsProfile;
@@ -48,11 +43,10 @@ export const SETTINGS_TABS: { id: SettingsTab; label: string; keywords: string[]
 ];
 
 export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
-  examGraded: true,
-  examReminders: true,
-  systemMaintenance: true,
+  examEvents: true,
   integrityAlerts: true,
-  emailDigest: false,
+  resultUpdates: true,
+  systemUpdates: true,
 };
 
 export const PRIVACY_BULLETS = [
@@ -89,17 +83,17 @@ export const NOTIFICATION_TOGGLES: {
   description: string;
 }[] = [
   {
-    key: 'examGraded',
-    label: 'Exam graded alerts',
-    description: 'Notify me when a completed exam has been graded and results are available.',
+    key: 'examEvents',
+    label: 'Exam alerts',
+    description: 'Notify me about exam reminders, starts, and endings.',
   },
   {
-    key: 'examReminders',
-    label: 'Upcoming exam reminders',
-    description: 'Send reminders 24 hours and 1 hour before scheduled exams.',
+    key: 'resultUpdates',
+    label: 'Result updates',
+    description: 'Notify me when a lecturer releases an exam result.',
   },
   {
-    key: 'systemMaintenance',
+    key: 'systemUpdates',
     label: 'System maintenance',
     description: 'Alerts about scheduled downtime and portal maintenance windows.',
   },
@@ -107,11 +101,6 @@ export const NOTIFICATION_TOGGLES: {
     key: 'integrityAlerts',
     label: 'Integrity & verification',
     description: 'Updates on identity verification and integrity report availability.',
-  },
-  {
-    key: 'emailDigest',
-    label: 'Weekly email digest',
-    description: 'A summary of upcoming exams and recent results sent every Monday.',
   },
 ];
 

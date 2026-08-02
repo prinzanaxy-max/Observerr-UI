@@ -8,7 +8,6 @@ import type { ProctoringMediaState } from '../../types/proctoringMedia';
 
 type ProctoringMainFeedProps = {
   feed: ProctoringFeed;
-  onWarn?: () => void;
   onViewTimeline?: () => void;
   onToggleAudio?: () => void;
   audioMuted?: boolean;
@@ -21,7 +20,6 @@ const integrityClass = (score: number) =>
 
 const ProctoringMainFeed = memo(({
   feed,
-  onWarn,
   onViewTimeline,
   onToggleAudio,
   audioMuted = false,
@@ -137,28 +135,11 @@ const ProctoringMainFeed = memo(({
     <div className="p-4 flex flex-wrap items-center gap-2 sm:gap-3 border-t border-student-surface-variant/50">
       <button
         type="button"
-        onClick={onWarn}
-        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-student-error-container text-student-on-error-container font-student font-bold text-student-body-md hover:opacity-90 transition-opacity"
-      >
-        <Icon name="campaign" />
-        Warn Student
-      </button>
-
-      <button
-        type="button"
         onClick={onViewTimeline}
         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-student-primary text-student-primary font-student font-bold text-student-body-md hover:bg-student-primary/5 transition-colors"
       >
         <Icon name="timeline" />
         View Timeline
-      </button>
-
-      <button
-        type="button"
-        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-student-outline-variant text-student-on-surface-variant font-student font-semibold text-student-body-md hover:bg-student-surface-container-high transition-colors"
-      >
-        <Icon name="photo_camera" />
-        Snapshot
       </button>
 
       <button
@@ -170,13 +151,6 @@ const ProctoringMainFeed = memo(({
         {audioMuted ? 'Unmute' : 'Mute'} Audio
       </button>
 
-      <button
-        type="button"
-        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-student-outline-variant text-student-on-surface-variant font-student font-semibold text-student-body-md hover:bg-student-surface-container-high transition-colors"
-        aria-label="Fullscreen"
-      >
-        <Icon name="fullscreen" />
-      </button>
     </div>
   </section>
 ));

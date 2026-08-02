@@ -43,6 +43,24 @@ const ExamDetailsForm = memo(({ form, onChange }: ExamDetailsFormProps) => (
         />
       </div>
 
+      <div>
+        <label htmlFor="student-enrollments" className="block text-student-label-md font-student text-student-on-surface-variant uppercase mb-2">
+          Enrolled Student IDs
+        </label>
+        <textarea
+          id="student-enrollments"
+          rows={4}
+          value={form.studentInstitutionalIdsText}
+          onChange={(e) => onChange({ studentInstitutionalIdsText: e.target.value })}
+          placeholder={'STU-2026-001\nSTU-2026-002'}
+          aria-describedby="student-enrollments-help"
+          className="w-full resize-y bg-student-surface-container-lowest border border-student-outline-variant rounded-lg px-4 py-3 font-student text-student-body-lg text-student-on-surface placeholder:text-student-outline focus:border-student-primary focus:ring-1 focus:ring-student-primary transition-colors"
+        />
+        <p id="student-enrollments-help" className="mt-2 text-student-body-sm text-student-on-surface-variant">
+          Enter one institutional ID per line, or separate IDs with commas. Only these students will see this exam.
+        </p>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label htmlFor="datetime" className="block text-student-label-md font-student text-student-on-surface-variant uppercase mb-2">

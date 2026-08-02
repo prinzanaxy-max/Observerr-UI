@@ -148,24 +148,20 @@ const LandingPage = () => {
               <div className="relative w-full h-full">
                 <div className="absolute top-10 left-0 md:-left-12 bg-white p-4 rounded-xl shadow-lg border border-outline-variant/30 entrance-stagger slow-float z-30" style={{ animationDelay: '0.4s' }}>
                   <div className="flex items-center gap-3">
-                    <span className="text-xl">🛡️</span>
+                    <span className="material-symbols-outlined text-[#2b6c00]" aria-hidden="true">shield</span>
                     <div>
                       <p className="font-label-sm text-[12px] text-on-surface-variant">Integrity Score</p>
-                      <p className="font-body-md text-sm text-on-surface">Kofi Atta — <span className={`font-bold ${GREEN.text}`}>94%</span> <span className="text-emerald-500 ml-1">🟢 Low Risk</span></p>
+                      <p className="font-body-md text-sm text-on-surface">Kofi Atta — <span className={`font-bold ${GREEN.text}`}>94%</span> <span className="text-emerald-600 ml-1 inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" aria-hidden="true" />Low Risk</span></p>
                     </div>
                   </div>
                 </div>
                 <div className={`absolute top-1/2 -right-4 md:-right-8 bg-white p-4 rounded-xl shadow-lg ${GREEN.borderLeft} border-y border-r border-outline-variant/30 entrance-stagger slow-float z-30`} style={{ animationDelay: '0.6s' }}>
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-amber-500">⚠️</span>
+                      <span className="material-symbols-outlined text-amber-500" aria-hidden="true">warning</span>
                       <p className="font-headline-md text-sm text-on-surface">Flag Detected</p>
                     </div>
                     <p className="font-body-md text-[13px] text-on-surface-variant">Tab switch — Yaw Darko</p>
-                    <div className="flex gap-2 mt-1">
-                      <button type="button" className="text-[11px] font-bold text-on-surface-variant hover:text-on-surface uppercase tracking-wider">Dismiss</button>
-                      <button type="button" className={`text-[11px] font-bold ${GREEN.text} hover:text-[#276400] uppercase tracking-wider`}>Review</button>
-                    </div>
                   </div>
                 </div>
                 <div className="absolute bottom-10 left-10 md:left-4 bg-white p-4 rounded-xl shadow-lg border border-outline-variant/30 entrance-stagger slow-float z-30" style={{ animationDelay: '0.8s' }}>
@@ -181,7 +177,7 @@ const LandingPage = () => {
                       <div className={`w-1.5 ${GREEN.bg} h-7 rounded-full`} />
                       <div className="w-1.5 bg-[#2b6c00]/50 h-5 rounded-full" />
                     </div>
-                    <span className="text-xl">📊</span>
+                    <span className="material-symbols-outlined text-[#2b6c00]" aria-hidden="true">monitoring</span>
                   </div>
                 </div>
               </div>
@@ -230,7 +226,7 @@ const LandingPage = () => {
                     <h3 className="font-headline-md text-lg text-on-surface mb-3">{step.title}</h3>
                     <p className="font-body-md text-sm text-on-surface-variant mb-4">{step.desc}</p>
                     {step.link && (
-                      <a className={`${GREEN.text} font-label-sm text-sm hover:underline flex items-center gap-1 w-max`} href="#">
+                      <a className={`${GREEN.text} font-label-sm text-sm hover:underline flex items-center gap-1 w-max`} href={step.n === '1' ? '/auth?mode=signup' : '/auth'}>
                         {step.link} <span className="material-symbols-outlined text-[16px]">chevron_right</span>
                       </a>
                     )}
@@ -282,29 +278,29 @@ const LandingPage = () => {
                     <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider col-span-3 text-right">Action</span>
                   </div>
                   {[
-                    { name: 'Kofi Atta', score: '94%', risk: 'Low', badge: '🟢', high: false },
-                    { name: 'Ama Serwaa', score: '81%', risk: 'Low', badge: '🟢', high: false },
-                    { name: 'Yaw Darko', score: '32%', risk: 'High', badge: '🔴', high: true },
-                    { name: 'Efua Boateng', score: '28%', risk: 'High', badge: '🔴', high: true },
+                    { name: 'Kofi Atta', score: '94%', risk: 'Low', high: false },
+                    { name: 'Ama Serwaa', score: '81%', risk: 'Low', high: false },
+                    { name: 'Yaw Darko', score: '32%', risk: 'High', high: true },
+                    { name: 'Efua Boateng', score: '28%', risk: 'High', high: true },
                   ].map((row) => (
                     <div key={row.name} className={`px-6 py-3.5 grid grid-cols-12 gap-2 items-center border-b border-gray-50 last:border-0 ${row.high ? 'bg-red-50/40' : ''}`}>
                       <span className="text-[13px] font-medium text-on-surface col-span-4 truncate">{row.name}</span>
                       <span className={`text-[13px] font-bold col-span-3 ${row.high ? 'text-red-600' : 'text-on-surface'}`}>{row.score}</span>
                       <span className="text-[12px] col-span-2 flex items-center gap-1">
-                        <span>{row.badge}</span>
+                        <span className={`w-2 h-2 rounded-full ${row.high ? 'bg-red-500' : 'bg-emerald-500'}`} aria-hidden="true" />
                         <span className={`font-medium ${row.high ? 'text-red-600' : 'text-emerald-600'}`}>{row.risk}</span>
                       </span>
                       <div className="col-span-3 flex justify-end">
                         {row.high ? (
-                          <button type="button" className="text-[11px] font-bold text-red-600 border border-red-200 px-2.5 py-1 rounded-lg hover:bg-red-50 transition-colors">Investigate</button>
+                          <a href="/auth" className="text-[11px] font-bold text-red-600 border border-red-200 px-2.5 py-1 rounded-lg hover:bg-red-50 transition-colors">Investigate</a>
                         ) : (
-                          <button type="button" className={`text-[11px] font-bold ${GREEN.text} border border-[#2b6c00]/30 px-2.5 py-1 rounded-lg hover:bg-[#2b6c00]/5 transition-colors`}>View</button>
+                          <a href="/auth" className={`text-[11px] font-bold ${GREEN.text} border border-[#2b6c00]/30 px-2.5 py-1 rounded-lg hover:bg-[#2b6c00]/5 transition-colors`}>View</a>
                         )}
                       </div>
                     </div>
                   ))}
                   <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 text-center">
-                    <a href="#" className={`text-[12px] ${GREEN.text} font-medium hover:underline`}>View all 42 students →</a>
+                    <a href="/auth" className={`text-[12px] ${GREEN.text} font-medium hover:underline`}>View all 42 students →</a>
                   </div>
                 </div>
               </div>
@@ -318,7 +314,7 @@ const LandingPage = () => {
               <div className="flex justify-center lg:justify-start order-2 lg:order-1">
                 <div className={`bg-white w-full max-w-[420px] rounded-xl overflow-hidden ${GREEN.borderTop}`} style={{ boxShadow: '0 20px 60px -10px rgba(43,108,0,0.12)' }}>
                   <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                    <p className="text-on-surface font-bold text-[15px]">Good morning, Kofi 👋</p>
+                    <p className="text-on-surface font-bold text-[15px]">Good morning, Kofi</p>
                     <span className={`w-8 h-8 rounded-full ${GREEN.bgLight} flex items-center justify-center ${GREEN.text} text-xs font-bold`}>KA</span>
                   </div>
                   <div className="px-6 py-5 space-y-3">
@@ -329,19 +325,19 @@ const LandingPage = () => {
                           <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full inline-block animate-pulse" />
                           Available Now
                         </span>
-                        <a href="#" className={`${GREEN.bg} text-white text-[11px] font-bold px-4 py-1.5 rounded-full ${GREEN.bgHover} transition-colors`}>Enter Exam →</a>
+                        <a href="/auth" className={`${GREEN.bg} text-white text-[11px] font-bold px-4 py-1.5 rounded-full ${GREEN.bgHover} transition-colors`}>Enter Exam →</a>
                       </div>
                     </div>
                     <div className="rounded-xl p-4 border border-gray-100 bg-white opacity-80">
                       <div className="flex items-center justify-between">
                         <p className="text-on-surface font-medium text-[13px]">MTH 203 — Quiz 3</p>
-                        <span className="text-[12px] text-amber-600 font-semibold">🟡 Starting Soon</span>
+                        <span className="text-[12px] text-amber-600 font-semibold inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" aria-hidden="true" />Starting Soon</span>
                       </div>
                     </div>
                     <div className="rounded-xl p-4 border border-gray-100 bg-white opacity-50">
                       <div className="flex items-center justify-between">
                         <p className="text-on-surface font-medium text-[13px]">ENG 101 — Final Exam</p>
-                        <span className="text-[12px] text-gray-400 font-semibold">⚪ Upcoming</span>
+                        <span className="text-[12px] text-gray-500 font-semibold inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full border border-gray-400" aria-hidden="true" />Upcoming</span>
                       </div>
                     </div>
                   </div>
@@ -399,21 +395,24 @@ const LandingPage = () => {
           </div>
           <div className="col-span-1 flex flex-col gap-3">
             <p className="font-label-sm font-bold text-on-surface mb-2">Product</p>
-            {['For Lecturers', 'For Students', 'Integrations', 'Pricing'].map((l) => (
-              <a key={l} className="font-body-md text-sm text-on-surface-variant hover:text-on-surface hover:underline transition-all" href="#">{l}</a>
+            {[
+              ['For Lecturers', '#for-lecturers'],
+              ['For Students', '#for-students'],
+              ['Integrations', '#how-it-works'],
+              ['Pricing', '/auth?mode=signup'],
+            ].map(([label, href]) => (
+              <a key={label} className="font-body-md text-sm text-on-surface-variant hover:text-on-surface hover:underline transition-all" href={href}>{label}</a>
             ))}
           </div>
           <div className="col-span-1 flex flex-col gap-3">
             <p className="font-label-sm font-bold text-on-surface mb-2">Company</p>
-            {['About Us', 'Integrity Manifesto', 'Careers', 'Contact Support'].map((l) => (
-              <a key={l} className="font-body-md text-sm text-on-surface-variant hover:text-on-surface hover:underline transition-all" href="#">{l}</a>
-            ))}
+            <a className="font-body-md text-sm text-on-surface-variant hover:text-on-surface hover:underline transition-all" href="#home">About Observerr</a>
+            <a className="font-body-md text-sm text-on-surface-variant hover:text-on-surface hover:underline transition-all" href="mailto:support@observerr.app">Contact Support</a>
           </div>
           <div className="col-span-1 flex flex-col gap-3">
             <p className="font-label-sm font-bold text-on-surface mb-2">Legal</p>
-            {['Privacy Policy', 'Terms of Service', 'Security', 'Accessibility'].map((l) => (
-              <a key={l} className="font-body-md text-sm text-on-surface-variant hover:text-on-surface hover:underline transition-all" href="#">{l}</a>
-            ))}
+            <a className="font-body-md text-sm text-on-surface-variant hover:text-on-surface hover:underline transition-all" href="#how-it-works">Security</a>
+            <a className="font-body-md text-sm text-on-surface-variant hover:text-on-surface hover:underline transition-all" href="/auth">Accessibility</a>
           </div>
         </div>
       </footer>

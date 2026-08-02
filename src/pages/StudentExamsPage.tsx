@@ -6,6 +6,7 @@ import StudentExamCard from '../components/student/StudentExamCard';
 import Icon from '../components/student/Icon';
 import { useStudentExams } from '../hooks/useStudentExams';
 import type { ExamListTab, StudentExam } from '../data/studentExamsData';
+import { studentExamActionPath } from '../lib/examResultNavigation';
 
 const StudentExamsPage = () => {
   const navigate = useNavigate();
@@ -34,7 +35,11 @@ const StudentExamsPage = () => {
   const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
   const handleTabChange = useCallback((tab: ExamListTab) => setActiveTab(tab), []);
   const handleExamAction = useCallback((exam: StudentExam) => {
-    navigate(`/student/exams/${exam.id}`);
+    navigate(studentExamActionPath(
+      exam.id,
+      exam.action.type === 'view-results' ? 'view-results' : 'exam',
+      exam.resultId,
+    ));
   }, [navigate]);
 
   return (

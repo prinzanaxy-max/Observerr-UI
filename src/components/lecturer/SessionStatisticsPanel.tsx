@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import Icon from '../student/Icon';
-import type { SessionStatistics } from '../../data/studentTimelineData';
+import type { SessionStatistics } from '../../types/lecturerStudents';
 
 type SessionStatisticsPanelProps = {
   stats: SessionStatistics;

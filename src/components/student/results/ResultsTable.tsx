@@ -18,7 +18,7 @@ const TableSkeleton = () => (
   <tbody className="animate-pulse">
     {Array.from({ length: 5 }).map((_, i) => (
       <tr key={i} className="border-b border-student-outline-variant/20">
-        <td className="py-5 px-6" colSpan={5}>
+        <td className="py-5 px-6" colSpan={6}>
           <div className="h-12 rounded-lg bg-student-surface-container-high/70" />
         </td>
       </tr>
@@ -39,11 +39,11 @@ const ResultsTable = memo(({
       <table className="w-full text-left border-collapse min-w-[760px]">
         <thead>
           <tr className="border-b border-student-outline-variant/40 bg-student-surface-container-low/50">
-            {['Course', 'Date Taken', 'Integrity Score', 'Status', 'Action'].map((col, idx) => (
+            {['Course', 'Date Taken', 'Grade', 'Integrity Score', 'Status', 'Action'].map((col, idx) => (
               <th
                 key={col}
                 className={`py-4 px-6 text-student-label-md font-student font-bold text-student-on-surface-variant uppercase tracking-wider ${
-                  idx === 4 ? 'text-right' : ''
+                  idx === 5 ? 'text-right' : ''
                 }`}
               >
                 {col}
@@ -79,6 +79,11 @@ const ResultsTable = memo(({
                 <td className="py-5 px-6">
                   <p className="font-medium">{result.dateTaken}</p>
                   <p className="text-student-label-md font-student text-student-on-surface-variant">{result.timeLabel}</p>
+                </td>
+                <td className="py-5 px-6">
+                  <span className="font-semibold">
+                    {result.score === null ? 'Pending' : `${result.score}/${result.maxScore}`}
+                  </span>
                 </td>
                 <td className="py-5 px-6">
                   <IntegrityScoreCell score={result.integrityScore} />

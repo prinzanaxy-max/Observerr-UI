@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { Link } from 'react-router-dom';
 import Icon from '../student/Icon';
 
 type LecturerTopBarProps = {
@@ -28,14 +29,13 @@ const LecturerTopBar = memo(({ searchQuery, onSearchChange, onNewExam }: Lecture
     </div>
 
     <div className="flex items-center gap-4 sm:gap-6 shrink-0">
-      <button
-        type="button"
+      <Link
+        to="/lecturer/settings"
         className="relative hover:bg-student-surface-container rounded-full p-2 transition-colors"
-        aria-label="Notifications"
+        aria-label="Notification settings"
       >
         <Icon name="notifications" className="text-student-on-surface-variant" />
-        <span className="absolute top-2 right-2 w-2 h-2 bg-student-error rounded-full" />
-      </button>
+      </Link>
       <button
         type="button"
         onClick={onNewExam}

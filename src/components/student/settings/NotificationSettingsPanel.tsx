@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { NOTIFICATION_TOGGLES, type NotificationPreferences } from '../../../data/studentSettingsData';
 import PushNotificationsToggle from './PushNotificationsToggle';
 import type { PushPermissionStatus } from '../../../types/pushNotifications';
@@ -12,7 +12,7 @@ type NotificationSettingsPanelProps = {
   pushEnabled: boolean;
   pushErrorMessage: string;
   onEnablePush: () => Promise<boolean>;
-  onDisablePush: () => void;
+  onDisablePush: () => void | Promise<void>;
   toggles?: typeof NOTIFICATION_TOGGLES;
 };
 
@@ -29,6 +29,7 @@ const NotificationSettingsPanel = memo(({
   toggles = NOTIFICATION_TOGGLES,
 }: NotificationSettingsPanelProps) => {
   const [draft, setDraft] = useState(preferences);
+  const savePendingRef = useRef(false);
 
   useEffect(() => {
     setDraft(preferences);
@@ -41,7 +42,13 @@ const NotificationSettingsPanel = memo(({
   }, [draft, onToggle]);
 
   const handleSaveAll = useCallback(async () => {
-    await onSaveAll(draft);
+    if (savePendingRef.current) return;
+    savePendingRef.current = true;
+    try {
+      await onSaveAll(draft);
+    } finally {
+      savePendingRef.current = false;
+    }
   }, [draft, onSaveAll]);
 
   return (
@@ -49,7 +56,7 @@ const NotificationSettingsPanel = memo(({
       <div className="mb-6">
         <h3 className="text-student-headline-sm font-student text-student-on-surface mb-1">Notification Preferences</h3>
         <p className="text-student-body-md font-student text-student-on-surface-variant">
-          Choose which alerts you receive in the portal and by email.
+          Choose which alerts you receive in the portal and through browser push.
         </p>
       </div>
 
@@ -75,6 +82,7 @@ const NotificationSettingsPanel = memo(({
               type="button"
               role="switch"
               aria-checked={draft[item.key]}
+              aria-label={`${item.label}: ${draft[item.key] ? 'on' : 'off'}`}
               onClick={() => handleToggle(item.key)}
               className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${
                 draft[item.key] ? 'bg-student-primary' : 'bg-student-outline-variant/60'
@@ -97,7 +105,7 @@ const NotificationSettingsPanel = memo(({
           onClick={() => void handleSaveAll()}
           className="px-6 py-2.5 rounded-full bg-student-primary text-student-on-primary text-student-body-md font-student font-bold shadow-[0_0_15px_rgba(43,108,0,0.3)] hover:shadow-[0_0_20px_rgba(43,108,0,0.4)] transition-all disabled:opacity-60"
         >
-          Save Preferences
+          {saving ? 'Saving…' : 'Save Preferences'}
         </button>
       </div>
     </section>

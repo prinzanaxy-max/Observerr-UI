@@ -15,8 +15,28 @@ export type CreateExamFormState = {
   courseId: string;
   startDateTime: string;
   durationMinutes: string;
+  studentInstitutionalIdsText: string;
   security: Record<SecuritySettingKey, boolean>;
+  questions: AuthoringQuestion[];
 };
+
+export type AnswerChoice = 'A' | 'B' | 'C' | 'D';
+
+export type AuthoringQuestion = {
+  id: string;
+  text: string;
+  options: Record<AnswerChoice, string>;
+  correctAnswer: AnswerChoice;
+  points: number;
+};
+
+export const createEmptyQuestion = (index = 0): AuthoringQuestion => ({
+  id: globalThis.crypto?.randomUUID?.() ?? `question-${Date.now()}-${index}`,
+  text: '',
+  options: { A: '', B: '', C: '', D: '' },
+  correctAnswer: 'A',
+  points: 1,
+});
 
 export const CREATE_EXAM_PATH = '/lecturer/exams/new';
 
@@ -55,9 +75,11 @@ export const DEFAULT_FORM_STATE: CreateExamFormState = {
   courseId: '',
   startDateTime: '',
   durationMinutes: '120',
+  studentInstitutionalIdsText: '',
   security: {
     webcamMonitoring: true,
     tabSwitchTracking: true,
     blockCopyPaste: true,
   },
+  questions: [createEmptyQuestion()],
 };

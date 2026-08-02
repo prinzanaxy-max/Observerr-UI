@@ -27,6 +27,8 @@ export type StudentResultItem = {
   timing: ResultTiming;
   integrityScore: number;
   status: ApiResultStatus;
+  score: number | null;
+  maxScore: number;
 };
 
 export type StudentResultsPageResponse = {
@@ -46,6 +48,37 @@ export type StudentResultsSummary = {
   underReview: number;
 };
 
+export type StudentResultDetailResponse = {
+  id: number;
+  courseName: string;
+  courseCode: string;
+  assessmentType: string;
+  dateTaken: string;
+  completedLabel: string;
+  integrityScore: number;
+  status: ApiResultStatus;
+  baseScore: number;
+  deductions: number;
+  finalScore: number;
+  deductionNote?: string;
+  feedbackTitle: string;
+  feedbackMessage: string;
+  score: number | null;
+  maxScore: number;
+  timeline: TimelineEvent[];
+};
+
+export type TimelineEvent = {
+  id: number;
+  title: string;
+  timeLabel: string;
+  description: string;
+  type: 'success' | 'neutral' | 'shield';
+  imageUrl?: string;
+  imageCaption?: string;
+  aiConfidence?: { label: string; value: string };
+};
+
 /** Row shape used by ResultsTable and related UI. */
 export type StudentResultRow = {
   id: number;
@@ -56,6 +89,8 @@ export type StudentResultRow = {
   dateTaken: string;
   timeLabel: string;
   integrityScore: number;
+  score: number | null;
+  maxScore: number;
   status: 'Verified' | 'Under Review';
 };
 

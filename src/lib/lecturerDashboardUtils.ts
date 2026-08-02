@@ -111,6 +111,8 @@ export const mapLiveSessionStudent = (student: LiveSessionStudentDto): Monitored
   lastEvent: student.lastEvent,
   highlighted: student.highlighted ?? student.riskLevel?.toUpperCase() === 'HIGH',
   latestSessionId: student.latestSessionId,
+  blocked: student.blocked ?? false,
+  blockReason: student.blockReason,
 });
 
 export const mapProctoringFeedToView = (feed: ProctoringFeedDto): ProctoringFeed => ({

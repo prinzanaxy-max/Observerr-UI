@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { IntegrityAuditRecord, IntegritySessionSummary, StartIntegritySessionResponse } from '../types/integritySession';
+import { AxiosError } from 'axios';
+import type {
+  CompleteIntegritySessionResponse,
+  IntegrityAuditRecord,
+  IntegritySessionSummary,
+  StartIntegritySessionResponse,
+  SubmitIntegritySessionPayload,
+} from '../types/integritySession';
 import * as integritySessionService from '../services/integritySessionService';
 
 const FLUSH_INTERVAL_MS = 12_000;
@@ -80,6 +87,12 @@ export function useIntegritySessionSync({
           `[IntegritySession] flushed ${result.accepted} event(s), skipped ${result.skipped}`,
         );
       } catch (err) {
+        if (err instanceof AxiosError && err.response?.status === 403) {
+          const detail = err.response.data as { message?: string } | undefined;
+          setSessionError(detail?.message ?? 'This exam attempt has been blocked by the lecturer.');
+          sessionCompletedRef.current = true;
+          return;
+        }
         if (integritySessionService.isSessionConflictError(err)) {
           sessionCompletedRef.current = true;
           console.warn('[IntegritySession] Session already completed — stopping flush.');
@@ -119,7 +132,14 @@ export function useIntegritySessionSync({
   }, [flush, sessionReady]);
 
   const submitSession = useCallback(
-    async (summary: IntegritySessionSummary, events: IntegrityAuditRecord[]) => {
+    async (
+      summary: IntegritySessionSummary,
+      events: IntegrityAuditRecord[],
+      submit?: (
+        sessionId: string,
+        payload: SubmitIntegritySessionPayload,
+      ) => Promise<CompleteIntegritySessionResponse | unknown>,
+    ) => {
       if (!sessionId) {
         console.warn('[IntegritySession] No backend sessionId — skipping submit.');
         return null;
@@ -137,10 +157,13 @@ export function useIntegritySessionSync({
 
       try {
         const pending = events.slice(lastFlushedIndexRef.current);
-        const result = await integritySessionService.submitIntegritySession(sessionId, {
+        const payload = {
           summary: apiSummary,
           events: pending,
-        });
+        };
+        const result = submit
+          ? await submit(sessionId, payload)
+          : await integritySessionService.submitIntegritySession(sessionId, payload);
         sessionCompletedRef.current = true;
         lastFlushedIndexRef.current = events.length;
         console.info('[IntegritySession] complete:', result);
