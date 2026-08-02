@@ -13,6 +13,7 @@ import ExamSessionNav from '../components/student/exam/ExamSessionNav';
 import IntegrityCalibrationOverlay from '../components/student/exam/IntegrityCalibrationOverlay';
 import IntegrityMonitorErrorBoundary from '../components/student/exam/IntegrityMonitorErrorBoundary';
 import ProctoringStatusBanner from '../components/student/exam/ProctoringStatusBanner';
+import Icon from '../components/student/Icon';
 import { useIntegrityMonitor } from '../hooks/useIntegrityMonitor';
 import { useIntegrityScore } from '../hooks/useIntegrityScore';
 import { useIntegritySessionSync } from '../hooks/useIntegritySessionSync';

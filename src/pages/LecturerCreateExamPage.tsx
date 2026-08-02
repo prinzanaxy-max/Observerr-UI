@@ -33,6 +33,7 @@ const LecturerCreateExamPage = () => {
   const [, setTick] = useState(0);
   const skipAutosaveRef = useRef(true);
   const draftOwnerRef = useRef(institutionalId);
+  const publishedRef = useRef(false);
 
   useEffect(() => {
     document.title = 'Create New Exam — Observerr Lecturer';
@@ -54,6 +55,7 @@ const LecturerCreateExamPage = () => {
       return undefined;
     }
     const timer = window.setTimeout(() => {
+      if (publishedRef.current) return;
       try {
         setLastSavedAt(writeExamDraft(localStorage, institutionalId, form));
         draftOwnerRef.current = institutionalId;
@@ -102,6 +104,7 @@ const LecturerCreateExamPage = () => {
     async (e: FormEvent) => {
       e.preventDefault();
       if (await publishExam(form)) {
+        publishedRef.current = true;
         clearExamDraft(localStorage, draftOwnerRef.current);
         if (draftOwnerRef.current !== institutionalId) clearExamDraft(localStorage, institutionalId);
       }

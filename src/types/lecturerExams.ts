@@ -49,6 +49,7 @@ export type CreateExamRequest = {
   course: string;
   startAt: string;
   durationMinutes: number;
+  studentInstitutionalIds: string[];
   security: ExamSecuritySettings;
   questions: {
     text: string;

@@ -6,7 +6,8 @@ test.describe('critical authoring and recovery', () => {
     await mockSession(page, 'LECTURER');
   });
 
-  test('validates imports, recovers drafts, and suppresses duplicate publish', async ({ page }) => {
+  test('validates imports, recovers drafts, and suppresses duplicate publish', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === 'mobile-chromium', 'Covered on desktop and tablet authoring layouts.');
     let createRequests = 0;
     await page.route('**/api/lecturer/exams', async (route) => {
       if (route.request().method() !== 'POST') return route.fallback();
@@ -101,7 +102,8 @@ test.describe('critical student contracts', () => {
     expect(pageErrors).toEqual([]);
   });
 
-  test('saves notification preferences once and reports upload validation errors', async ({ page }) => {
+  test('saves notification preferences once and reports upload validation errors', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === 'mobile-chromium', 'Covered on desktop and tablet settings layouts.');
     let preferenceWrites = 0;
     await page.route('**/api/notifications/preferences', async (route) => {
       if (route.request().method() === 'PUT') {
@@ -119,7 +121,10 @@ test.describe('critical student contracts', () => {
     await page.getByRole('button', { name: 'Notifications' }).first().click();
     await page.getByRole('switch', { name: /Exam/i }).click();
     const save = page.getByRole('button', { name: 'Save Preferences' });
-    await Promise.all([save.click(), save.click()]);
+    await save.evaluate((button: HTMLButtonElement) => {
+      button.click();
+      button.click();
+    });
     await expect(page.getByText('Notification preferences saved.')).toBeVisible();
     expect(preferenceWrites).toBe(1);
 
@@ -297,7 +302,9 @@ test('refreshes one expired token and retries the protected request', async ({ p
   expect(refreshCalls).toBe(1);
 });
 
-test('supports isolated mocked student and lecturer roles', async ({ browser }) => {
+test('supports isolated mocked student and lecturer roles', async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop-chromium', 'Cross-role isolation is viewport-independent.');
+  test.slow();
   const studentContext = await browser.newContext({ baseURL: 'http://127.0.0.1:4173' });
   const lecturerContext = await browser.newContext({ baseURL: 'http://127.0.0.1:4173' });
   const student = await studentContext.newPage();

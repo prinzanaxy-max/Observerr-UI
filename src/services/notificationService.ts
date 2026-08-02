@@ -14,6 +14,7 @@ import {
 } from '../lib/apiResponse';
 
 const CATEGORIES: NotificationCategory[] = ['EXAM', 'INTEGRITY', 'RESULT', 'SYSTEM'];
+let preferenceUpdatePromise: Promise<NotificationPreferences> | null = null;
 
 export const normalizeNotificationPage = (value: unknown): NotificationPage => {
   const page = requireRecord(value, 'notifications page');
@@ -98,9 +99,11 @@ export async function fetchNotificationPreferences(): Promise<NotificationPrefer
 export async function updateNotificationPreferences(
   preferences: NotificationPreferences,
 ): Promise<NotificationPreferences> {
-  const { data } = await apiClient.put<unknown>(
-    '/api/notifications/preferences',
-    preferences,
-  );
-  return normalizeNotificationPreferences(data);
+  if (preferenceUpdatePromise) return preferenceUpdatePromise;
+  preferenceUpdatePromise = apiClient.put<unknown>('/api/notifications/preferences', preferences)
+    .then(({ data }) => normalizeNotificationPreferences(data))
+    .finally(() => {
+      preferenceUpdatePromise = null;
+    });
+  return preferenceUpdatePromise;
 }

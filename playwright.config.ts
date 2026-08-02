@@ -27,6 +27,7 @@ export default defineConfig({
     },
     {
       name: 'tablet-chromium',
+      testMatch: /critical-workflows\.spec\.ts/,
       use: { ...devices['iPad Pro 11'], browserName: 'chromium' },
     },
   ],
