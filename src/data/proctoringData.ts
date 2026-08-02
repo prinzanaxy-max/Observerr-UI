@@ -16,6 +16,8 @@ export type ProctoringFeed = {
   streamingSince: string;
   seatLabel?: string;
   sessionId?: string | number;
+  participantIdentity?: string;
+  roomName?: string;
 };
 
 export type ProctoringExam = {

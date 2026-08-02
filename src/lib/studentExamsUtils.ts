@@ -77,9 +77,9 @@ export function mapStudentExamDtoToCard(dto: StudentExamDto): StudentExam {
   const { date, timeRange } = parseScheduleParts(dto.schedule, dto.startAt, dto.endAt);
   const { icon, iconTone } = iconForCourse(dto.courseCode);
 
-  let statusLabel = 'Scheduled';
+  let statusLabel: string;
   let statusTone: StudentExam['statusTone'] = 'neutral';
-  let action: StudentExam['action'] = { type: 'guidelines', label: 'Review Guidelines' };
+  let action: StudentExam['action'];
   let highlight = false;
 
   if (status === 'LIVE') {

@@ -8,6 +8,7 @@ import ProctoringMainFeed from '../components/lecturer/ProctoringMainFeed';
 import ProctoringStudentRail from '../components/lecturer/ProctoringStudentRail';
 import type { ProctoringFeed } from '../data/proctoringData';
 import { CREATE_EXAM_PATH } from '../data/createExamData';
+import { useLecturerLiveKitRoom } from '../hooks/useLecturerLiveKitRoom';
 
 const LecturerProctoringPage = () => {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ const LecturerProctoringPage = () => {
   const [selectedExamId, setSelectedExamId] = useState<number | null>(null);
   const [selectedFeedId, setSelectedFeedId] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [audioMuted, setAudioMuted] = useState(false);
+  const [audioMuted, setAudioMuted] = useState(true);
 
   const { exams, feeds, loading, error, reloadExams } = useLecturerProctoring(selectedExamId);
 
@@ -55,10 +56,13 @@ const LecturerProctoringPage = () => {
     () => filteredFeeds.find((feed) => feed.id === selectedFeedId) ?? filteredFeeds[0],
     [filteredFeeds, selectedFeedId],
   );
+  const selectedIdentity =
+    (selectedFeed?.participantIdentity ?? String(selectedFeed?.sessionId ?? '')) || null;
+  const liveRoom = useLecturerLiveKitRoom(selectedExamId, selectedIdentity);
 
   const handleSelectFeed = useCallback((feed: ProctoringFeed) => {
     setSelectedFeedId(feed.id);
-    setAudioMuted(false);
+    setAudioMuted(true);
   }, []);
 
   const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
@@ -129,6 +133,11 @@ const LecturerProctoringPage = () => {
       }
     >
       <div className="p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto w-full pb-12">
+        {liveRoom.error && (
+          <p className="mb-3 rounded-xl bg-amber-50 px-4 py-2 text-amber-800 font-student text-student-body-md">
+            Live video unavailable; showing the latest status and snapshot where available.
+          </p>
+        )}
         {loading && feeds.length === 0 ? (
           <div className="h-96 rounded-[24px] bg-student-surface-container-high animate-pulse" />
         ) : (
@@ -140,6 +149,13 @@ const LecturerProctoringPage = () => {
                 onToggleAudio={handleToggleAudio}
                 onViewTimeline={handleViewTimeline}
                 onWarn={() => {}}
+                participant={
+                  liveRoom.participants.get(
+                    selectedFeed.participantIdentity ??
+                      String(selectedFeed.sessionId ?? ''),
+                  )
+                }
+                connectionState={liveRoom.state}
               />
             )}
 
@@ -149,6 +165,7 @@ const LecturerProctoringPage = () => {
               searchQuery={searchQuery}
               onSearchChange={handleSearchChange}
               onSelect={handleSelectFeed}
+              participants={liveRoom.participants}
             />
           </div>
         )}

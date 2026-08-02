@@ -4,10 +4,12 @@ import type { ApiIntegrityAuditRecord } from '../lib/integrity/integrityApiMappe
 /** Stable codes stored in DB — do not rename once deployed. */
 export type IntegrityEventCode =
   | 'GAZE_DEVIATION_BRIEF'
+  | 'GAZE_DEVIATION_MODERATE'
   | 'GAZE_DEVIATION_SUSTAINED'
   | 'TAB_BLUR'
   | 'TAB_BLUR_REPEATED'
   | 'FACE_PARTIAL_BRIEF'
+  | 'FACE_ABSENT_SHORT'
   | 'FACE_ABSENT_MEDIUM'
   | 'FACE_ABSENT_LONG'
   | 'CLIPBOARD_EVENT'
@@ -25,6 +27,8 @@ export type IntegrityEventCode =
   | 'GAZE_DEVIATION_END'
   | 'FACE_LOST'
   | 'FACE_RESTORED'
+  | 'FACE_PARTIAL_DETECTED'
+  | 'FACE_PARTIAL_CLEARED'
   | 'TAB_FOCUS'
   | 'MULTI_FACE_CLEARED';
 
@@ -76,6 +80,8 @@ export type StartIntegritySessionResponse = {
 export type AppendIntegrityEventsResponse = {
   accepted: number;
   skipped: number;
+  currentScore: number;
+  requiresReview: boolean;
 };
 
 export type CompleteIntegritySessionResponse = {

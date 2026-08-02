@@ -1,22 +1,26 @@
 export type ProctoringExamDto = {
-  id: number;
+  examId: number;
   title: string;
-  courseCode: string;
+  courseLabel: string;
   activeFeeds: number;
   totalStudents: number;
 };
 
 export type ProctoringFeedDto = {
   sessionId: string | number;
+  participantIdentity?: string;
+  roomName?: string;
   studentId: number;
-  studentNumber: string;
-  name: string;
+  studentNumber?: string;
+  studentName: string;
+  name?: string;
   initials?: string;
   riskLevel: string;
-  liveStatus: string;
+  liveStatus?: string;
   liveStatusLabel: string;
   integrityScore: number;
   snapshotUrl: string | null;
+  lastEvent?: string | null;
   lastFlag?: string | null;
   cameraOn?: boolean;
   micOn?: boolean;
@@ -31,5 +35,6 @@ export type ProctoringExamsResponse = {
 
 export type ProctoringFeedsResponse = {
   examId: number;
+  roomName?: string;
   feeds: ProctoringFeedDto[];
 };

@@ -115,18 +115,20 @@ export const mapLiveSessionStudent = (student: LiveSessionStudentDto): Monitored
 
 export const mapProctoringFeedToView = (feed: ProctoringFeedDto): ProctoringFeed => ({
   id: String(feed.studentNumber || feed.studentId),
-  name: feed.name,
+  name: feed.studentName || feed.name || `Student ${feed.studentId}`,
   initials: feed.initials,
   risk: normalizeRisk(feed.riskLevel),
-  liveStatus: normalizeLiveStatus(feed.liveStatus),
+  liveStatus: normalizeLiveStatus(feed.liveStatus ?? feed.liveStatusLabel),
   liveStatusLabel: feed.liveStatusLabel,
   feedPreview: feed.snapshotUrl ?? '',
   audioLevel: feed.audioLevel ?? 0,
   cameraOn: feed.cameraOn ?? Boolean(feed.snapshotUrl),
   micOn: feed.micOn ?? false,
   integrityScore: Math.round(feed.integrityScore),
-  lastFlag: feed.lastFlag ?? undefined,
+  lastFlag: feed.lastFlag ?? feed.lastEvent ?? undefined,
   streamingSince: feed.streamingSince ?? '—',
   seatLabel: feed.seatLabel ?? undefined,
   sessionId: feed.sessionId,
+  participantIdentity: feed.participantIdentity ?? String(feed.sessionId),
+  roomName: feed.roomName,
 });

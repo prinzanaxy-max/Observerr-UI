@@ -2,6 +2,9 @@ import { memo } from 'react';
 import Icon from '../student/Icon';
 import type { ProctoringFeed } from '../../data/proctoringData';
 import { liveStatusTone, riskTone } from '../../data/proctoringData';
+import LiveMediaVideo from './LiveMediaVideo';
+import type { LiveParticipantState } from '../../hooks/useLecturerLiveKitRoom';
+import type { ProctoringMediaState } from '../../types/proctoringMedia';
 
 type ProctoringMainFeedProps = {
   feed: ProctoringFeed;
@@ -9,6 +12,8 @@ type ProctoringMainFeedProps = {
   onViewTimeline?: () => void;
   onToggleAudio?: () => void;
   audioMuted?: boolean;
+  participant?: LiveParticipantState;
+  connectionState?: ProctoringMediaState;
 };
 
 const integrityClass = (score: number) =>
@@ -20,10 +25,22 @@ const ProctoringMainFeed = memo(({
   onViewTimeline,
   onToggleAudio,
   audioMuted = false,
+  participant,
+  connectionState = 'disabled',
 }: ProctoringMainFeedProps) => (
   <section className="bg-student-surface rounded-[24px] lecturer-card-elevation overflow-hidden flex flex-col">
     <div className="relative aspect-video bg-student-inverse-surface overflow-hidden">
-      {feed.cameraOn && feed.feedPreview ? (
+      {participant?.cameraOn ? (
+        <>
+          <LiveMediaVideo
+            stream={participant.stream}
+            muted={audioMuted}
+            label={`Live feed — ${feed.name}`}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 pointer-events-none" />
+        </>
+      ) : feed.cameraOn && feed.feedPreview ? (
         <>
           <img
             src={feed.feedPreview}
@@ -35,14 +52,18 @@ const ProctoringMainFeed = memo(({
       ) : (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-student-surface-container-high text-student-on-surface-variant gap-3">
           <Icon name="videocam_off" className="text-5xl opacity-50" />
-          <p className="font-student text-student-body-md">Camera offline</p>
+          <p className="font-student text-student-body-md">
+            {connectionState === 'connecting' || connectionState === 'reconnecting'
+              ? 'Connecting to camera…'
+              : 'Camera offline'}
+          </p>
         </div>
       )}
 
       <div className="absolute top-4 left-4 flex items-center gap-2">
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-student-error/90 text-white font-student text-student-label-md font-bold uppercase tracking-wider">
           <span className="w-2 h-2 rounded-full bg-white pulse-live" />
-          Live
+          {participant?.connected ? 'Live' : 'Offline'}
         </span>
         <span className={`px-3 py-1 rounded-full border font-student text-student-label-md font-medium ${liveStatusTone[feed.liveStatus]}`}>
           {feed.liveStatusLabel}
@@ -91,8 +112,8 @@ const ProctoringMainFeed = memo(({
                 <div
                   key={i}
                   className={`flex-1 rounded-sm transition-all ${
-                    i < Math.round((feed.audioLevel / 100) * 8)
-                      ? feed.audioLevel > 60
+                    i < Math.round(((participant?.audioLevel ?? feed.audioLevel) / 100) * 8)
+                      ? (participant?.audioLevel ?? feed.audioLevel) > 60
                         ? 'bg-student-error'
                         : 'bg-student-primary-fixed'
                       : 'bg-white/20'

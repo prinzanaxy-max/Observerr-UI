@@ -18,6 +18,7 @@ import { useIntegrityScore } from '../hooks/useIntegrityScore';
 import { useIntegritySessionSync } from '../hooks/useIntegritySessionSync';
 import { useStudentExam } from '../hooks/useStudentExam';
 import type { IntegrityEvent } from '../types/integrityMonitoring';
+import { useStudentLiveKitPublisher } from '../hooks/useStudentLiveKitPublisher';
 
 const formatTime = (totalSeconds: number) => {
   const h = Math.floor(totalSeconds / 3600);
@@ -36,8 +37,11 @@ type ExamSessionWithMonitorProps = {
   integrityScore: number;
   calibrationDone: boolean;
   onCalibrationDone: () => void;
+  onCalibrationBypassed: () => void;
   onProctoringUnavailable: () => void;
   sessionError?: string | null;
+  sessionId: string | null;
+  onPublisherReady: (disconnect: () => Promise<void>) => void;
   children: React.ReactNode;
 };
 
@@ -48,24 +52,60 @@ function ExamSessionWithMonitor({
   integrityScore,
   calibrationDone,
   onCalibrationDone,
+  onCalibrationBypassed,
   onProctoringUnavailable,
   sessionError,
+  sessionId,
+  onPublisherReady,
   children,
 }: ExamSessionWithMonitorProps) {
+  const publisherDisconnectRef = useRef<(() => Promise<void>) | null>(null);
   const monitor = useIntegrityMonitor({
     videoRef,
     examContainerRef,
     enabled: true,
     onIntegrityEvent,
     blockClipboard: true,
+    beforeStopTracks: () => publisherDisconnectRef.current?.(),
   });
+  const publisher = useStudentLiveKitPublisher({
+    sessionId,
+    mediaStream: monitor.mediaStream,
+    enabled: Boolean(sessionId && calibrationDone && monitor.status === 'monitoring'),
+  });
+  const mediaFailureReportedRef = useRef(false);
+
+  useEffect(() => {
+    publisherDisconnectRef.current = publisher.disconnect;
+    onPublisherReady(publisher.disconnect);
+  }, [onPublisherReady, publisher.disconnect]);
+
+  useEffect(() => {
+    if (
+      !mediaFailureReportedRef.current &&
+      (publisher.state === 'unavailable' || publisher.state === 'error')
+    ) {
+      mediaFailureReportedRef.current = true;
+      onProctoringUnavailable();
+      onIntegrityEvent({
+        type: 'proctoring_unavailable',
+        timestamp: new Date().toISOString(),
+        metadata: { reason: publisher.error ?? 'live_video_unavailable' },
+      });
+    }
+  }, [
+    onIntegrityEvent,
+    onProctoringUnavailable,
+    publisher.error,
+    publisher.state,
+  ]);
 
   useEffect(() => {
     if (monitor.status === 'unavailable' || monitor.status === 'permission_denied') {
       onProctoringUnavailable();
-      onCalibrationDone();
+      onCalibrationBypassed();
     }
-  }, [monitor.status, onCalibrationDone, onProctoringUnavailable]);
+  }, [monitor.status, onCalibrationBypassed, onProctoringUnavailable]);
 
   const showCalibration =
     !calibrationDone &&
@@ -81,7 +121,7 @@ function ExamSessionWithMonitor({
 
   return (
     <div ref={examContainerRef} className="student-exam-pre h-dvh flex flex-col font-student text-student-on-surface antialiased">
-      {/* Hidden capture — landmarks only; raw video never sent to backend */}
+      {/* Local preview feeds MediaPipe; the same tracks publish directly to LiveKit, never through our API. */}
       <video ref={videoRef} className="sr-only" aria-hidden playsInline muted />
 
       {showCalibration && (
@@ -112,14 +152,19 @@ const StudentExamSessionPage = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const examContainerRef = useRef<HTMLDivElement>(null);
   const sessionIdRef = useRef('');
+  const publisherDisconnectRef = useRef<(() => Promise<void>) | null>(null);
   const proctoringAvailableRef = useRef(true);
   const sessionStartedLoggedRef = useRef(false);
+  const sessionEndedLoggedRef = useRef(false);
+  const autoSubmitAttemptedRef = useRef(false);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [finalizing, setFinalizing] = useState(false);
   const [calibrationDone, setCalibrationDone] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   const {
     score: integrityScore,
@@ -134,6 +179,7 @@ const StudentExamSessionPage = () => {
   const handleSessionReady = useCallback(
     (session: { sessionId: string; startedAt: string }) => {
       sessionIdRef.current = session.sessionId;
+      setSessionId(session.sessionId);
       setSessionStartedAt(session.startedAt);
       if (!sessionStartedLoggedRef.current) {
         sessionStartedLoggedRef.current = true;
@@ -147,18 +193,37 @@ const StudentExamSessionPage = () => {
     [id, logSessionEvent, setSessionStartedAt],
   );
 
-  const { submitSession, sessionError } = useIntegritySessionSync({
+  const { submitSession, sessionError, sessionReady } = useIntegritySessionSync({
     examId: id,
-    enabled: !Number.isNaN(id) && id > 0,
+    enabled:
+      !Number.isNaN(id) &&
+      id > 0 &&
+      exam?.availability === 'ready',
     getAuditLog,
     onSessionReady: handleSessionReady,
   });
 
   const finalizeSession = useCallback(async () => {
-    logSessionEvent('SESSION_ENDED', 'Exam session ended', 'Student submitted or timed out.');
+    if (!sessionEndedLoggedRef.current) {
+      sessionEndedLoggedRef.current = true;
+      logSessionEvent('SESSION_ENDED', 'Exam session ended', 'Student submitted or timed out.');
+    }
+    await publisherDisconnectRef.current?.();
     const summary = buildSummary(proctoringAvailableRef.current);
-    await submitSession(summary, getAuditLog());
+    return (await submitSession(summary, getAuditLog())) !== null;
   }, [buildSummary, getAuditLog, logSessionEvent, submitSession]);
+
+  const attemptFinalize = useCallback(async () => {
+    if (finalizing) return false;
+    setFinalizing(true);
+    try {
+      const completed = await finalizeSession();
+      if (completed) setSubmitted(true);
+      return completed;
+    } finally {
+      setFinalizing(false);
+    }
+  }, [finalizeSession, finalizing]);
 
   useEffect(() => {
     if (exam) {
@@ -168,22 +233,24 @@ const StudentExamSessionPage = () => {
   }, [exam]);
 
   useEffect(() => {
-    if (!exam || submitted || !calibrationDone) return undefined;
+    if (!exam || submitted || !calibrationDone || !sessionReady) return undefined;
     const timer = window.setInterval(() => {
       setSecondsLeft((prev) => {
         if (prev <= 1) {
           window.clearInterval(timer);
-          void finalizeSession();
-          setSubmitted(true);
+          if (!autoSubmitAttemptedRef.current) {
+            autoSubmitAttemptedRef.current = true;
+            void attemptFinalize();
+          }
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
     return () => window.clearInterval(timer);
-  }, [exam, submitted, calibrationDone, finalizeSession]);
+  }, [attemptFinalize, exam, submitted, calibrationDone, sessionReady]);
 
-  const questions = exam?.questions ?? [];
+  const questions = useMemo(() => exam?.questions ?? [], [exam?.questions]);
   const currentQuestion = questions[currentIndex];
   const currentAnswer = currentQuestion ? answers[currentQuestion.id] ?? '' : '';
 
@@ -206,9 +273,8 @@ const StudentExamSessionPage = () => {
   }, [questions.length]);
 
   const handleSubmit = useCallback(() => {
-    void finalizeSession();
-    setSubmitted(true);
-  }, [finalizeSession]);
+    void attemptFinalize();
+  }, [attemptFinalize]);
 
   const handleCalibrationDone = useCallback(() => {
     setCalibrationDone(true);
@@ -218,6 +284,12 @@ const StudentExamSessionPage = () => {
       'Baseline head pose captured for gaze deviation detection.',
     );
   }, [logSessionEvent]);
+  const handleCalibrationBypassed = useCallback(() => {
+    setCalibrationDone(true);
+  }, []);
+  const handlePublisherReady = useCallback((disconnect: () => Promise<void>) => {
+    publisherDisconnectRef.current = disconnect;
+  }, []);
 
   if (examIdNum === null) {
     return <Navigate to="/student/exams" replace />;
@@ -281,10 +353,13 @@ const StudentExamSessionPage = () => {
         integrityScore={integrityScore}
         calibrationDone={calibrationDone}
         onCalibrationDone={handleCalibrationDone}
+        onCalibrationBypassed={handleCalibrationBypassed}
         onProctoringUnavailable={() => {
           proctoringAvailableRef.current = false;
         }}
         sessionError={sessionError}
+        sessionId={sessionId}
+        onPublisherReady={handlePublisherReady}
       >
         <ExamSessionHeader
           title={exam.title}
@@ -341,7 +416,7 @@ const StudentExamSessionPage = () => {
           onPrevious={handlePrevious}
           onNext={handleNext}
           onSubmit={handleSubmit}
-          canSubmit={answeredCount > 0}
+          canSubmit={answeredCount > 0 && sessionReady && !finalizing}
         />
       </ExamSessionWithMonitor>
     </IntegrityMonitorErrorBoundary>

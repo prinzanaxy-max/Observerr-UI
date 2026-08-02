@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { IntegrityAuditRecord, IntegritySessionSummary, StartIntegritySessionResponse } from '../types/integritySession';
 import * as integritySessionService from '../services/integritySessionService';
 
-const FLUSH_INTERVAL_MS = 30_000;
+const FLUSH_INTERVAL_MS = 12_000;
 
 export type UseIntegritySessionSyncOptions = {
   examId: number;
@@ -22,10 +22,13 @@ export function useIntegritySessionSync({
   const [sessionError, setSessionError] = useState<string | null>(null);
 
   const lastFlushedIndexRef = useRef(0);
+  const flushInFlightRef = useRef<Promise<void> | null>(null);
   const sessionCompletedRef = useRef(false);
   const startedAtRef = useRef<string | null>(null);
   const onSessionReadyRef = useRef(onSessionReady);
-  onSessionReadyRef.current = onSessionReady;
+  useEffect(() => {
+    onSessionReadyRef.current = onSessionReady;
+  }, [onSessionReady]);
 
   useEffect(() => {
     if (!enabled || examId <= 0) return undefined;
@@ -59,27 +62,40 @@ export function useIntegritySessionSync({
     };
   }, [enabled, examId]);
 
-  const flush = useCallback(async () => {
-    if (!sessionReady || !sessionId || sessionCompletedRef.current) return;
-
-    const all = getAuditLog();
-    const pending = all.slice(lastFlushedIndexRef.current);
-    if (pending.length === 0) return;
-
-    try {
-      const result = await integritySessionService.appendIntegrityEvents(sessionId, pending);
-      lastFlushedIndexRef.current = all.length;
-      console.info(
-        `[IntegritySession] flushed ${result.accepted} event(s), skipped ${result.skipped}`,
-      );
-    } catch (err) {
-      if (integritySessionService.isSessionConflictError(err)) {
-        sessionCompletedRef.current = true;
-        console.warn('[IntegritySession] Session already completed — stopping flush.');
-        return;
-      }
-      console.warn('[IntegritySession] Flush failed, will retry.', err);
+  const flush = useCallback((): Promise<void> => {
+    if (flushInFlightRef.current) return flushInFlightRef.current;
+    if (!sessionReady || !sessionId || sessionCompletedRef.current) {
+      return Promise.resolve();
     }
+
+    const run = async () => {
+      const all = getAuditLog();
+      const pending = all.slice(lastFlushedIndexRef.current);
+      if (pending.length === 0) return;
+
+      try {
+        const result = await integritySessionService.appendIntegrityEvents(sessionId, pending);
+        lastFlushedIndexRef.current = all.length;
+        console.info(
+          `[IntegritySession] flushed ${result.accepted} event(s), skipped ${result.skipped}`,
+        );
+      } catch (err) {
+        if (integritySessionService.isSessionConflictError(err)) {
+          sessionCompletedRef.current = true;
+          console.warn('[IntegritySession] Session already completed — stopping flush.');
+          return;
+        }
+        console.warn('[IntegritySession] Flush failed, will retry.', err);
+      }
+    };
+
+    const inFlight = run().finally(() => {
+      if (flushInFlightRef.current === inFlight) {
+        flushInFlightRef.current = null;
+      }
+    });
+    flushInFlightRef.current = inFlight;
+    return inFlight;
   }, [getAuditLog, sessionId, sessionReady]);
 
   useEffect(() => {
@@ -88,8 +104,18 @@ export function useIntegritySessionSync({
     const id = window.setInterval(() => {
       void flush();
     }, FLUSH_INTERVAL_MS);
+    const flushWhenHidden = () => {
+      if (document.visibilityState === 'hidden') void flush();
+    };
+    const flushOnPageHide = () => void flush();
+    document.addEventListener('visibilitychange', flushWhenHidden);
+    window.addEventListener('pagehide', flushOnPageHide);
 
-    return () => window.clearInterval(id);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener('visibilitychange', flushWhenHidden);
+      window.removeEventListener('pagehide', flushOnPageHide);
+    };
   }, [flush, sessionReady]);
 
   const submitSession = useCallback(

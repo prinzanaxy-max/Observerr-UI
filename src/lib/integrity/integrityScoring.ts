@@ -3,6 +3,7 @@ import type { IntegrityEventCode } from '../../types/integritySession';
 import type { IntegrityScoreDeduction, IntegritySeverity } from '../../types/integrityMonitoring';
 
 export const INTEGRITY_STARTING_SCORE = 100;
+export const PROCTORING_UNAVAILABLE_SCORE_CAP = 85;
 
 export type ScoredRule = IntegrityScoreDeduction & {
   code: IntegrityEventCode;
@@ -15,10 +16,28 @@ export const INTEGRITY_DEDUCTION_RULES: ScoredRule[] = [
     code: 'GAZE_DEVIATION_BRIEF',
     eventType: 'gaze_deviation_end',
     minDurationMs: 2_000,
-    maxDurationMs: 4_000,
+    maxDurationMs: 3_999,
     points: 1,
     severity: 'low',
     label: 'Brief gaze deviation (2–4s off-screen)',
+  },
+  {
+    code: 'GAZE_DEVIATION_MODERATE',
+    eventType: 'gaze_deviation_end',
+    minDurationMs: 4_000,
+    maxDurationMs: 9_999,
+    points: 3,
+    severity: 'medium',
+    label: 'Moderate gaze deviation (4–10s off-screen)',
+  },
+  {
+    code: 'FACE_ABSENT_SHORT',
+    eventType: 'face_restored',
+    minDurationMs: 2_000,
+    maxDurationMs: 4_999,
+    points: 3,
+    severity: 'low',
+    label: 'No face detected (2–5s)',
   },
   {
     code: 'GAZE_DEVIATION_SUSTAINED',
@@ -95,6 +114,7 @@ export const INTEGRITY_DEDUCTION_RULES: ScoredRule[] = [
     points: 25,
     severity: 'high',
     label: 'Webcam permission revoked mid-exam',
+    requiresReview: true,
   },
   {
     code: 'TAB_BLUR_NO_FACE',
@@ -112,6 +132,14 @@ export const INTEGRITY_DEDUCTION_RULES: ScoredRule[] = [
     label: 'Camera feed frozen or spoofed',
     requiresReview: true,
   },
+  {
+    code: 'PROCTORING_UNAVAILABLE',
+    eventType: 'proctoring_unavailable',
+    points: 15,
+    severity: 'high',
+    label: 'Proctoring unavailable — lecturer review required',
+    requiresReview: true,
+  },
 ];
 
 const INFO_EVENT_MAP: Partial<Record<IntegrityEventType, { code: IntegrityEventCode; title: string }>> = {
@@ -123,6 +151,7 @@ const INFO_EVENT_MAP: Partial<Record<IntegrityEventType, { code: IntegrityEventC
   multi_face_cleared: { code: 'MULTI_FACE_CLEARED', title: 'Multiple faces cleared' },
   tab_blur_no_face: { code: 'TAB_BLUR_NO_FACE', title: 'Tab blur with no face visible' },
   camera_feed_frozen: { code: 'CAMERA_FEED_FROZEN', title: 'Camera feed frozen or spoofed' },
+  proctoring_unavailable: { code: 'PROCTORING_UNAVAILABLE', title: 'Proctoring unavailable' },
   calibration_complete: { code: 'CALIBRATION_COMPLETE', title: 'Gaze calibration complete' },
   session_started: { code: 'SESSION_STARTED', title: 'Exam session started' },
   session_ended: { code: 'SESSION_ENDED', title: 'Exam session ended' },
@@ -145,19 +174,18 @@ function matchesDuration(rule: ScoredRule, durationMs: number): boolean {
 
 export function resolveDeduction(
   event: IntegrityEvent,
-  _tabBlurCount = 0,
 ): ScoredRule | null {
   const duration = event.durationMs ?? 0;
   const candidates = INTEGRITY_DEDUCTION_RULES.filter((rule) => {
     if (rule.eventType !== event.type) return false;
     if (rule.minCount !== undefined) return false;
 
-    if (rule.minDurationMs !== undefined || rule.maxDurationMs !== undefined) {
-      return matchesDuration(rule, duration);
-    }
-
     if (event.type === 'face_partial_out_of_frame') {
       return event.metadata?.ended === true && matchesDuration(rule, duration);
+    }
+
+    if (rule.minDurationMs !== undefined || rule.maxDurationMs !== undefined) {
+      return matchesDuration(rule, duration);
     }
 
     return true;
@@ -183,7 +211,7 @@ export function resolveDeductionsForEvent(
     return rules;
   }
 
-  const primary = resolveDeduction(event, tabBlurCount);
+  const primary = resolveDeduction(event);
   if (primary) rules.push(primary);
   return rules;
 }
@@ -232,7 +260,28 @@ export function applyIntegrityRules(
   return { updates, newScore: next };
 }
 
+export function applyProctoringUnavailableCap(rule: ScoredRule, currentScore: number): ScoredRule {
+  if (rule.code !== 'PROCTORING_UNAVAILABLE') return rule;
+  return {
+    ...rule,
+    points: Math.max(0, currentScore - PROCTORING_UNAVAILABLE_SCORE_CAP),
+    requiresReview: true,
+  };
+}
+
 export function describeEvent(event: IntegrityEvent): { code: IntegrityEventCode; title: string; description: string } {
+  if (event.type === 'face_partial_out_of_frame') {
+    return {
+      code: event.metadata?.ended === true
+        ? 'FACE_PARTIAL_CLEARED'
+        : 'FACE_PARTIAL_DETECTED',
+      title: event.metadata?.ended === true
+        ? 'Partial face visibility cleared'
+        : 'Partial face visibility detected',
+      description: buildDescription(event),
+    };
+  }
+
   const info = INFO_EVENT_MAP[event.type];
   if (info) {
     return {

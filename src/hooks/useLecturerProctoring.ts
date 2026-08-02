@@ -21,7 +21,15 @@ export function useLecturerProctoring(selectedExamId: number | null) {
     setError('');
     try {
       const data = await lecturerProctoringService.fetchProctoringExams();
-      setExams(data.exams ?? []);
+      setExams(
+        (data.exams ?? []).map((exam) => ({
+          id: exam.examId,
+          title: exam.title,
+          courseCode: exam.courseLabel,
+          activeFeeds: exam.activeFeeds,
+          totalStudents: exam.totalStudents,
+        })),
+      );
     } catch (err) {
       console.error('[Proctoring] exams load failed', err);
       const parsed = parseAnalyticsApiError(err);
@@ -63,9 +71,21 @@ export function useLecturerProctoring(selectedExamId: number | null) {
   useEffect(() => {
     if (selectedExamId !== null) {
       void loadFeeds(selectedExamId);
+      const poll = window.setInterval(() => {
+        if (document.visibilityState === 'visible') void loadFeeds(selectedExamId);
+      }, 10_000);
+      const onVisibility = () => {
+        if (document.visibilityState === 'visible') void loadFeeds(selectedExamId);
+      };
+      document.addEventListener('visibilitychange', onVisibility);
+      return () => {
+        window.clearInterval(poll);
+        document.removeEventListener('visibilitychange', onVisibility);
+      };
     } else {
       setFeeds([]);
     }
+    return undefined;
   }, [loadFeeds, selectedExamId]);
 
   return {

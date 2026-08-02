@@ -12,7 +12,7 @@ import type {
   IntegrityMonitorStatus,
 } from '../types/integrityMonitoring';
 import {
-  averageHeadPoses,
+  calibrationQuality,
   computeFaceBoxCoverage,
   isGazeDeviated,
   matrixToHeadPose,
@@ -23,8 +23,13 @@ import {
   loadFaceLandmarker,
 } from '../lib/integrity/faceLandmarkerLoader';
 import type { FaceLandmarker } from '@mediapipe/tasks-vision';
+import {
+  frameDifferenceRatio,
+  sampleVideoLuma,
+  type LumaFrame,
+} from '../lib/integrity/frameDifference';
 
-const DEFAULT_INFERENCE_MS = 750;
+const DEFAULT_INFERENCE_MS = 500;
 const CALIBRATION_DURATION_MS = 3_000;
 const CALIBRATION_SAMPLE_INTERVAL_MS = 200;
 
@@ -37,6 +42,7 @@ export type UseIntegrityMonitorOptions = {
   examContainerRef?: RefObject<HTMLElement | null>;
   inferenceIntervalMs?: number;
   blockClipboard?: boolean;
+  beforeStopTracks?: () => Promise<void> | void;
 };
 
 export type UseIntegrityMonitorReturn = {
@@ -45,21 +51,8 @@ export type UseIntegrityMonitorReturn = {
   calibrationBaseline: CalibrationBaseline | null;
   calibrate: () => Promise<CalibrationBaseline>;
   error: string | null;
+  mediaStream: MediaStream | null;
 };
-
-function sampleVideoFrame(video: HTMLVideoElement): string | null {
-  try {
-    const canvas = document.createElement('canvas');
-    canvas.width = 32;
-    canvas.height = 24;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return null;
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL('image/jpeg', 0.5).slice(-64);
-  } catch {
-    return null;
-  }
-}
 
 function isDevtoolsShortcut(e: KeyboardEvent): boolean {
   const key = e.key.toLowerCase();
@@ -79,6 +72,7 @@ export function useIntegrityMonitor({
   examContainerRef,
   inferenceIntervalMs = DEFAULT_INFERENCE_MS,
   blockClipboard = true,
+  beforeStopTracks,
 }: UseIntegrityMonitorOptions): UseIntegrityMonitorReturn {
   const [status, setStatus] = useState<IntegrityMonitorStatus>('idle');
   const [isCalibrating, setIsCalibrating] = useState(false);
@@ -86,6 +80,7 @@ export function useIntegrityMonitor({
     externalBaseline,
   );
   const [error, setError] = useState<string | null>(null);
+  const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
 
   const landmarkerRef = useRef<FaceLandmarker | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -96,10 +91,17 @@ export function useIntegrityMonitor({
   const baselineRef = useRef<CalibrationBaseline | null>(externalBaseline);
   const lastFaceDetectedRef = useRef(true);
   const frozenFrameCountRef = useRef(0);
-  const lastFrameSampleRef = useRef<string | null>(null);
+  const lastFrameSampleRef = useRef<LumaFrame | null>(null);
+  const frameCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const frozenEmittedRef = useRef(false);
   const onEventRef = useRef(onIntegrityEvent);
-  onEventRef.current = onIntegrityEvent;
+  const beforeStopTracksRef = useRef(beforeStopTracks);
+  useEffect(() => {
+    onEventRef.current = onIntegrityEvent;
+  }, [onIntegrityEvent]);
+  useEffect(() => {
+    beforeStopTracksRef.current = beforeStopTracks;
+  }, [beforeStopTracks]);
 
   useEffect(() => {
     baselineRef.current = calibrationBaseline ?? externalBaseline;
@@ -152,13 +154,15 @@ export function useIntegrityMonitor({
       lastFaceDetectedRef.current = faceDetected;
 
       if (video.videoWidth > 0 && !frozenEmittedRef.current) {
-        const sample = sampleVideoFrame(video);
-        if (sample && sample === lastFrameSampleRef.current) {
+        frameCanvasRef.current ??= document.createElement('canvas');
+        const sample = sampleVideoLuma(video, frameCanvasRef.current);
+        const previous = lastFrameSampleRef.current;
+        if (sample && previous && frameDifferenceRatio(previous, sample) < 0.01) {
           frozenFrameCountRef.current += 1;
         } else {
           frozenFrameCountRef.current = 0;
-          lastFrameSampleRef.current = sample;
         }
+        lastFrameSampleRef.current = sample;
       }
 
       const machine = machineRef.current;
@@ -172,7 +176,7 @@ export function useIntegrityMonitor({
       if (
         video.videoWidth > 0 &&
         !frozenEmittedRef.current &&
-        frozenFrameCountRef.current >= 5
+        frozenFrameCountRef.current >= 10
       ) {
         frozenEmittedRef.current = true;
         machine.emitFrozenFrame();
@@ -187,6 +191,7 @@ export function useIntegrityMonitor({
     stopLoopRef.current?.();
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
+    setMediaStream(null);
     monitoringRef.current = false;
   }, []);
 
@@ -222,7 +227,7 @@ export function useIntegrityMonitor({
         loopHandleRef.current = requestAnimationFrame(() => tick(performance.now()));
       }
 
-      stopLoopRef.current = () => {
+      return () => {
         stopped = true;
         if (rVfcId !== null && typeof video.cancelVideoFrameCallback === 'function') {
           video.cancelVideoFrameCallback(rVfcId);
@@ -242,10 +247,11 @@ export function useIntegrityMonitor({
 
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
-      audio: false,
+      audio: { echoCancellation: true, noiseSuppression: true },
     });
 
     streamRef.current = stream;
+    setMediaStream(stream);
     video.srcObject = stream;
     video.muted = true;
     video.playsInline = true;
@@ -292,7 +298,17 @@ export function useIntegrityMonitor({
       sample();
     });
 
-    const baseline = averageHeadPoses(samples);
+    const quality = calibrationQuality(samples);
+    if (!quality.acceptable) {
+      setIsCalibrating(false);
+      setStatus('calibrating');
+      throw new Error(
+        quality.sampleCount < 8
+          ? 'Keep your face visible throughout calibration and try again.'
+          : 'Hold your head steady during calibration and try again.',
+      );
+    }
+    const baseline = quality.baseline;
     baselineRef.current = baseline;
     setCalibrationBaseline(baseline);
     setIsCalibrating(false);
@@ -304,7 +320,6 @@ export function useIntegrityMonitor({
   // Load model + camera
   useEffect(() => {
     if (!enabled) {
-      setStatus('idle');
       return undefined;
     }
 
@@ -320,7 +335,10 @@ export function useIntegrityMonitor({
         landmarkerRef.current = landmarker;
 
         await startCamera();
-        if (cancelled) return;
+        if (cancelled) {
+          stopCamera();
+          return;
+        }
 
         const video = videoRef.current;
         if (!video) return;
@@ -332,7 +350,7 @@ export function useIntegrityMonitor({
           setStatus('calibrating');
         }
 
-        startDetectionLoop(landmarker, video);
+        stopLoopRef.current = startDetectionLoop(landmarker, video);
       } catch (err) {
         if (cancelled) return;
         const message =
@@ -354,9 +372,11 @@ export function useIntegrityMonitor({
     return () => {
       cancelled = true;
       stopLoopRef.current?.();
-      stopCamera();
-      closeFaceLandmarker();
-      landmarkerRef.current = null;
+      void Promise.resolve(beforeStopTracksRef.current?.()).finally(() => {
+        stopCamera();
+        closeFaceLandmarker();
+        landmarkerRef.current = null;
+      });
     };
   }, [enabled, emit, startCamera, startDetectionLoop, stopCamera, videoRef]);
 
@@ -422,5 +442,6 @@ export function useIntegrityMonitor({
     calibrationBaseline,
     calibrate,
     error,
+    mediaStream,
   };
 }

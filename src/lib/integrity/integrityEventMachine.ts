@@ -15,6 +15,8 @@ export class IntegrityEventMachine {
 
   private gazingAway = false;
   private gazeEpisode: Episode | null = null;
+  private gazeAwayFrames = 0;
+  private gazeReturnFrames = 0;
 
   private multipleFaces = false;
   private multiFaceEpisode: Episode | null = null;
@@ -63,14 +65,22 @@ export class IntegrityEventMachine {
   }
 
   updateGaze(gazeDeviation: boolean) {
-    if (gazeDeviation && !this.gazingAway) {
+    if (gazeDeviation) {
+      this.gazeAwayFrames += 1;
+      this.gazeReturnFrames = 0;
+    } else {
+      this.gazeReturnFrames += 1;
+      this.gazeAwayFrames = 0;
+    }
+
+    if (this.gazeAwayFrames >= 2 && !this.gazingAway) {
       this.gazingAway = true;
       this.gazeEpisode = { startedAt: Date.now() };
       this.emitEvent('gaze_deviation_start');
       return;
     }
 
-    if (!gazeDeviation && this.gazingAway) {
+    if (this.gazeReturnFrames >= 2 && this.gazingAway) {
       this.gazingAway = false;
       const durationMs = this.gazeEpisode
         ? Date.now() - this.gazeEpisode.startedAt
@@ -171,6 +181,8 @@ export class IntegrityEventMachine {
     this.faceLostEpisode = null;
     this.gazingAway = false;
     this.gazeEpisode = null;
+    this.gazeAwayFrames = 0;
+    this.gazeReturnFrames = 0;
     this.multipleFaces = false;
     this.multiFaceEpisode = null;
     this.tabHidden = false;

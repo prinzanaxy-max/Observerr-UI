@@ -3,6 +3,8 @@ import Icon from '../student/Icon';
 import type { ProctoringFeed } from '../../data/proctoringData';
 import { liveStatusTone, riskTone } from '../../data/proctoringData';
 import { liveStatusDot } from '../../data/liveMonitoringData';
+import LiveMediaVideo from './LiveMediaVideo';
+import type { LiveParticipantState } from '../../hooks/useLecturerLiveKitRoom';
 
 type ProctoringStudentRailProps = {
   feeds: ProctoringFeed[];
@@ -10,6 +12,7 @@ type ProctoringStudentRailProps = {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   onSelect: (feed: ProctoringFeed) => void;
+  participants?: Map<string, LiveParticipantState>;
 };
 
 const ProctoringStudentRail = memo(({
@@ -18,6 +21,7 @@ const ProctoringStudentRail = memo(({
   searchQuery,
   onSearchChange,
   onSelect,
+  participants = new Map(),
 }: ProctoringStudentRailProps) => (
   <aside className="bg-student-surface rounded-[24px] lecturer-card-elevation flex flex-col min-h-0 h-full max-h-[calc(100dvh-12rem)] lg:max-h-none">
     <div className="p-4 border-b border-student-surface-variant/50 shrink-0">
@@ -43,6 +47,9 @@ const ProctoringStudentRail = memo(({
     <ul className="flex-1 overflow-y-auto overscroll-contain p-3 space-y-2 lecturer-custom-scrollbar" role="listbox" aria-label="Student live feeds">
       {feeds.map((feed) => {
         const isSelected = feed.id === selectedId;
+        const participant = participants.get(
+          feed.participantIdentity ?? String(feed.sessionId ?? ''),
+        );
         return (
           <li key={feed.id} role="option" aria-selected={isSelected}>
             <button
@@ -55,7 +62,14 @@ const ProctoringStudentRail = memo(({
               }`}
             >
               <div className="relative aspect-video bg-student-surface-container-high">
-                {feed.cameraOn ? (
+                {participant?.cameraOn ? (
+                  <LiveMediaVideo
+                    stream={participant.stream}
+                    muted
+                    label={`Preview — ${feed.name}`}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                ) : feed.cameraOn && feed.feedPreview ? (
                   <img
                     src={feed.feedPreview}
                     alt=""
@@ -71,7 +85,7 @@ const ProctoringStudentRail = memo(({
 
                 <span className="absolute top-2 left-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-student-error/90 text-white text-[10px] font-bold uppercase">
                   <span className={`w-1.5 h-1.5 rounded-full ${liveStatusDot[feed.liveStatus]} pulse-live`} />
-                  Live
+                  {participant?.connected ? 'Live' : 'Offline'}
                 </span>
 
                 {feed.lastFlag && (

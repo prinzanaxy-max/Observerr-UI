@@ -49,8 +49,10 @@ export function matrixToHeadPose(matrix: number[] | Float32Array): HeadPose {
   };
 }
 
-export const YAW_DEVIATION_THRESHOLD_DEG = 25;
-export const PITCH_DEVIATION_THRESHOLD_DEG = 20;
+export const YAW_DEVIATION_THRESHOLD_DEG = 18;
+export const PITCH_DEVIATION_THRESHOLD_DEG = 15;
+export const MIN_CALIBRATION_SAMPLES = 8;
+export const MAX_CALIBRATION_STDDEV_DEG = 6;
 
 export function isGazeDeviated(
   pose: HeadPose,
@@ -82,6 +84,29 @@ export function averageHeadPoses(poses: HeadPose[]): HeadPose {
     yaw: sum.yaw / n,
     pitch: sum.pitch / n,
     roll: sum.roll / n,
+  };
+}
+
+export function calibrationQuality(poses: HeadPose[]): {
+  acceptable: boolean;
+  baseline: HeadPose;
+  sampleCount: number;
+  maxStdDev: number;
+} {
+  const baseline = averageHeadPoses(poses);
+  const standardDeviation = (key: keyof HeadPose) => {
+    if (poses.length === 0) return Number.POSITIVE_INFINITY;
+    const variance =
+      poses.reduce((sum, pose) => sum + (pose[key] - baseline[key]) ** 2, 0) / poses.length;
+    return Math.sqrt(variance);
+  };
+  const maxStdDev = Math.max(standardDeviation('yaw'), standardDeviation('pitch'));
+  return {
+    acceptable:
+      poses.length >= MIN_CALIBRATION_SAMPLES && maxStdDev <= MAX_CALIBRATION_STDDEV_DEG,
+    baseline,
+    sampleCount: poses.length,
+    maxStdDev,
   };
 }
 

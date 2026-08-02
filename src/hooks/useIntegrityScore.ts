@@ -3,6 +3,7 @@ import type { IntegrityEvent } from '../types/integrityMonitoring';
 import type { IntegrityAuditRecord, IntegritySessionSummary } from '../types/integritySession';
 import {
   applyIntegrityRules,
+  applyProctoringUnavailableCap,
   createClientEventId,
   describeEvent,
   INTEGRITY_STARTING_SCORE,
@@ -48,6 +49,7 @@ export function useIntegrityScore(
     const sessionId = getSessionId();
     const { code, title, description } = describeEvent(event);
     let rules = resolveDeductionsForEvent(event, tabBlurCountRef.current);
+    rules = rules.map((rule) => applyProctoringUnavailableCap(rule, scoreRef.current));
 
     if (event.type === 'tab_blur' && tabBlurCountRef.current >= 3) {
       if (!repeatedTabPenaltyAppliedRef.current) {
@@ -125,7 +127,10 @@ export function useIntegrityScore(
       finalScore: scoreRef.current,
       totalEvents: auditLogRef.current.length,
       totalDeductions: auditLogRef.current.reduce((sum, r) => sum + r.pointsDeducted, 0),
-      requiresReview: requiresReview || auditLogRef.current.some((r) => r.requiresReview),
+      requiresReview:
+        !proctoringAvailable ||
+        requiresReview ||
+        auditLogRef.current.some((r) => r.requiresReview),
       proctoringAvailable,
     }),
     [examId, getSessionId, requiresReview],
