@@ -25,6 +25,8 @@ export function useStudentLiveKitPublisher({
   const roomRef = useRef<Room | null>(null);
   const publicationsRef = useRef<LocalTrackPublication[]>([]);
   const generationRef = useRef(0);
+  const retryTimerRef = useRef<number | null>(null);
+  const [retryAttempt, setRetryAttempt] = useState(0);
   const [state, setState] = useState<ProctoringMediaState>('disabled');
   const [error, setError] = useState<string | null>(null);
 
@@ -50,6 +52,13 @@ export function useStudentLiveKitPublisher({
       return undefined;
     }
 
+    const scheduleRetry = () => {
+      if (retryTimerRef.current !== null) return;
+      retryTimerRef.current = window.setTimeout(() => {
+        retryTimerRef.current = null;
+        setRetryAttempt((attempt) => attempt + 1);
+      }, 3_000);
+    };
     const generation = ++generationRef.current;
     const room = new Room({ adaptiveStream: true, dynacast: true });
     roomRef.current = room;
@@ -62,9 +71,11 @@ export function useStudentLiveKitPublisher({
 
     room.on(RoomEvent.ConnectionStateChanged, (connectionState) => {
       if (generation !== generationRef.current) return;
-      if (connectionState === ConnectionState.Connected) setState('connected');
-      else if (connectionState === ConnectionState.Reconnecting) setState('reconnecting');
-      else if (connectionState === ConnectionState.Disconnected) setState('disconnected');
+      if (connectionState === ConnectionState.Reconnecting) setState('reconnecting');
+      else if (connectionState === ConnectionState.Disconnected) {
+        setState('disconnected');
+        scheduleRetry();
+      }
     });
 
     const connect = async () => {
@@ -90,12 +101,15 @@ export function useStudentLiveKitPublisher({
           }),
         );
         if (audioTrack) {
-          publications.push(
-            await room.localParticipant.publishTrack(audioTrack, {
+          try {
+            publications.push(await room.localParticipant.publishTrack(audioTrack, {
               source: Track.Source.Microphone,
               stopMicTrackOnMute: false,
-            }),
-          );
+            }));
+          } catch (audioError) {
+            // A missing/unsupported microphone must not take the camera feed offline.
+            console.warn('[LiveKit] Microphone publish failed; continuing with video', audioError);
+          }
         }
         publicationsRef.current = publications;
         setState('connected');
@@ -106,14 +120,19 @@ export function useStudentLiveKitPublisher({
         setError(
           cause instanceof Error ? cause.message : 'Live proctoring video is unavailable',
         );
+        if (!isMediaUnavailable(cause)) scheduleRetry();
       }
     };
 
     void connect();
     return () => {
+      if (retryTimerRef.current !== null) {
+        window.clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
+      }
       if (generation === generationRef.current) void disconnect();
     };
-  }, [disconnect, enabled, mediaStream, sessionId]);
+  }, [disconnect, enabled, mediaStream, retryAttempt, sessionId]);
 
   return { state, error, disconnect };
 }

@@ -115,9 +115,19 @@ function ExamSessionWithMonitor({
   const bannerStatus = useMemo(() => {
     if (monitor.status === 'permission_denied') return 'permission_denied' as const;
     if (monitor.status === 'unavailable') return 'unavailable' as const;
+    if (publisher.state === 'unavailable' || publisher.state === 'error') {
+      return 'unavailable' as const;
+    }
+    if (
+      publisher.state === 'connecting' ||
+      publisher.state === 'reconnecting' ||
+      publisher.state === 'disconnected'
+    ) {
+      return 'loading' as const;
+    }
     if (!calibrationDone || monitor.status === 'loading') return 'loading' as const;
     return 'monitoring' as const;
-  }, [calibrationDone, monitor.status]);
+  }, [calibrationDone, monitor.status, publisher.state]);
 
   return (
     <div ref={examContainerRef} className="student-exam-pre h-dvh flex flex-col font-student text-student-on-surface antialiased">
@@ -134,7 +144,7 @@ function ExamSessionWithMonitor({
       <ProctoringStatusBanner
         status={bannerStatus}
         integrityScore={integrityScore}
-        message={monitor.error ?? sessionError}
+        message={publisher.error ?? monitor.error ?? sessionError}
       />
 
       {children}
