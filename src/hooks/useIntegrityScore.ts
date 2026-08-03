@@ -21,10 +21,10 @@ export function useIntegrityScore(
   const [auditLog, setAuditLog] = useState<IntegrityAuditRecord[]>([]);
   const [requiresReview, setRequiresReview] = useState(false);
 
-  const tabBlurCountRef = useRef(0);
   const sessionStartedAtRef = useRef(new Date().toISOString());
   const scoreRef = useRef(initialScore);
   const auditLogRef = useRef<IntegrityAuditRecord[]>([]);
+  const deductedByCapRef = useRef<Record<string, number>>({});
 
   const getSessionId = useCallback(() => sessionIdRef.current || 'pending', [sessionIdRef]);
 
@@ -41,13 +41,9 @@ export function useIntegrityScore(
   }, []);
 
   const handleIntegrityEvent = useCallback((event: IntegrityEvent) => {
-    if (event.type === 'tab_blur') {
-      tabBlurCountRef.current += 1;
-    }
-
     const sessionId = getSessionId();
     const { code, title, description } = describeEvent(event);
-    let rules = resolveDeductionsForEvent(event, tabBlurCountRef.current);
+    let rules = resolveDeductionsForEvent(event);
     rules = rules.map((rule) => applyProctoringUnavailableCap(rule, scoreRef.current));
 
     if (rules.length === 0) {
@@ -67,7 +63,12 @@ export function useIntegrityScore(
       return;
     }
 
-    const { updates, newScore } = applyIntegrityRules(scoreRef.current, rules);
+    const { updates, newScore, deductedByCap } = applyIntegrityRules(
+      scoreRef.current,
+      rules,
+      deductedByCapRef.current,
+    );
+    deductedByCapRef.current = deductedByCap;
     scoreRef.current = newScore;
     setScore(newScore);
     setLastUpdate(updates[updates.length - 1] ?? null);
@@ -84,7 +85,13 @@ export function useIntegrityScore(
         requiresReview: update.requiresReview,
         timestamp: event.timestamp,
         durationMs: event.durationMs,
-        metadata: { examId, sessionId, rawType: event.type, ...event.metadata },
+        metadata: {
+          examId,
+          sessionId,
+          rawType: event.type,
+          capKey: update.capKey,
+          ...event.metadata,
+        },
       });
     }
   }, [appendRecord, examId, getSessionId]);

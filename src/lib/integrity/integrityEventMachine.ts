@@ -28,6 +28,7 @@ export class IntegrityEventMachine {
   private partialFaceEpisode: Episode | null = null;
 
   private tabBlurCount = 0;
+  private focusLost = false;
   private emitFn: EmitFn;
 
   constructor(emit: EmitFn) {
@@ -132,13 +133,13 @@ export class IntegrityEventMachine {
     }
   }
 
-  onTabBlur(faceDetected = true) {
+  onTabSwitch(faceDetected = true) {
     if (this.tabHidden) return;
     this.tabHidden = true;
     this.tabBlurCount += 1;
     this.tabBlurEpisode = { startedAt: Date.now() };
-    this.emitEvent('tab_blur', {
-      metadata: { count: this.tabBlurCount, faceDetected },
+    this.emitEvent('tab_switch', {
+      metadata: { count: this.tabBlurCount, faceDetected, source: 'visibility' },
     });
     if (!faceDetected) {
       this.emitEvent('tab_blur_no_face', {
@@ -147,23 +148,49 @@ export class IntegrityEventMachine {
     }
   }
 
+  /** @deprecated Prefer onTabSwitch / onFocusLoss */
+  onTabBlur(faceDetected = true) {
+    this.onTabSwitch(faceDetected);
+  }
+
+  onFocusLoss(faceDetected = true) {
+    if (this.focusLost || this.tabHidden) return;
+    this.focusLost = true;
+    this.emitEvent('focus_loss', {
+      metadata: { faceDetected, source: 'window' },
+    });
+  }
+
   onTabFocus() {
-    if (!this.tabHidden) return;
-    this.tabHidden = false;
-    const durationMs = this.tabBlurEpisode
-      ? Date.now() - this.tabBlurEpisode.startedAt
-      : undefined;
-    this.tabBlurEpisode = null;
-    this.emitEvent('tab_focus', { durationMs, metadata: { count: this.tabBlurCount } });
+    if (this.tabHidden) {
+      this.tabHidden = false;
+      const durationMs = this.tabBlurEpisode
+        ? Date.now() - this.tabBlurEpisode.startedAt
+        : undefined;
+      this.tabBlurEpisode = null;
+      this.emitEvent('tab_focus', { durationMs, metadata: { count: this.tabBlurCount } });
+    }
+    this.focusLost = false;
   }
 
   onDevtoolsShortcut() {
-    // Cannot reliably detect DevTools open — only shortcut attempts.
     this.emitEvent('devtools_shortcut_attempt');
   }
 
   onClipboard(action: 'copy' | 'paste' | 'cut') {
     this.emitEvent('clipboard_event', { metadata: { action } });
+  }
+
+  onFullscreenExit() {
+    this.emitEvent('fullscreen_exit');
+  }
+
+  onPageRefresh() {
+    this.emitEvent('page_refresh');
+  }
+
+  onIdleTimeout() {
+    this.emitEvent('idle_timeout', { metadata: { thresholdMs: 60_000 } });
   }
 
   onCameraPermissionLost(reason: string) {
@@ -190,5 +217,6 @@ export class IntegrityEventMachine {
     this.partialFaceActive = false;
     this.partialFaceEpisode = null;
     this.tabBlurCount = 0;
+    this.focusLost = false;
   }
 }

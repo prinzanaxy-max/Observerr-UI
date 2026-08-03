@@ -384,19 +384,41 @@ export function useIntegrityMonitor({
   useEffect(() => {
     if (!enabled) return undefined;
 
+    let idleTimer: number | null = null;
+    let idleArmed = true;
+    const resetIdle = () => {
+      if (idleTimer !== null) window.clearTimeout(idleTimer);
+      idleArmed = true;
+      idleTimer = window.setTimeout(() => {
+        if (idleArmed) {
+          idleArmed = false;
+          machineRef.current?.onIdleTimeout();
+        }
+      }, 60_000);
+    };
+
     const onVisibility = () => {
       if (document.hidden) {
-        machineRef.current?.onTabBlur(lastFaceDetectedRef.current);
+        machineRef.current?.onTabSwitch(lastFaceDetectedRef.current);
       } else {
         machineRef.current?.onTabFocus();
+        resetIdle();
       }
     };
 
-    const onBlur = () => machineRef.current?.onTabBlur(lastFaceDetectedRef.current);
-    const onFocus = () => machineRef.current?.onTabFocus();
+    const onBlur = () => {
+      if (!document.hidden) {
+        machineRef.current?.onFocusLoss(lastFaceDetectedRef.current);
+      }
+    };
+    const onFocus = () => {
+      machineRef.current?.onTabFocus();
+      resetIdle();
+    };
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (isDevtoolsShortcut(e)) {
+      resetIdle();
+      if (isDevtoolsShortcut(e) || ((e.altKey || e.metaKey) && e.key === 'Tab')) {
         e.preventDefault();
         machineRef.current?.onDevtoolsShortcut();
       }
@@ -405,31 +427,54 @@ export function useIntegrityMonitor({
     const onCopy = (e: ClipboardEvent) => {
       if (blockClipboard) e.preventDefault();
       machineRef.current?.onClipboard('copy');
+      resetIdle();
     };
     const onPaste = (e: ClipboardEvent) => {
       if (blockClipboard) e.preventDefault();
       machineRef.current?.onClipboard('paste');
+      resetIdle();
     };
     const onCut = (e: ClipboardEvent) => {
       if (blockClipboard) e.preventDefault();
       machineRef.current?.onClipboard('cut');
+      resetIdle();
+    };
+
+    const onFullscreen = () => {
+      if (!document.fullscreenElement) {
+        machineRef.current?.onFullscreenExit();
+      }
+    };
+
+    const onPageHide = () => {
+      machineRef.current?.onPageRefresh();
     };
 
     document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('blur', onBlur);
     window.addEventListener('focus', onFocus);
     window.addEventListener('keydown', onKeyDown, true);
+    window.addEventListener('mousemove', resetIdle, { passive: true });
+    window.addEventListener('pointerdown', resetIdle, { passive: true });
+    document.addEventListener('fullscreenchange', onFullscreen);
+    window.addEventListener('pagehide', onPageHide);
 
     const container = examContainerRef?.current ?? document.body;
     container.addEventListener('copy', onCopy, true);
     container.addEventListener('paste', onPaste, true);
     container.addEventListener('cut', onCut, true);
+    resetIdle();
 
     return () => {
+      if (idleTimer !== null) window.clearTimeout(idleTimer);
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('blur', onBlur);
       window.removeEventListener('focus', onFocus);
       window.removeEventListener('keydown', onKeyDown, true);
+      window.removeEventListener('mousemove', resetIdle);
+      window.removeEventListener('pointerdown', resetIdle);
+      document.removeEventListener('fullscreenchange', onFullscreen);
+      window.removeEventListener('pagehide', onPageHide);
       container.removeEventListener('copy', onCopy, true);
       container.removeEventListener('paste', onPaste, true);
       container.removeEventListener('cut', onCut, true);

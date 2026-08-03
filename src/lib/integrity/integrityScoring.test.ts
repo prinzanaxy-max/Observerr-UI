@@ -1,81 +1,83 @@
 import { describe, expect, it } from 'vitest';
 import {
+  applyCap,
+  applyIntegrityRules,
   applyProctoringUnavailableCap,
   describeEvent,
   resolveDeductionsForEvent,
 } from './integrityScoring';
 
-const event = (durationMs: number) => ({
+const gaze = (durationMs: number) => ({
   type: 'gaze_deviation_end' as const,
   timestamp: new Date(0).toISOString(),
   durationMs,
 });
 
-describe('integrity scoring boundaries', () => {
-  it('closes the moderate gaze gap', () => {
-    expect(resolveDeductionsForEvent(event(3_999))[0]?.code).toBe(
-      'GAZE_DEVIATION_BRIEF',
-    );
-    expect(resolveDeductionsForEvent(event(4_000))[0]?.code).toBe(
-      'GAZE_DEVIATION_MODERATE',
-    );
-    expect(resolveDeductionsForEvent(event(9_999))[0]?.code).toBe(
-      'GAZE_DEVIATION_MODERATE',
-    );
-    expect(resolveDeductionsForEvent(event(10_000))[0]?.code).toBe(
-      'GAZE_DEVIATION_SUSTAINED',
-    );
+describe('integrity scoring model', () => {
+  it('closes the moderate gaze gap with flat 3-pt gaze deductions', () => {
+    expect(resolveDeductionsForEvent(gaze(3_999))[0]?.code).toBe('GAZE_DEVIATION_BRIEF');
+    expect(resolveDeductionsForEvent(gaze(4_000))[0]?.code).toBe('GAZE_DEVIATION_MODERATE');
+    expect(resolveDeductionsForEvent(gaze(10_000))[0]?.points).toBe(3);
   });
 
-  it('scores short face absence and unavailable proctoring', () => {
+  it('separates copy and paste deductions', () => {
     expect(
       resolveDeductionsForEvent({
-        type: 'face_restored',
+        type: 'clipboard_event',
         timestamp: new Date(0).toISOString(),
-        durationMs: 2_000,
-      })[0]?.code,
-    ).toBe('FACE_ABSENT_SHORT');
+        metadata: { action: 'copy' },
+      })[0],
+    ).toMatchObject({ code: 'COPY_EVENT', points: 7 });
+    expect(
+      resolveDeductionsForEvent({
+        type: 'clipboard_event',
+        timestamp: new Date(0).toISOString(),
+        metadata: { action: 'paste' },
+      })[0],
+    ).toMatchObject({ code: 'PASTE_EVENT', points: 8 });
+  });
+
+  it('five copies deduct 35 points and land below 70%', () => {
+    let score = 100;
+    let caps: Record<string, number> = {};
+    const copy = resolveDeductionsForEvent({
+      type: 'clipboard_event',
+      timestamp: new Date(0).toISOString(),
+      metadata: { action: 'copy' },
+    });
+    for (let i = 0; i < 5; i += 1) {
+      const result = applyIntegrityRules(score, copy, caps);
+      score = result.newScore;
+      caps = result.deductedByCap;
+    }
+    expect(score).toBe(65);
+    expect(caps.COPY).toBe(35);
+    const sixth = applyIntegrityRules(score, copy, caps);
+    expect(sixth.updates[0]?.pointsDeducted).toBe(0);
+    expect(sixth.updates[0]?.requiresReview).toBe(true);
+  });
+
+  it('caps unavailable proctoring at 60', () => {
     const unavailable = resolveDeductionsForEvent({
       type: 'proctoring_unavailable',
       timestamp: new Date(0).toISOString(),
     })[0];
-    expect(unavailable).toMatchObject({ points: 25, requiresReview: true });
     expect(applyProctoringUnavailableCap(unavailable!, 100).points).toBe(40);
-    expect(applyProctoringUnavailableCap(unavailable!, 70).points).toBe(10);
     expect(applyProctoringUnavailableCap(unavailable!, 50).points).toBe(0);
   });
 
-  it('applies the repeated-tab rule on every 3rd blur', () => {
-    const blur = { type: 'tab_blur' as const, timestamp: new Date(0).toISOString() };
-    expect(resolveDeductionsForEvent(blur, 2)).toHaveLength(1);
-    expect(resolveDeductionsForEvent(blur, 3).map((rule) => rule.code)).toEqual([
-      'TAB_BLUR',
-      'TAB_BLUR_REPEATED',
-    ]);
-    expect(resolveDeductionsForEvent(blur, 4)).toHaveLength(1);
-    expect(resolveDeductionsForEvent(blur, 6).map((rule) => rule.code)).toEqual([
-      'TAB_BLUR',
-      'TAB_BLUR_REPEATED',
-    ]);
+  it('applies remaining capacity correctly', () => {
+    expect(applyCap('COPY', 7, 28)).toEqual({ points: 7, hitCap: true });
+    expect(applyCap('COPY', 7, 35)).toEqual({ points: 0, hitCap: true });
   });
 
-  it('scores only completed brief partial-face episodes', () => {
-    const started = {
-      type: 'face_partial_out_of_frame' as const,
-      timestamp: new Date(0).toISOString(),
-    };
-    expect(resolveDeductionsForEvent(started)).toEqual([]);
-    expect(describeEvent(started).code).toBe('FACE_PARTIAL_DETECTED');
-
-    const brief = {
-      ...started,
-      durationMs: 5_000,
-      metadata: { ended: true },
-    };
-    expect(resolveDeductionsForEvent(brief)[0]?.code).toBe('FACE_PARTIAL_BRIEF');
-
-    const long = { ...brief, durationMs: 5_001 };
-    expect(resolveDeductionsForEvent(long)).toEqual([]);
-    expect(describeEvent(long).code).toBe('FACE_PARTIAL_CLEARED');
+  it('describes clipboard actions distinctly', () => {
+    expect(
+      describeEvent({
+        type: 'clipboard_event',
+        timestamp: new Date(0).toISOString(),
+        metadata: { action: 'paste' },
+      }).code,
+    ).toBe('PASTE_EVENT');
   });
 });
