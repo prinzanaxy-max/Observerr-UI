@@ -62,6 +62,8 @@ const AuthPage = () => {
   const [siErrors, setSiErrors] = useState<Record<string, string>>({});
   const [siLoading, setSiLoading] = useState(false);
 
+  const [suFirstName, setSuFirstName] = useState('');
+  const [suLastName, setSuLastName] = useState('');
   const [suInstitutionalId, setSuInstitutionalId] = useState('');
   const [suEmail, setSuEmail] = useState('');
   const [suPassword, setSuPassword] = useState('');
@@ -135,6 +137,10 @@ const AuthPage = () => {
   const handleSignUp = async (e: FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
+    if (!suFirstName.trim()) errs.firstName = 'First name is required';
+    else if (suFirstName.trim().length > 50) errs.firstName = 'First name must be at most 50 characters';
+    if (!suLastName.trim()) errs.lastName = 'Last name is required';
+    else if (suLastName.trim().length > 50) errs.lastName = 'Last name must be at most 50 characters';
     if (!suInstitutionalId.trim()) errs.institutionalId = 'Institutional ID is required';
     if (!suEmail.trim()) errs.email = 'Email is required';
     else if (!isValidEmail(suEmail)) errs.email = 'Enter a valid email address';
@@ -146,6 +152,8 @@ const AuthPage = () => {
     setSuLoading(true);
     try {
       await register({
+        firstName: suFirstName.trim(),
+        lastName: suLastName.trim(),
         institutionalId: suInstitutionalId.trim(),
         email: suEmail.trim(),
         password: suPassword,
@@ -162,6 +170,8 @@ const AuthPage = () => {
         setSuErrors(mapConflictError(apiErr.message));
       } else if (apiErr.error === 'VALIDATION_FAILED' && apiErr.errors) {
         setSuErrors({
+          ...(apiErr.errors.firstName ? { firstName: apiErr.errors.firstName } : {}),
+          ...(apiErr.errors.lastName ? { lastName: apiErr.errors.lastName } : {}),
           ...(apiErr.errors.institutionalId ? { institutionalId: apiErr.errors.institutionalId } : {}),
           ...(apiErr.errors.email ? { email: apiErr.errors.email } : {}),
           ...(apiErr.errors.password ? { password: apiErr.errors.password } : {}),
@@ -250,6 +260,31 @@ const AuthPage = () => {
       </p>
 
       <form onSubmit={handleSignUp} noValidate className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <AuthField
+            id="signup-first-name"
+            label="First name"
+            icon="person"
+            type="text"
+            placeholder="Jane"
+            value={suFirstName}
+            autoComplete="given-name"
+            onChange={(v) => { setSuFirstName(v); setSuErrors((e) => ({ ...e, firstName: '' })); }}
+            error={suErrors.firstName}
+          />
+          <AuthField
+            id="signup-last-name"
+            label="Last name"
+            icon="person"
+            type="text"
+            placeholder="Doe"
+            value={suLastName}
+            autoComplete="family-name"
+            onChange={(v) => { setSuLastName(v); setSuErrors((e) => ({ ...e, lastName: '' })); }}
+            error={suErrors.lastName}
+          />
+        </div>
+
         <div>
           <AuthField
             id="signup-institutional-id"

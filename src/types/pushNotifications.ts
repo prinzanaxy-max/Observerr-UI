@@ -41,7 +41,8 @@ export type PushPermissionStatus =
   | 'granted'
   | 'denied'
   | 'error'
-  | 'unsupported';
+  | 'unsupported'
+  | 'unconfigured';
 
 export type ForegroundPushPayload = {
   title: string;

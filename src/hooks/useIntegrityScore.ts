@@ -22,7 +22,6 @@ export function useIntegrityScore(
   const [requiresReview, setRequiresReview] = useState(false);
 
   const tabBlurCountRef = useRef(0);
-  const repeatedTabPenaltyAppliedRef = useRef(false);
   const sessionStartedAtRef = useRef(new Date().toISOString());
   const scoreRef = useRef(initialScore);
   const auditLogRef = useRef<IntegrityAuditRecord[]>([]);
@@ -50,14 +49,6 @@ export function useIntegrityScore(
     const { code, title, description } = describeEvent(event);
     let rules = resolveDeductionsForEvent(event, tabBlurCountRef.current);
     rules = rules.map((rule) => applyProctoringUnavailableCap(rule, scoreRef.current));
-
-    if (event.type === 'tab_blur' && tabBlurCountRef.current >= 3) {
-      if (!repeatedTabPenaltyAppliedRef.current) {
-        repeatedTabPenaltyAppliedRef.current = true;
-      } else {
-        rules = rules.filter((r) => r.code !== 'TAB_BLUR_REPEATED');
-      }
-    }
 
     if (rules.length === 0) {
       appendRecord({

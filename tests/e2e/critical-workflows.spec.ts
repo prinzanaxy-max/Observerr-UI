@@ -166,7 +166,7 @@ test.describe('critical student contracts', () => {
         contentType: 'application/json',
         body: JSON.stringify([{
           id: 501,
-          order: 1,
+          order: 0,
           text: 'Recovered question',
           points: 1,
           options: [

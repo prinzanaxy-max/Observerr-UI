@@ -73,7 +73,7 @@ function payload(path: string, role: Role, mode: ApiMode): unknown {
   if (/^\/api\/student\/exam-sessions\/[^/]+\/questions$/.test(path)) {
     return empty ? [] : [{
       id: 501,
-      order: 1,
+      order: 0,
       text: 'Which option is correct?',
       points: 1,
       options: [

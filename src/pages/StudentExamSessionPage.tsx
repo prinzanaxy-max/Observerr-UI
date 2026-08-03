@@ -219,11 +219,14 @@ const StudentExamSessionPage = () => {
     setSessionStartedAt,
   } = useIntegrityScore(id, sessionIdRef);
 
+  const [sessionStartedAtIso, setSessionStartedAtIso] = useState<string | null>(null);
+
   const handleSessionReady = useCallback(
     (session: { sessionId: string; startedAt: string }) => {
       sessionIdRef.current = session.sessionId;
       setSessionId(session.sessionId);
       setSessionStartedAt(session.startedAt);
+      setSessionStartedAtIso(session.startedAt);
       if (!sessionStartedLoggedRef.current) {
         sessionStartedLoggedRef.current = true;
         logSessionEvent(
@@ -280,10 +283,18 @@ const StudentExamSessionPage = () => {
     setSubmissionError('');
     try {
       const completed = await finalizeSession();
-      if (completed) setSubmitted(true);
-      return completed;
-    } catch {
+      if (completed) {
+        setSubmitted(true);
+        return true;
+      }
       setSubmissionError('Your answers could not be submitted. Please retry before leaving this page.');
+      return false;
+    } catch (err) {
+      setSubmissionError(
+        err instanceof Error
+          ? err.message
+          : 'Your answers could not be submitted. Please retry before leaving this page.',
+      );
       return false;
     } finally {
       setFinalizing(false);
@@ -303,7 +314,7 @@ const StudentExamSessionPage = () => {
       if (requestId !== questionsRequestRef.current) return;
       setSessionQuestions(questions.map((question) => ({
         id: question.id,
-        number: question.order,
+        number: (question.order ?? 0) + 1,
         text: question.text,
         type: 'multiple-choice',
         options: question.options.map((option) => option.text),
@@ -349,11 +360,19 @@ const StudentExamSessionPage = () => {
   );
 
   useEffect(() => {
-    if (exam) {
-      document.title = `Exam — ${exam.title} | Observerr`;
-      setSecondsLeft(exam.durationMinutes * 60);
+    if (!exam) return;
+    document.title = `Exam — ${exam.title} | Observerr`;
+    const totalSeconds = exam.durationMinutes * 60;
+    if (sessionStartedAtIso) {
+      const startedMs = Date.parse(sessionStartedAtIso);
+      const elapsedSec = Number.isFinite(startedMs)
+        ? Math.floor((Date.now() - startedMs) / 1000)
+        : 0;
+      setSecondsLeft(Math.max(0, totalSeconds - elapsedSec));
+      return;
     }
-  }, [exam]);
+    setSecondsLeft(totalSeconds);
+  }, [exam, sessionStartedAtIso]);
 
   useEffect(() => {
     if (!exam || submitted || !calibrationDone || !sessionReady) return undefined;
@@ -463,6 +482,21 @@ const StudentExamSessionPage = () => {
           className="rounded-full bg-student-primary px-6 py-3 font-semibold text-student-on-primary"
         >
           Return to exams
+        </button>
+      </div>
+    );
+  }
+
+  if (!sessionId && sessionError) {
+    return (
+      <div className="student-exam-pre h-dvh flex flex-col items-center justify-center gap-4 px-6 font-student text-center">
+        <p role="alert" className="text-student-error">{sessionError}</p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="rounded-full bg-student-primary px-6 py-3 font-semibold text-student-on-primary"
+        >
+          Retry
         </button>
       </div>
     );

@@ -58,7 +58,7 @@ const payloadToForeground = (payload: MessagePayload): ForegroundPushPayload => 
 export function usePushNotifications() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [status, setStatus] = useState<PushPermissionStatus>(() => {
-    if (!isFirebaseConfigured()) return 'unsupported';
+    if (!isFirebaseConfigured()) return 'unconfigured';
     return mapBrowserPermission();
   });
   const [pushEnabled, setPushEnabled] = useState(readPushEnabled);
@@ -118,8 +118,10 @@ export function usePushNotifications() {
     setErrorMessage('');
 
     if (!isFirebaseConfigured()) {
-      setStatus('unsupported');
-      setErrorMessage('Push notifications are not configured.');
+      setStatus('unconfigured');
+      setErrorMessage(
+        'Push is not configured. Add VITE_FIREBASE_* and VITE_FIREBASE_VAPID_KEY to your frontend environment, then regenerate the Firebase service worker.',
+      );
       return false;
     }
 

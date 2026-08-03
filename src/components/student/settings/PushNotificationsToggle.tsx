@@ -16,7 +16,9 @@ const statusLabel: Record<PushPermissionStatus, string> = {
   granted: 'Push notifications are enabled for this browser.',
   denied: 'Notifications are blocked — enable them in your browser settings.',
   error: 'Could not enable push notifications.',
-  unsupported: 'Push notifications are not supported or configured in this environment.',
+  unsupported: 'This browser does not support push notifications.',
+  unconfigured:
+    'Push is not configured yet. Set VITE_FIREBASE_* (and VAPID) in the frontend env, and FIREBASE_SERVICE_ACCOUNT_JSON on the API.',
 };
 
 const PushNotificationsToggle = memo(({
@@ -28,7 +30,7 @@ const PushNotificationsToggle = memo(({
 }: PushNotificationsToggleProps) => {
   const isOn = pushEnabled && status === 'granted';
   const isLoading = status === 'requesting';
-  const isDisabled = status === 'unsupported' || isLoading;
+  const isDisabled = status === 'unsupported' || status === 'unconfigured' || isLoading;
 
   const handleToggle = useCallback(() => {
     if (isOn) {

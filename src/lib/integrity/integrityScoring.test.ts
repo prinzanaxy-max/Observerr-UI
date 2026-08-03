@@ -39,15 +39,21 @@ describe('integrity scoring boundaries', () => {
       type: 'proctoring_unavailable',
       timestamp: new Date(0).toISOString(),
     })[0];
-    expect(unavailable).toMatchObject({ points: 15, requiresReview: true });
-    expect(applyProctoringUnavailableCap(unavailable!, 100).points).toBe(15);
-    expect(applyProctoringUnavailableCap(unavailable!, 70).points).toBe(0);
+    expect(unavailable).toMatchObject({ points: 25, requiresReview: true });
+    expect(applyProctoringUnavailableCap(unavailable!, 100).points).toBe(40);
+    expect(applyProctoringUnavailableCap(unavailable!, 70).points).toBe(10);
+    expect(applyProctoringUnavailableCap(unavailable!, 50).points).toBe(0);
   });
 
-  it('only offers the repeated-tab rule after the threshold', () => {
+  it('applies the repeated-tab rule on every 3rd blur', () => {
     const blur = { type: 'tab_blur' as const, timestamp: new Date(0).toISOString() };
     expect(resolveDeductionsForEvent(blur, 2)).toHaveLength(1);
     expect(resolveDeductionsForEvent(blur, 3).map((rule) => rule.code)).toEqual([
+      'TAB_BLUR',
+      'TAB_BLUR_REPEATED',
+    ]);
+    expect(resolveDeductionsForEvent(blur, 4)).toHaveLength(1);
+    expect(resolveDeductionsForEvent(blur, 6).map((rule) => rule.code)).toEqual([
       'TAB_BLUR',
       'TAB_BLUR_REPEATED',
     ]);

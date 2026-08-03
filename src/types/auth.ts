@@ -4,6 +4,8 @@ export type UserRole = 'STUDENT' | 'LECTURER' | 'ADMIN';
 export type Role = UserRole;
 
 export interface RegisterRequest {
+  firstName: string;
+  lastName: string;
   institutionalId: string;
   email: string;
   password: string;

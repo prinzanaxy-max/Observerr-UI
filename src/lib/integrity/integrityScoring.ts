@@ -3,21 +3,21 @@ import type { IntegrityEventCode } from '../../types/integritySession';
 import type { IntegrityScoreDeduction, IntegritySeverity } from '../../types/integrityMonitoring';
 
 export const INTEGRITY_STARTING_SCORE = 100;
-export const PROCTORING_UNAVAILABLE_SCORE_CAP = 85;
+export const PROCTORING_UNAVAILABLE_SCORE_CAP = 60;
 
 export type ScoredRule = IntegrityScoreDeduction & {
   code: IntegrityEventCode;
   requiresReview?: boolean;
 };
 
-/** Deduction table aligned with proctoring spec (Low / Medium / High / Critical). */
+/** Deduction table aligned with backend IntegrityScoringPolicy. */
 export const INTEGRITY_DEDUCTION_RULES: ScoredRule[] = [
   {
     code: 'GAZE_DEVIATION_BRIEF',
     eventType: 'gaze_deviation_end',
     minDurationMs: 2_000,
     maxDurationMs: 3_999,
-    points: 1,
+    points: 5,
     severity: 'low',
     label: 'Brief gaze deviation (2–4s off-screen)',
   },
@@ -26,7 +26,7 @@ export const INTEGRITY_DEDUCTION_RULES: ScoredRule[] = [
     eventType: 'gaze_deviation_end',
     minDurationMs: 4_000,
     maxDurationMs: 9_999,
-    points: 3,
+    points: 12,
     severity: 'medium',
     label: 'Moderate gaze deviation (4–10s off-screen)',
   },
@@ -35,39 +35,39 @@ export const INTEGRITY_DEDUCTION_RULES: ScoredRule[] = [
     eventType: 'face_restored',
     minDurationMs: 2_000,
     maxDurationMs: 4_999,
-    points: 3,
-    severity: 'low',
+    points: 10,
+    severity: 'medium',
     label: 'No face detected (2–5s)',
   },
   {
     code: 'GAZE_DEVIATION_SUSTAINED',
     eventType: 'gaze_deviation_end',
     minDurationMs: 10_000,
-    points: 5,
-    severity: 'medium',
+    points: 20,
+    severity: 'high',
     label: 'Sustained gaze deviation (>10s)',
   },
   {
     code: 'TAB_BLUR',
     eventType: 'tab_blur',
-    points: 2,
-    severity: 'low',
+    points: 8,
+    severity: 'medium',
     label: 'Tab/window blur',
   },
   {
     code: 'TAB_BLUR_REPEATED',
     eventType: 'tab_blur',
     minCount: 3,
-    points: 8,
-    severity: 'medium',
-    label: 'Repeated tab/window blur (3+ times)',
+    points: 20,
+    severity: 'high',
+    label: 'Repeated tab/window blur (every 3 blurs)',
   },
   {
     code: 'FACE_PARTIAL_BRIEF',
     eventType: 'face_partial_out_of_frame',
     maxDurationMs: 5_000,
-    points: 2,
-    severity: 'low',
+    points: 6,
+    severity: 'medium',
     label: 'Face partially out of frame (brief)',
   },
   {
@@ -75,51 +75,53 @@ export const INTEGRITY_DEDUCTION_RULES: ScoredRule[] = [
     eventType: 'face_restored',
     minDurationMs: 5_000,
     maxDurationMs: 15_000,
-    points: 6,
-    severity: 'medium',
+    points: 18,
+    severity: 'high',
     label: 'No face detected (5–15s)',
   },
   {
     code: 'FACE_ABSENT_LONG',
     eventType: 'face_restored',
     minDurationMs: 15_000,
-    points: 15,
-    severity: 'high',
+    points: 30,
+    severity: 'critical',
     label: 'No face detected (>15s)',
+    requiresReview: true,
   },
   {
     code: 'CLIPBOARD_EVENT',
     eventType: 'clipboard_event',
-    points: 8,
-    severity: 'medium',
+    points: 20,
+    severity: 'high',
     label: 'Copy/paste detected',
   },
   {
     code: 'MULTI_FACE_DETECTED',
     eventType: 'multi_face_detected',
-    points: 20,
-    severity: 'high',
+    points: 40,
+    severity: 'critical',
     label: 'Second face detected in frame',
+    requiresReview: true,
   },
   {
     code: 'DEVTOOLS_SHORTCUT',
     eventType: 'devtools_shortcut_attempt',
-    points: 20,
+    points: 35,
     severity: 'high',
     label: 'DevTools shortcut attempt',
   },
   {
     code: 'CAMERA_PERMISSION_LOST',
     eventType: 'camera_permission_lost',
-    points: 25,
-    severity: 'high',
+    points: 40,
+    severity: 'critical',
     label: 'Webcam permission revoked mid-exam',
     requiresReview: true,
   },
   {
     code: 'TAB_BLUR_NO_FACE',
     eventType: 'tab_blur_no_face',
-    points: 30,
+    points: 50,
     severity: 'critical',
     label: 'Tab blur with no face visible',
     requiresReview: true,
@@ -127,7 +129,7 @@ export const INTEGRITY_DEDUCTION_RULES: ScoredRule[] = [
   {
     code: 'CAMERA_FEED_FROZEN',
     eventType: 'camera_feed_frozen',
-    points: 35,
+    points: 55,
     severity: 'critical',
     label: 'Camera feed frozen or spoofed',
     requiresReview: true,
@@ -135,7 +137,7 @@ export const INTEGRITY_DEDUCTION_RULES: ScoredRule[] = [
   {
     code: 'PROCTORING_UNAVAILABLE',
     eventType: 'proctoring_unavailable',
-    points: 15,
+    points: 25,
     severity: 'high',
     label: 'Proctoring unavailable — lecturer review required',
     requiresReview: true,
@@ -204,7 +206,8 @@ export function resolveDeductionsForEvent(
   if (event.type === 'tab_blur') {
     const single = INTEGRITY_DEDUCTION_RULES.find((r) => r.code === 'TAB_BLUR');
     if (single) rules.push(single);
-    if (tabBlurCount >= 3) {
+    // Extra streak penalty on every 3rd blur (3, 6, 9, …).
+    if (tabBlurCount >= 3 && tabBlurCount % 3 === 0) {
       const repeated = INTEGRITY_DEDUCTION_RULES.find((r) => r.code === 'TAB_BLUR_REPEATED');
       if (repeated) rules.push(repeated);
     }

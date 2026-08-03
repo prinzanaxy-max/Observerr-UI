@@ -57,7 +57,11 @@ export function useIntegritySessionSync({
         onSessionReadyRef.current?.(res);
       } catch (err) {
         if (cancelled) return;
-        setSessionError('Could not start proctoring session on server.');
+        const detail =
+          err instanceof AxiosError
+            ? (err.response?.data as { message?: string } | undefined)?.message
+            : undefined;
+        setSessionError(detail ?? 'Could not start proctoring session on server.');
         console.warn('[IntegritySession] Failed to start session', err);
       }
     };
@@ -170,7 +174,11 @@ export function useIntegritySessionSync({
         return result;
       } catch (err) {
         console.warn('[IntegritySession] Failed to submit session to backend', err);
-        return null;
+        if (err instanceof AxiosError) {
+          const detail = err.response?.data as { message?: string } | undefined;
+          throw new Error(detail?.message ?? 'Exam submission failed. Please retry.');
+        }
+        throw err instanceof Error ? err : new Error('Exam submission failed. Please retry.');
       }
     },
     [flush, sessionId],
