@@ -1,7 +1,3 @@
-export type DeviceTokenRequest = {
-  token: string;
-};
-
 export type NotificationCategory =
   | 'EXAM'
   | 'INTEGRITY'

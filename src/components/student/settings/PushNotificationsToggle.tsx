@@ -18,7 +18,7 @@ const statusLabel: Record<PushPermissionStatus, string> = {
   error: 'Could not enable push notifications.',
   unsupported: 'This browser does not support push notifications.',
   unconfigured:
-    'Push is not configured yet. Set VITE_FIREBASE_* (and VAPID) in the frontend env, and FIREBASE_SERVICE_ACCOUNT_JSON on the API.',
+    'Push is not configured yet. Set VITE_VAPID_PUBLIC_KEY in the frontend env and matching VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY on the API.',
 };
 
 const PushNotificationsToggle = memo(({

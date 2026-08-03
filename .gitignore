@@ -19,9 +19,6 @@ test-results/
 .env.local
 .env.*.local
 
-# Generated at dev/build from .env — contains Firebase web config
-public/firebase-messaging-sw.js
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
