@@ -17,6 +17,7 @@ export type ExamSecuritySettings = {
   webcamMonitoring: boolean;
   tabSwitchTracking: boolean;
   blockCopyPaste: boolean;
+  allowRetake: boolean;
 };
 
 export type LecturerExamDto = {

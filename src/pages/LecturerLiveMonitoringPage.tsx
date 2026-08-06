@@ -94,7 +94,8 @@ const LecturerLiveMonitoringPage = () => {
     setEndError('');
     try {
       await endLecturerExam(examId);
-      navigate('/lecturer/exams');
+      // Graded PENDING results are ready to publish for student Results visibility.
+      navigate(`/lecturer/exams/${examId}/results`);
     } catch {
       setEndError('Could not end this exam. It may already be ended, or the request failed.');
     } finally {

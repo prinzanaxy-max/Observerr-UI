@@ -13,9 +13,16 @@ type ExamOverviewCardProps = {
   onPrimaryAction: (exam: ExamOverview) => void;
   onSelect?: (exam: ExamOverview) => void;
   starting?: boolean;
+  publishing?: boolean;
 };
 
-const ExamOverviewCard = memo(({ exam, onPrimaryAction, onSelect, starting = false }: ExamOverviewCardProps) => {
+const ExamOverviewCard = memo(({
+  exam,
+  onPrimaryAction,
+  onSelect,
+  starting = false,
+  publishing = false,
+}: ExamOverviewCardProps) => {
   const isLive = exam.status === 'live';
   const isUpcoming = exam.status === 'upcoming';
 
@@ -95,10 +102,14 @@ const ExamOverviewCard = memo(({ exam, onPrimaryAction, onSelect, starting = fal
           exam.published === false ? (
             <button
               type="button"
-              disabled
-              className="flex-1 bg-student-surface-container-high text-student-on-surface-variant py-2.5 rounded-full text-student-body-md font-student font-semibold opacity-50 cursor-not-allowed"
+              disabled={publishing}
+              onClick={(e) => {
+                e.stopPropagation();
+                onPrimaryAction(exam);
+              }}
+              className="flex-1 bg-student-secondary text-student-on-secondary py-2.5 rounded-full text-student-body-md font-student font-semibold hover:opacity-90 transition-opacity disabled:opacity-60"
             >
-              Publish to start
+              {publishing ? 'Publishing…' : 'Publish Exam'}
             </button>
           ) : (
             <button

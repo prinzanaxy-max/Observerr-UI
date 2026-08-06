@@ -1,4 +1,8 @@
-export type SecuritySettingKey = 'webcamMonitoring' | 'tabSwitchTracking' | 'blockCopyPaste';
+export type SecuritySettingKey =
+  | 'webcamMonitoring'
+  | 'tabSwitchTracking'
+  | 'blockCopyPaste'
+  | 'allowRetake';
 
 export type SecuritySetting = {
   key: SecuritySettingKey;
@@ -68,6 +72,15 @@ export const SECURITY_SETTINGS: SecuritySetting[] = [
     iconTextClass: 'text-student-on-error-container',
     defaultEnabled: true,
   },
+  {
+    key: 'allowRetake',
+    label: 'Allow Retakes',
+    description: 'Let students start again after submitting (off by default)',
+    icon: 'replay',
+    iconBgClass: 'bg-student-secondary-container/40',
+    iconTextClass: 'text-student-on-secondary-container',
+    defaultEnabled: false,
+  },
 ];
 
 export const DEFAULT_FORM_STATE: CreateExamFormState = {
@@ -80,6 +93,7 @@ export const DEFAULT_FORM_STATE: CreateExamFormState = {
     webcamMonitoring: true,
     tabSwitchTracking: true,
     blockCopyPaste: true,
+    allowRetake: false,
   },
   questions: [createEmptyQuestion()],
 };

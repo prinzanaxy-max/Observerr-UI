@@ -6,6 +6,7 @@ export type StudentExamSecurityDto = {
   webcamMonitoring: boolean;
   tabSwitchTracking: boolean;
   blockCopyPaste: boolean;
+  allowRetake?: boolean;
 };
 
 export type StudentExamDto = {
@@ -21,6 +22,8 @@ export type StudentExamDto = {
   durationMinutes: number;
   security: StudentExamSecurityDto;
   canTake: boolean;
+  attempted?: boolean;
+  allowRetake?: boolean;
   questions?: StudentExamQuestionDto[];
   resultId?: number | null;
 };

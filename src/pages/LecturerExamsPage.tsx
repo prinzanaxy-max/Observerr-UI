@@ -12,6 +12,7 @@ import type { ExamFilterTab, ExamOverview } from '../types/lecturerExams';
 import { CREATE_EXAM_PATH } from '../data/createExamData';
 import { lecturerExamPath } from '../lib/examResultNavigation';
 import { startLecturerExam } from '../services/lecturerLiveSessionsService';
+import { publishLecturerExam } from '../services/lecturerExamsService';
 
 const ExamCardSkeleton = () => (
   <div className="bg-student-surface rounded-[24px] p-6 lecturer-card-elevation animate-pulse h-[320px]">
@@ -32,6 +33,7 @@ const LecturerExamsPage = () => {
   const [activeTab, setActiveTab] = useState<ExamFilterTab>('live');
   const [searchQuery, setSearchQuery] = useState('');
   const [startingExamId, setStartingExamId] = useState<number | null>(null);
+  const [publishingExamId, setPublishingExamId] = useState<number | null>(null);
   const [actionError, setActionError] = useState('');
 
   const { exams, loading, error, forbidden, reload } = useLecturerExams(searchQuery, activeTab);
@@ -56,6 +58,22 @@ const LecturerExamsPage = () => {
 
   const handlePrimaryAction = useCallback(
     async (exam: ExamOverview) => {
+      if (exam.status === 'upcoming' && exam.published === false) {
+        if (publishingExamId !== null) return;
+        setPublishingExamId(exam.id);
+        setActionError('');
+        try {
+          await publishLecturerExam(exam.id);
+          await reload();
+        } catch {
+          setActionError(
+            'Could not publish this exam. It needs at least one question, enrolled students, and a future start time.',
+          );
+        } finally {
+          setPublishingExamId(null);
+        }
+        return;
+      }
       if (exam.status === 'upcoming') {
         if (startingExamId !== null) return;
         setStartingExamId(exam.id);
@@ -72,7 +90,7 @@ const LecturerExamsPage = () => {
       }
       openExam(exam);
     },
-    [navigate, openExam, startingExamId],
+    [navigate, openExam, publishingExamId, reload, startingExamId],
   );
 
   return (
@@ -142,6 +160,7 @@ const LecturerExamsPage = () => {
                 onPrimaryAction={(selected) => void handlePrimaryAction(selected)}
                 onSelect={exam.status !== 'upcoming' ? openExam : undefined}
                 starting={startingExamId === exam.id}
+                publishing={publishingExamId === exam.id}
               />
             ))}
           </div>

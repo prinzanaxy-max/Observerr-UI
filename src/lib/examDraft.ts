@@ -34,6 +34,7 @@ const isForm = (value: unknown): value is CreateExamFormState => {
   if (!['webcamMonitoring', 'tabSwitchTracking', 'blockCopyPaste'].every(
     (key) => typeof security[key] === 'boolean',
   )) return false;
+  if (security.allowRetake !== undefined && typeof security.allowRetake !== 'boolean') return false;
   return value.questions.length > 0 && value.questions.every((question) => {
     if (!isRecord(question) || !isRecord(question.options)) return false;
     const options = question.options;
@@ -64,6 +65,10 @@ export function readExamDraft(storage: Pick<Storage, 'getItem'>, institutionalId
           form: {
             ...parsed.form,
             studentInstitutionalIdsText: parsed.form.studentInstitutionalIdsText ?? '',
+            security: {
+              ...parsed.form.security,
+              allowRetake: parsed.form.security.allowRetake ?? false,
+            },
           },
         };
   } catch {

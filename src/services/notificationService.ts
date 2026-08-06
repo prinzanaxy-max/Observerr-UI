@@ -89,6 +89,10 @@ export async function dismissNotification(
   await apiClient.delete(`/api/notifications/${notificationId}`);
 }
 
+export async function clearAllNotifications(): Promise<void> {
+  await apiClient.delete('/api/notifications');
+}
+
 export async function fetchNotificationPreferences(): Promise<NotificationPreferences> {
   const { data } = await apiClient.get<unknown>(
     '/api/notifications/preferences',

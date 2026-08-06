@@ -49,6 +49,7 @@ const mapToTab = (status: ApiStudentExamStatus): ExamListTab =>
 const mapAvailability = (dto: StudentExamDto): ExamAvailability => {
   const status = normalizeStatus(dto.status);
   if (status === 'COMPLETED') return 'completed';
+  if (dto.attempted && !dto.canTake) return 'completed';
   if (status === 'LIVE' && dto.canTake) return 'ready';
   return 'locked';
 };
@@ -64,12 +65,25 @@ export function mapStudentExamDtoToCard(dto: StudentExamDto): StudentExam {
   let highlight = false;
 
   if (status === 'LIVE') {
-    statusLabel = dto.canTake ? 'Live now' : 'In progress';
-    statusTone = dto.canTake ? 'urgent' : 'neutral';
-    action = dto.canTake
-      ? { type: 'waiting-room', label: 'Enter Exam' }
-      : { type: 'disabled', label: 'Not available yet' };
-    highlight = dto.canTake;
+    if (dto.attempted && !dto.canTake) {
+      statusLabel = 'Submitted';
+      statusTone = 'neutral';
+      action = { type: 'view-results', label: 'View Results' };
+      highlight = false;
+    } else if (dto.canTake) {
+      statusLabel = dto.attempted && dto.allowRetake ? 'Retake available' : 'Live now';
+      statusTone = 'urgent';
+      action = {
+        type: 'waiting-room',
+        label: dto.attempted && dto.allowRetake ? 'Retake Exam' : 'Enter Exam',
+      };
+      highlight = true;
+    } else {
+      statusLabel = 'In progress';
+      statusTone = 'neutral';
+      action = { type: 'disabled', label: 'Not available yet' };
+      highlight = false;
+    }
   } else if (status === 'UPCOMING') {
     statusLabel = 'Upcoming';
     action = { type: 'guidelines', label: 'View Details' };
@@ -104,10 +118,14 @@ export function mapStudentExamDtoToDetail(dto: StudentExamDto): StudentExamDetai
   let beginLabel = 'Begin Exam';
 
   if (availability === 'ready') {
-    availableAtLabel = 'Ready to start';
-    beginLabel = 'Begin Exam';
+    availableAtLabel = dto.attempted && dto.allowRetake
+      ? 'Retake allowed by your lecturer'
+      : 'Ready to start';
+    beginLabel = dto.attempted && dto.allowRetake ? 'Retake Exam' : 'Begin Exam';
   } else if (availability === 'completed') {
-    availableAtLabel = 'Exam completed';
+    availableAtLabel = dto.attempted && normalizeStatus(dto.status) === 'LIVE'
+      ? 'Already submitted — retakes are not allowed'
+      : 'Exam completed';
     beginLabel = 'Back to exams';
   } else if (normalizeStatus(dto.status) === 'UPCOMING') {
     availableAtLabel = `Opens ${dto.schedule}`;
@@ -156,7 +174,13 @@ export function mapStudentExamDtoToUpcoming(dto: StudentExamDto): UpcomingExam |
     time: timeRange,
     icon,
     badge: {
-      label: status === 'LIVE' ? (dto.canTake ? 'Live now' : 'In progress') : 'Upcoming',
+      label: status === 'LIVE'
+        ? (dto.attempted && !dto.canTake
+          ? 'Submitted'
+          : dto.canTake
+            ? (dto.attempted && dto.allowRetake ? 'Retake available' : 'Live now')
+            : 'In progress')
+        : 'Upcoming',
       tone: status === 'LIVE' && dto.canTake ? 'urgent' : 'upcoming',
     },
   };

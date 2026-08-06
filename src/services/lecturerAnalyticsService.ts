@@ -10,15 +10,26 @@ import { requireArray, requireNumber, requireRecord, requireString } from '../li
 
 const SEVERITIES = ['SUCCESS', 'WARNING', 'DANGER', 'NEUTRAL'] as const;
 
+const normalizeReportSeverity = (raw: string): (typeof SEVERITIES)[number] => {
+  const value = raw.trim().toUpperCase();
+  if (SEVERITIES.includes(value as (typeof SEVERITIES)[number])) {
+    return value as (typeof SEVERITIES)[number];
+  }
+  if (value === 'HIGH' || value === 'CRITICAL' || value === 'ERROR') return 'DANGER';
+  if (value === 'MEDIUM' || value === 'WARN') return 'WARNING';
+  if (value === 'LOW' || value === 'INFO') return 'NEUTRAL';
+  if (value === 'OK') return 'SUCCESS';
+  return 'NEUTRAL';
+};
+
 export const normalizeIntegrityReport = (value: unknown): IntegrityReportPage => {
   const page = requireRecord(value, 'integrity report');
   return {
     content: requireArray(page.content, 'integrity report').map((value) => {
       const event = requireRecord(value, 'integrity report event');
-      const severity = requireString(event.severity, 'integrity report event');
-      if (!SEVERITIES.includes(severity as (typeof SEVERITIES)[number])) {
-        throw new Error('Invalid integrity report event response.');
-      }
+      const severity = normalizeReportSeverity(
+        requireString(event.severity, 'integrity report event'),
+      );
       if (
         (typeof event.id !== 'string' && typeof event.id !== 'number') ||
         (typeof event.sessionId !== 'string' && typeof event.sessionId !== 'number') ||
@@ -33,7 +44,7 @@ export const normalizeIntegrityReport = (value: unknown): IntegrityReportPage =>
         examId: event.examId,
         examTitle: requireString(event.examTitle, 'integrity report event'),
         eventType: requireString(event.eventType, 'integrity report event'),
-        severity: severity as IntegrityReportPage['content'][number]['severity'],
+        severity,
         occurredAt: requireString(event.occurredAt, 'integrity report event'),
         pointsDeducted: event.pointsDeducted === null
           ? null
@@ -64,9 +75,23 @@ export async function fetchLecturerAnalyticsOverview(
 export async function fetchIntegrityReport(
   filters: IntegrityReportFilters,
 ): Promise<IntegrityReportPage> {
+  const params: Record<string, string | number> = {
+    page: filters.page ?? 0,
+    size: filters.size ?? 20,
+  };
+  if (filters.startDate && filters.endDate) {
+    params.startDate = filters.startDate;
+    params.endDate = filters.endDate;
+  } else if (filters.period) {
+    params.period = filters.period;
+  }
+  if (filters.search?.trim()) params.search = filters.search.trim();
+  if (filters.eventType) params.eventType = filters.eventType;
+  if (filters.severity) params.severity = filters.severity;
+
   const { data } = await apiClient.get<unknown>(
     '/api/lecturer/analytics/integrity-events',
-    { params: filters },
+    { params },
   );
   return normalizeIntegrityReport(data);
 }

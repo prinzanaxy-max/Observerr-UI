@@ -113,6 +113,25 @@ export function useNotifications(category?: NotificationCategory) {
     }
   }, [unreadCount]);
 
+  const [clearAllPending, setClearAllPending] = useState(false);
+  const clearAll = useCallback(async () => {
+    if (clearAllPending || (notifications.length === 0 && unreadCount === 0)) return;
+    setClearAllPending(true);
+    setError('');
+    try {
+      await notificationService.clearAllNotifications();
+      setNotifications([]);
+      setUnreadCount(0);
+      setPage(0);
+      setTotalPages(0);
+      notifyNotificationsChanged();
+    } catch {
+      setError('Could not clear notifications.');
+    } finally {
+      setClearAllPending(false);
+    }
+  }, [clearAllPending, notifications.length, unreadCount]);
+
   return {
     notifications,
     unreadCount,
@@ -121,11 +140,13 @@ export function useNotifications(category?: NotificationCategory) {
     error,
     pendingIds,
     markAllPending,
+    clearAllPending,
     hasMore: page + 1 < totalPages,
     reload: () => load(),
     loadMore: () => load(page + 1, true),
     markRead,
     dismiss,
     markAllRead,
+    clearAll,
   };
 }

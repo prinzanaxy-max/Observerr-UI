@@ -29,12 +29,14 @@ const LecturerNotificationsPage = () => {
     error,
     pendingIds,
     markAllPending,
+    clearAllPending,
     hasMore,
     reload,
     loadMore,
     markRead,
     dismiss,
     markAllRead,
+    clearAll,
   } = useNotifications(category || undefined);
 
   useEffect(() => {
@@ -78,34 +80,58 @@ const LecturerNotificationsPage = () => {
           <h2 className="text-student-headline-md font-student font-semibold text-student-on-surface">
             Notifications
           </h2>
-          {unreadCount > 0 && (
-            <button
-              type="button"
-              disabled={markAllPending}
-              onClick={() => void markAllRead()}
-              className="text-student-label-md font-student text-student-primary py-1.5 px-3 rounded-full border border-student-primary disabled:opacity-50"
-            >
-              {markAllPending ? 'Marking…' : 'Mark all read'}
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {unreadCount > 0 && (
+              <button
+                type="button"
+                disabled={markAllPending}
+                onClick={() => void markAllRead()}
+                className="text-student-label-md font-student text-student-primary py-1.5 px-3 rounded-full border border-student-primary disabled:opacity-50"
+              >
+                {markAllPending ? 'Marking…' : 'Mark all read'}
+              </button>
+            )}
+            {(notifications.length > 0 || unreadCount > 0) && (
+              <button
+                type="button"
+                disabled={clearAllPending}
+                onClick={() => void clearAll()}
+                className="text-student-label-md font-student text-student-error py-1.5 px-3 rounded-full border border-student-error disabled:opacity-50"
+              >
+                {clearAllPending ? 'Clearing…' : 'Clear all'}
+              </button>
+            )}
+          </div>
         </header>
       }
     >
       <div className="p-4 md:p-8 max-w-[800px] mx-auto w-full pb-12 space-y-5">
-        <div className="md:hidden flex items-center justify-between pt-2">
+        <div className="md:hidden flex items-center justify-between gap-2 pt-2 flex-wrap">
           <h1 className="text-student-headline-md font-student font-bold text-student-on-surface">
             Notifications
           </h1>
-          {unreadCount > 0 && (
-            <button
-              type="button"
-              disabled={markAllPending}
-              onClick={() => void markAllRead()}
-              className="text-student-label-md font-student text-student-primary py-1.5 px-3 rounded-full border border-student-primary disabled:opacity-50"
-            >
-              {markAllPending ? 'Marking…' : 'Mark all read'}
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {unreadCount > 0 && (
+              <button
+                type="button"
+                disabled={markAllPending}
+                onClick={() => void markAllRead()}
+                className="text-student-label-md font-student text-student-primary py-1.5 px-3 rounded-full border border-student-primary disabled:opacity-50"
+              >
+                {markAllPending ? 'Marking…' : 'Mark all read'}
+              </button>
+            )}
+            {(notifications.length > 0 || unreadCount > 0) && (
+              <button
+                type="button"
+                disabled={clearAllPending}
+                onClick={() => void clearAll()}
+                className="text-student-label-md font-student text-student-error py-1.5 px-3 rounded-full border border-student-error disabled:opacity-50"
+              >
+                {clearAllPending ? 'Clearing…' : 'Clear all'}
+              </button>
+            )}
+          </div>
         </div>
 
         {unreadCount > 0 && (

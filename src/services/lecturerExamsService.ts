@@ -64,6 +64,25 @@ export async function setLecturerResultReleased(
   return normalizeLecturerResults(data);
 }
 
+/** Release or withhold every result for an exam (empty resultIds = all). */
+export async function setAllLecturerResultsReleased(
+  examId: number,
+  released: boolean,
+): Promise<LecturerExamResultsResponse> {
+  const { data } = await apiClient.post<unknown>(
+    `/api/lecturer/exams/${examId}/results/${released ? 'release' : 'unrelease'}`,
+    { resultIds: [] },
+  );
+  return normalizeLecturerResults(data);
+}
+
+export async function publishLecturerExam(examId: number): Promise<LecturerExamDto> {
+  const { data } = await apiClient.post<LecturerExamDto>(
+    `/api/lecturer/exams/${examId}/publish`,
+  );
+  return data;
+}
+
 export async function fetchLecturerExam(examId: number): Promise<LecturerExamDto> {
   const { data } = await apiClient.get<LecturerExamDto>(`/api/lecturer/exams/${examId}`);
   return data;

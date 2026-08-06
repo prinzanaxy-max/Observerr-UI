@@ -29,12 +29,19 @@ const ExamPreActionBar = memo(({
             {beginLabel}
           </Link>
         ) : isCompleted ? (
-          <Link
-            to="/student/exams"
-            className="w-full h-14 rounded-full text-student-headline-sm font-student font-bold flex items-center justify-center border-2 border-student-primary text-student-primary hover:bg-student-primary/5 transition-colors"
-          >
-            {availableAtLabel ?? 'View Results'}
-          </Link>
+          <div className="space-y-3">
+            {availableAtLabel && (
+              <p className="text-center text-student-body-md font-student text-student-on-surface-variant">
+                {availableAtLabel}
+              </p>
+            )}
+            <Link
+              to="/student/results"
+              className="w-full h-14 rounded-full text-student-headline-sm font-student font-bold flex items-center justify-center border-2 border-student-primary text-student-primary hover:bg-student-primary/5 transition-colors"
+            >
+              {beginLabel === 'Back to exams' ? 'Go to Results' : beginLabel}
+            </Link>
+          </div>
         ) : (
           <button
             type="button"
