@@ -4,7 +4,7 @@ export type AnalyticsApiError = {
   timestamp: string;
 };
 
-export type AnalyticsPeriod = '7D' | '30D' | '3M';
+export type AnalyticsPeriod = '7D' | '30D' | '3M' | 'CUSTOM';
 
 export type AnalyticsChangeDirection = 'UP' | 'DOWN' | 'STABLE';
 
@@ -78,7 +78,9 @@ export type IntegrityReportPage = {
 };
 
 export type IntegrityReportFilters = {
-  period: AnalyticsPeriod;
+  period?: AnalyticsPeriod;
+  startDate?: string;
+  endDate?: string;
   page?: number;
   size?: number;
   search?: string;

@@ -34,6 +34,7 @@ export type LecturerExamDto = {
   activeFlagsCount?: number;
   startAt: string;
   durationMinutes: number;
+  published?: boolean;
   studentInstitutionalIds: string[];
   security: ExamSecuritySettings;
   detail: ExamDetail | null;
@@ -85,6 +86,7 @@ export type ExamOverview = {
   enrollment: string;
   startAt: string;
   durationMinutes: number;
+  published?: boolean;
   detail?: ExamDetail;
 };
 

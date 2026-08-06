@@ -12,9 +12,10 @@ type ExamOverviewCardProps = {
   exam: ExamOverview;
   onPrimaryAction: (exam: ExamOverview) => void;
   onSelect?: (exam: ExamOverview) => void;
+  starting?: boolean;
 };
 
-const ExamOverviewCard = memo(({ exam, onPrimaryAction, onSelect }: ExamOverviewCardProps) => {
+const ExamOverviewCard = memo(({ exam, onPrimaryAction, onSelect, starting = false }: ExamOverviewCardProps) => {
   const isLive = exam.status === 'live';
   const isUpcoming = exam.status === 'upcoming';
 
@@ -91,13 +92,27 @@ const ExamOverviewCard = memo(({ exam, onPrimaryAction, onSelect }: ExamOverview
             Proctor Now
           </button>
         ) : isUpcoming ? (
-          <button
-            type="button"
-            disabled
-            className="flex-1 bg-student-surface-container-high text-student-on-surface-variant py-2.5 rounded-full text-student-body-md font-student font-semibold opacity-50 cursor-not-allowed"
-          >
-            Not available yet
-          </button>
+          exam.published === false ? (
+            <button
+              type="button"
+              disabled
+              className="flex-1 bg-student-surface-container-high text-student-on-surface-variant py-2.5 rounded-full text-student-body-md font-student font-semibold opacity-50 cursor-not-allowed"
+            >
+              Publish to start
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={starting}
+              onClick={(e) => {
+                e.stopPropagation();
+                onPrimaryAction(exam);
+              }}
+              className="flex-1 bg-student-primary text-student-on-primary py-2.5 rounded-full text-student-body-md font-student font-semibold hover:bg-student-primary/90 transition-colors disabled:opacity-60"
+            >
+              {starting ? 'Starting…' : 'Start Now'}
+            </button>
+          )
         ) : (
           <button
             type="button"

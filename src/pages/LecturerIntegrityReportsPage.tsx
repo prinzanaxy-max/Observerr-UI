@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthProfile } from '../hooks/useAuthProfile';
 import { useLecturerAnalyticsOverview } from '../hooks/useLecturerAnalyticsOverview';
+import { useLecturerGoLive } from '../hooks/useLecturerGoLive';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
 import IntegrityReportsPageHeader from '../components/lecturer/IntegrityReportsPageHeader';
 import AnalyticsDateRangeFilter from '../components/lecturer/AnalyticsDateRangeFilter';
@@ -15,11 +16,21 @@ import { UI_PERIOD_TO_API } from '../lib/lecturerAnalyticsUtils';
 import { fetchIntegrityReport } from '../services/lecturerAnalyticsService';
 import type { IntegrityReportEvent, IntegrityReportPage } from '../types/lecturerAnalytics';
 
+const defaultCustomEnd = () => new Date().toISOString().slice(0, 10);
+const defaultCustomStart = () => {
+  const date = new Date();
+  date.setDate(date.getDate() - 7);
+  return date.toISOString().slice(0, 10);
+};
+
 const LecturerIntegrityReportsPage = () => {
   const navigate = useNavigate();
   const { institutionalId, email, initials } = useAuthProfile();
+  const { goLive, goingLive, goLiveError } = useLecturerGoLive();
 
   const [dateRange, setDateRange] = useState<DateRangeKey>('7d');
+  const [customStart, setCustomStart] = useState(defaultCustomStart);
+  const [customEnd, setCustomEnd] = useState(defaultCustomEnd);
   const [showFullReport, setShowFullReport] = useState(false);
   const [reportPage, setReportPage] = useState(0);
   const [reportSearch, setReportSearch] = useState('');
@@ -28,24 +39,38 @@ const LecturerIntegrityReportsPage = () => {
   const [fullReport, setFullReport] = useState<IntegrityReportPage | null>(null);
   const [fullReportLoading, setFullReportLoading] = useState(false);
   const [fullReportError, setFullReportError] = useState('');
-  const { report, loading, error, errorHint, forbidden, reload } = useLecturerAnalyticsOverview(dateRange);
+
+  const customRange = useMemo(
+    () => ({ startDate: customStart, endDate: customEnd }),
+    [customEnd, customStart],
+  );
+  const { report, loading, error, errorHint, forbidden, reload } = useLecturerAnalyticsOverview(
+    dateRange,
+    customRange,
+  );
 
   useEffect(() => {
     document.title = 'Integrity Reports — Observerr Lecturer';
   }, []);
 
   const handleDateRangeChange = useCallback((value: DateRangeKey) => setDateRange(value), []);
-  const handleGoLive = useCallback(() => navigate('/lecturer/exams'), [navigate]);
+  const handleGoLive = useCallback(() => void goLive(), [goLive]);
   const handleNewExam = useCallback(() => navigate(CREATE_EXAM_PATH), [navigate]);
   const handleViewFullReport = useCallback(() => setShowFullReport(true), []);
 
   const loadFullReport = useCallback(async () => {
-    if (!showFullReport || dateRange === 'custom') return;
+    if (!showFullReport) return;
+    if (dateRange === 'custom' && (!customStart || !customEnd)) {
+      setFullReportError('Select both a start and end date for the custom range.');
+      return;
+    }
     setFullReportLoading(true);
     setFullReportError('');
     try {
       setFullReport(await fetchIntegrityReport({
-        period: UI_PERIOD_TO_API[dateRange],
+        ...(dateRange === 'custom'
+          ? { startDate: customStart, endDate: customEnd }
+          : { period: UI_PERIOD_TO_API[dateRange] }),
         page: reportPage,
         size: 20,
         search: reportSearch.trim() || undefined,
@@ -57,14 +82,26 @@ const LecturerIntegrityReportsPage = () => {
     } finally {
       setFullReportLoading(false);
     }
-  }, [dateRange, reportEventType, reportPage, reportSearch, reportSeverity, showFullReport]);
+  }, [
+    customEnd,
+    customStart,
+    dateRange,
+    reportEventType,
+    reportPage,
+    reportSearch,
+    reportSeverity,
+    showFullReport,
+  ]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void loadFullReport(), 250);
     return () => window.clearTimeout(timer);
   }, [loadFullReport]);
 
-  useEffect(() => setReportPage(0), [dateRange, reportEventType, reportSearch, reportSeverity]);
+  useEffect(
+    () => setReportPage(0),
+    [dateRange, customStart, customEnd, reportEventType, reportSearch, reportSeverity],
+  );
 
   return (
     <LecturerPortalLayout
@@ -73,7 +110,13 @@ const LecturerIntegrityReportsPage = () => {
       initials={initials}
       onNewExam={handleNewExam}
       contentClassName="lecturer-exams-bg"
-      header={<IntegrityReportsPageHeader initials={initials} onGoLive={handleGoLive} />}
+      header={
+        <IntegrityReportsPageHeader
+          initials={initials}
+          onGoLive={handleGoLive}
+          goingLive={goingLive}
+        />
+      }
     >
       <div className="p-4 md:p-8 max-w-[1200px] mx-auto w-full pb-12 space-y-8 md:space-y-10">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -83,8 +126,21 @@ const LecturerIntegrityReportsPage = () => {
               Reviewing integrity metrics and proctoring events.
             </p>
           </div>
-          <AnalyticsDateRangeFilter value={dateRange} onChange={handleDateRangeChange} />
+          <AnalyticsDateRangeFilter
+            value={dateRange}
+            onChange={handleDateRangeChange}
+            customStart={customStart}
+            customEnd={customEnd}
+            onCustomStartChange={setCustomStart}
+            onCustomEndChange={setCustomEnd}
+          />
         </div>
+
+        {goLiveError && (
+          <div className="rounded-xl border border-student-error-container bg-student-error-container/30 px-4 py-3 text-student-on-error-container font-student text-student-body-md">
+            {goLiveError}
+          </div>
+        )}
 
         {(error || forbidden) && !loading && (
           <div className="rounded-xl border border-student-error-container bg-student-error-container/30 px-4 py-3 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">

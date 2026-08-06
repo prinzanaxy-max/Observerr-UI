@@ -87,7 +87,9 @@ export function normalizeAnalyticsOverview(raw: unknown): LecturerAnalyticsOverv
 
   const periodRaw = String(r.period ?? '7D').toUpperCase();
   const period: AnalyticsPeriod =
-    periodRaw === '30D' || periodRaw === '3M' ? (periodRaw as AnalyticsPeriod) : '7D';
+    periodRaw === '30D' || periodRaw === '3M' || periodRaw === 'CUSTOM'
+      ? (periodRaw as AnalyticsPeriod)
+      : '7D';
 
   return {
     period,

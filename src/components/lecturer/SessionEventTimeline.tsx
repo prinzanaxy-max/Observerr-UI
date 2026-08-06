@@ -1,6 +1,5 @@
 import { memo, useMemo, useState } from 'react';
 import Icon from '../student/Icon';
-import type { SessionEventSeverity } from '../../types/lecturerStudents';
 import type { TimelineEventView } from '../../lib/lecturerStudentsUtils';
 import {
   severityCardClass,
@@ -16,26 +15,66 @@ type SessionEventTimelineProps = {
   loading?: boolean;
 };
 
-const FILTER_OPTIONS: { value: 'all' | SessionEventSeverity; label: string }[] = [
+type EventFilter =
+  | 'all'
+  | 'tab'
+  | 'clipboard'
+  | 'face'
+  | 'fullscreen'
+  | 'success'
+  | 'warning'
+  | 'danger'
+  | 'neutral';
+
+const FILTER_OPTIONS: { value: EventFilter; label: string }[] = [
   { value: 'all', label: 'Filter: All Events' },
-  { value: 'SUCCESS', label: 'Success' },
-  { value: 'WARNING', label: 'Warnings' },
-  { value: 'DANGER', label: 'Critical' },
-  { value: 'NEUTRAL', label: 'Neutral' },
+  { value: 'tab', label: 'Tab Switch' },
+  { value: 'clipboard', label: 'Copy/Paste' },
+  { value: 'face', label: 'Face Detection' },
+  { value: 'fullscreen', label: 'Fullscreen / DevTools' },
+  { value: 'danger', label: 'Critical' },
+  { value: 'warning', label: 'Warnings' },
+  { value: 'success', label: 'Success' },
+  { value: 'neutral', label: 'Neutral' },
 ];
 
+const matchesEventTypeFilter = (event: TimelineEventView, filter: EventFilter): boolean => {
+  const code = `${event.eventType ?? ''} ${event.title}`.toLowerCase();
+  switch (filter) {
+    case 'tab':
+      return /tab|focus_loss|blur/.test(code);
+    case 'clipboard':
+      return /clipboard|copy|paste/.test(code);
+    case 'face':
+      return /face|gaze|multi_face/.test(code);
+    case 'fullscreen':
+      return /fullscreen|devtools/.test(code);
+    case 'danger':
+      return event.severity === 'DANGER';
+    case 'warning':
+      return event.severity === 'WARNING';
+    case 'success':
+      return event.severity === 'SUCCESS';
+    case 'neutral':
+      return event.severity === 'NEUTRAL';
+    default:
+      return true;
+  }
+};
+
 const SessionEventTimeline = memo(({ events, searchQuery, loading = false }: SessionEventTimelineProps) => {
-  const [filter, setFilter] = useState<'all' | SessionEventSeverity>('all');
+  const [filter, setFilter] = useState<EventFilter>('all');
 
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return events.filter((event) => {
-      if (filter !== 'all' && event.severity !== filter) return false;
+      if (!matchesEventTypeFilter(event, filter)) return false;
       if (!q) return true;
       return (
         event.title.toLowerCase().includes(q) ||
         event.message.toLowerCase().includes(q) ||
-        event.time.toLowerCase().includes(q)
+        event.time.toLowerCase().includes(q) ||
+        (event.eventType ?? '').toLowerCase().includes(q)
       );
     });
   }, [events, filter, searchQuery]);
@@ -61,7 +100,7 @@ const SessionEventTimeline = memo(({ events, searchQuery, loading = false }: Ses
         <h3 className="text-student-headline-sm font-student text-student-on-surface">Session Event Timeline</h3>
         <select
           value={filter}
-          onChange={(e) => setFilter(e.target.value as typeof filter)}
+          onChange={(e) => setFilter(e.target.value as EventFilter)}
           className="px-3 py-1 bg-student-surface-container rounded-full text-student-label-md font-student text-student-on-surface-variant border-0 focus:ring-2 focus:ring-student-primary/30 cursor-pointer"
           aria-label="Filter events"
         >

@@ -51,9 +51,12 @@ export const normalizeIntegrityReport = (value: unknown): IntegrityReportPage =>
 
 export async function fetchLecturerAnalyticsOverview(
   period: AnalyticsPeriod,
+  range?: { startDate: string; endDate: string },
 ): Promise<LecturerAnalyticsOverviewResponse> {
   const { data } = await apiClient.get<unknown>('/api/lecturer/analytics/overview', {
-    params: { period },
+    params: range
+      ? { startDate: range.startDate, endDate: range.endDate }
+      : { period },
   });
   return normalizeAnalyticsOverview(data);
 }

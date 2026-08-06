@@ -52,6 +52,13 @@ export async function fetchLecturerLiveSessions(
   return normalizeLiveSessions(data);
 }
 
+export async function startLecturerExam(examId: number): Promise<{ examId: number }> {
+  const { data } = await apiClient.post<{ examId: number }>(
+    `/api/lecturer/exams/${examId}/start`,
+  );
+  return data;
+}
+
 export async function endLecturerExam(examId: number): Promise<EndExamResponse> {
   const { data } = await apiClient.post<EndExamResponse>(
     `/api/lecturer/exams/${examId}/end`,

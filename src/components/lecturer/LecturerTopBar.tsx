@@ -1,6 +1,6 @@
 import { memo } from 'react';
-import { Link } from 'react-router-dom';
 import Icon from '../student/Icon';
+import NotificationBellLink from './NotificationBellLink';
 
 type LecturerTopBarProps = {
   searchQuery: string;
@@ -29,13 +29,7 @@ const LecturerTopBar = memo(({ searchQuery, onSearchChange, onNewExam }: Lecture
     </div>
 
     <div className="flex items-center gap-4 sm:gap-6 shrink-0">
-      <Link
-        to="/lecturer/settings"
-        className="relative hover:bg-student-surface-container rounded-full p-2 transition-colors"
-        aria-label="Notification settings"
-      >
-        <Icon name="notifications" className="text-student-on-surface-variant" />
-      </Link>
+      <NotificationBellLink className="hover:bg-student-surface-container" />
       <button
         type="button"
         onClick={onNewExam}

@@ -2,6 +2,7 @@ import { AxiosError } from 'axios';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as notificationService from '../services/notificationService';
 import type { NotificationCategory, NotificationItem } from '../types/pushNotifications';
+import { notifyNotificationsChanged } from './useUnreadNotificationCount';
 
 const PAGE_SIZE = 20;
 
@@ -63,6 +64,7 @@ export function useNotifications(category?: NotificationCategory) {
         items.map((item) => item.id === notification.id ? { ...item, read: true } : item),
       );
       setUnreadCount((count) => Math.max(0, count - 1));
+      notifyNotificationsChanged();
     } finally {
       setPendingIds((ids) => {
         const next = new Set(ids);
@@ -79,7 +81,10 @@ export function useNotifications(category?: NotificationCategory) {
     try {
       await notificationService.dismissNotification(id);
       setNotifications((items) => items.filter((notification) => notification.id !== id));
-      if (item && !item.read) setUnreadCount((count) => Math.max(0, count - 1));
+      if (item && !item.read) {
+        setUnreadCount((count) => Math.max(0, count - 1));
+        notifyNotificationsChanged();
+      }
     } catch {
       setError('Could not dismiss that notification.');
     } finally {
@@ -99,6 +104,7 @@ export function useNotifications(category?: NotificationCategory) {
       await notificationService.markAllNotificationsRead();
       setNotifications((items) => items.map((item) => ({ ...item, read: true })));
       setUnreadCount(0);
+      notifyNotificationsChanged();
     } catch {
       setError('Could not mark notifications as read.');
     } finally {

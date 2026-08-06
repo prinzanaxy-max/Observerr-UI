@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthProfile } from '../hooks/useAuthProfile';
 import { useLecturerStudents } from '../hooks/useLecturerStudents';
+import { useLecturerGoLive } from '../hooks/useLecturerGoLive';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
 import StudentsPageHeader from '../components/lecturer/StudentsPageHeader';
 import StudentsTable from '../components/lecturer/StudentsTable';
@@ -34,9 +35,10 @@ const LecturerStudentsPage = () => {
     document.title = 'Students — Observerr Lecturer';
   }, []);
 
+  const { goLive, goingLive, goLiveError } = useLecturerGoLive();
   const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
   const handleCourseChange = useCallback((value: string) => setCourseFilter(value), []);
-  const handleGoLive = useCallback(() => navigate('/lecturer/exams'), [navigate]);
+  const handleGoLive = useCallback(() => void goLive(), [goLive]);
 
   return (
     <LecturerPortalLayout
@@ -54,10 +56,16 @@ const LecturerStudentsPage = () => {
           onSearchChange={handleSearchChange}
           onCourseChange={handleCourseChange}
           onGoLive={handleGoLive}
+          goingLive={goingLive}
         />
       }
     >
       <div className="p-4 md:p-8 max-w-[1200px] mx-auto w-full pb-12">
+        {goLiveError && (
+          <div className="mb-4 rounded-xl border border-student-error-container bg-student-error-container/30 px-4 py-3 text-student-on-error-container font-student text-student-body-md">
+            {goLiveError}
+          </div>
+        )}
         <div className="md:hidden mb-6 space-y-4">
           <h1 className="text-student-headline-md font-student font-semibold text-student-on-surface">Students</h1>
           <input

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthProfile } from '../hooks/useAuthProfile';
 import { useLecturerExams } from '../hooks/useLecturerExams';
+import { useLecturerGoLive } from '../hooks/useLecturerGoLive';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
 import ExamsPageHeader from '../components/lecturer/ExamsPageHeader';
 import ExamsFilterBar from '../components/lecturer/ExamsFilterBar';
@@ -10,6 +11,7 @@ import Icon from '../components/student/Icon';
 import type { ExamFilterTab, ExamOverview } from '../types/lecturerExams';
 import { CREATE_EXAM_PATH } from '../data/createExamData';
 import { lecturerExamPath } from '../lib/examResultNavigation';
+import { startLecturerExam } from '../services/lecturerLiveSessionsService';
 
 const ExamCardSkeleton = () => (
   <div className="bg-student-surface rounded-[24px] p-6 lecturer-card-elevation animate-pulse h-[320px]">
@@ -29,8 +31,11 @@ const LecturerExamsPage = () => {
 
   const [activeTab, setActiveTab] = useState<ExamFilterTab>('live');
   const [searchQuery, setSearchQuery] = useState('');
+  const [startingExamId, setStartingExamId] = useState<number | null>(null);
+  const [actionError, setActionError] = useState('');
 
   const { exams, loading, error, forbidden, reload } = useLecturerExams(searchQuery, activeTab);
+  const { goLive, goingLive, goLiveError } = useLecturerGoLive();
 
   useEffect(() => {
     document.title = 'Exams — Observerr Lecturer';
@@ -39,7 +44,7 @@ const LecturerExamsPage = () => {
   const handleTabChange = useCallback((tab: ExamFilterTab) => setActiveTab(tab), []);
   const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
   const handleNewExam = useCallback(() => navigate(CREATE_EXAM_PATH), [navigate]);
-  const handleGoLive = useCallback(() => setActiveTab('live'), []);
+  const handleGoLive = useCallback(() => void goLive(), [goLive]);
 
   const openExam = useCallback(
     (exam: ExamOverview) => {
@@ -50,8 +55,24 @@ const LecturerExamsPage = () => {
   );
 
   const handlePrimaryAction = useCallback(
-    (exam: ExamOverview) => openExam(exam),
-    [openExam],
+    async (exam: ExamOverview) => {
+      if (exam.status === 'upcoming') {
+        if (startingExamId !== null) return;
+        setStartingExamId(exam.id);
+        setActionError('');
+        try {
+          await startLecturerExam(exam.id);
+          navigate(`/lecturer/exams/${exam.id}/live`);
+        } catch {
+          setActionError('Could not start this exam. It may already be live or ended.');
+        } finally {
+          setStartingExamId(null);
+        }
+        return;
+      }
+      openExam(exam);
+    },
+    [navigate, openExam, startingExamId],
   );
 
   return (
@@ -61,7 +82,9 @@ const LecturerExamsPage = () => {
       initials={initials}
       onNewExam={handleNewExam}
       contentClassName="lecturer-exams-bg"
-      header={<ExamsPageHeader initials={initials} onGoLive={handleGoLive} />}
+      header={
+        <ExamsPageHeader initials={initials} onGoLive={handleGoLive} goingLive={goingLive} />
+      }
     >
       <div className="p-4 md:p-8 max-w-[1440px] mx-auto w-full pb-12">
         <div className="md:hidden mb-6">
@@ -74,6 +97,12 @@ const LecturerExamsPage = () => {
           onTabChange={handleTabChange}
           onSearchChange={handleSearchChange}
         />
+
+        {(actionError || goLiveError) && (
+          <div className="mb-4 rounded-xl border border-student-error-container bg-student-error-container/30 px-4 py-3 text-student-on-error-container font-student text-student-body-md">
+            {actionError || goLiveError}
+          </div>
+        )}
 
         {error ? (
           <div className="bg-student-surface rounded-[24px] p-12 text-center lecturer-card-elevation">
@@ -110,8 +139,9 @@ const LecturerExamsPage = () => {
               <ExamOverviewCard
                 key={exam.id}
                 exam={exam}
-                onPrimaryAction={handlePrimaryAction}
+                onPrimaryAction={(selected) => void handlePrimaryAction(selected)}
                 onSelect={exam.status !== 'upcoming' ? openExam : undefined}
+                starting={startingExamId === exam.id}
               />
             ))}
           </div>

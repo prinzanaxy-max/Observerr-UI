@@ -29,6 +29,7 @@ const LecturerProctoringPage = lazy(() => import('./pages/LecturerProctoringPage
 const LecturerCreateExamPage = lazy(() => import('./pages/LecturerCreateExamPage'));
 const LecturerSessionDetailPage = lazy(() => import('./pages/LecturerSessionDetailPage'));
 const LecturerSettingsPage = lazy(() => import('./pages/LecturerSettingsPage'));
+const LecturerNotificationsPage = lazy(() => import('./pages/LecturerNotificationsPage'));
 const LecturerSupportPage = lazy(() => import('./pages/LecturerSupportPage'));
 const LecturerExamResultsPage = lazy(() => import('./pages/LecturerExamResultsPage'));
 const AccessDeniedPage = lazy(() => import('./pages/AccessDeniedPage'));
@@ -85,6 +86,7 @@ function App() {
           <Route path="/lecturer/reports" element={<LecturerIntegrityReportsPage />} />
           <Route path="/lecturer/proctoring" element={<LecturerProctoringPage />} />
           <Route path="/lecturer/settings" element={<LecturerSettingsPage />} />
+          <Route path="/lecturer/notifications" element={<LecturerNotificationsPage />} />
           <Route path="/lecturer/support" element={<LecturerSupportPage />} />
         </Route>
 

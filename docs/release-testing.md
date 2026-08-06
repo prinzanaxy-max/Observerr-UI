@@ -32,7 +32,7 @@ media devices, but that does not validate physical hardware, network traversal,
 stream quality, or the production signaling service.
 
 Before release, run those checks manually or in a dedicated integrated
-environment with real backend credentials, configured Firebase, a LiveKit room,
+environment with real backend credentials, configured Web Push (VAPID), a LiveKit room,
 camera/microphone hardware, and at least two participants. Also verify the
 production API CORS/cookie policy and one end-to-end student submission through
 lecturer result release.

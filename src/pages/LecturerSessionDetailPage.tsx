@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useAuthProfile } from '../hooks/useAuthProfile';
 import { useLecturerSessionDetail } from '../hooks/useLecturerSessionDetail';
+import { useLecturerGoLive } from '../hooks/useLecturerGoLive';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
 import StudentTimelineTopBar from '../components/lecturer/StudentTimelineTopBar';
 import StudentProfileHeader from '../components/lecturer/StudentProfileHeader';
@@ -15,6 +16,7 @@ const LecturerSessionDetailPage = () => {
   const navigate = useNavigate();
   const { institutionalId, email, initials } = useAuthProfile();
   const [searchQuery, setSearchQuery] = useState('');
+  const { goLive, goingLive } = useLecturerGoLive();
 
   const sessionId = sessionIdParam?.trim() || null;
 
@@ -62,6 +64,8 @@ const LecturerSessionDetailPage = () => {
           initials={initials}
           searchQuery={searchQuery}
           onSearchChange={handleSearchChange}
+          onGoLive={() => void goLive()}
+          goingLive={goingLive}
         />
       }
     >

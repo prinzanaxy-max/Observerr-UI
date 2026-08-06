@@ -8,6 +8,7 @@ import {
   STUDENT_PORTAL_FOOTER_NAV,
   STUDENT_PORTAL_NAV,
 } from '../../data/studentPortalNav';
+import { useUnreadNotificationCount } from '../../hooks/useUnreadNotificationCount';
 
 type StudentSidebarProps = {
   activeNav: string;
@@ -28,6 +29,7 @@ const StudentSidebar = memo(({
   avatarUrl,
 }: StudentSidebarProps) => {
   const { pathname } = useLocation();
+  const { unreadCount } = useUnreadNotificationCount();
 
   return (
     <aside className="hidden md:flex w-[240px] shrink-0 flex-col justify-between border-r border-student-surface-variant bg-student-surface shadow-[0px_10px_30px_rgba(0,0,0,0.05)] h-full z-10">
@@ -62,7 +64,7 @@ const StudentSidebar = memo(({
               >
                 <Icon name={item.icon} filled={isActive} className="mr-3 text-[20px]" />
                 {item.label}
-                {item.badge && (
+                {item.id === 'notifications' && unreadCount > 0 && (
                   <span className="absolute top-3 right-3 w-2 h-2 rounded-full bg-student-error" aria-hidden="true" />
                 )}
               </Link>

@@ -1,31 +1,28 @@
 import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../student/Icon';
+import NotificationBellLink from './NotificationBellLink';
 
 type IntegrityReportsPageHeaderProps = {
   initials: string;
   onGoLive: () => void;
+  goingLive?: boolean;
 };
 
-const IntegrityReportsPageHeader = memo(({ initials, onGoLive }: IntegrityReportsPageHeaderProps) => (
+const IntegrityReportsPageHeader = memo(({ initials, onGoLive, goingLive = false }: IntegrityReportsPageHeaderProps) => (
   <header className="hidden md:flex shrink-0 justify-end items-center h-16 px-8 bg-student-surface/80 backdrop-blur-md border-b border-student-outline-variant/20 z-20">
     <div className="flex items-center gap-4">
       <button
         type="button"
         onClick={onGoLive}
-        className="text-student-primary font-student text-student-headline-sm font-semibold hover:bg-student-surface-container-high px-4 py-2 rounded-full transition-colors flex items-center gap-2"
+        disabled={goingLive}
+        className="text-student-primary font-student text-student-headline-sm font-semibold hover:bg-student-surface-container-high px-4 py-2 rounded-full transition-colors flex items-center gap-2 disabled:opacity-60"
       >
         <Icon name="videocam" filled />
-        Go Live
+        {goingLive ? 'Starting…' : 'Go Live'}
       </button>
 
-      <Link
-        to="/lecturer/settings"
-        className="p-2 text-student-on-surface-variant hover:text-student-primary transition-colors hover:bg-student-surface-container rounded-full"
-        aria-label="Notification settings"
-      >
-        <Icon name="notifications" />
-      </Link>
+      <NotificationBellLink />
 
       <Link
         to="/lecturer/settings"

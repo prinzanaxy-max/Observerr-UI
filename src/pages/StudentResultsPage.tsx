@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StudentPortalLayout from '../components/student/StudentPortalLayout';
 import ResultsControlsBar from '../components/student/results/ResultsControlsBar';
@@ -10,6 +10,7 @@ import type { StudentResultRow } from '../types/studentResults';
 
 const StudentResultsPage = () => {
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
   const {
     summaryCards,
     rows,
@@ -39,11 +40,27 @@ const StudentResultsPage = () => {
     [navigate],
   );
 
+  const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
+
+  const filteredRows = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return rows;
+    return rows.filter((row) =>
+      `${row.courseName} ${row.courseCode} ${row.examLabel} ${row.status}`
+        .toLowerCase()
+        .includes(query),
+    );
+  }, [rows, searchQuery]);
+
   const showEmpty = !listLoading && !error && totalElements === 0;
+  const showNoMatches = !listLoading && !error && totalElements > 0 && filteredRows.length === 0;
 
   return (
     <StudentPortalLayout
       title="Results"
+      searchQuery={searchQuery}
+      onSearchChange={handleSearchChange}
+      searchPlaceholder="Search results..."
       contentClassName="student-results-bg relative"
     >
       <div className="pointer-events-none fixed top-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-student-primary-container opacity-20 blur-[100px] z-0" />
@@ -79,9 +96,9 @@ const StudentResultsPage = () => {
         ) : (
           <>
             <ResultsControlsBar
-              showingFrom={from}
-              showingTo={to}
-              total={totalElements}
+              showingFrom={filteredRows.length === 0 ? 0 : from}
+              showingTo={filteredRows.length === 0 ? 0 : Math.min(to, from + filteredRows.length - 1)}
+              total={searchQuery.trim() ? filteredRows.length : totalElements}
               sortKey={sortKey}
               onSortChange={setSort}
             />
@@ -94,12 +111,20 @@ const StudentResultsPage = () => {
                   Completed assessments will appear here.
                 </p>
               </div>
+            ) : showNoMatches ? (
+              <div className="text-center py-16 px-6 rounded-[24px] student-exam-glass-card">
+                <Icon name="search_off" className="text-[48px] text-student-outline mb-4 mx-auto" />
+                <h2 className="text-student-headline-sm font-student text-student-on-surface mb-2">No matching results</h2>
+                <p className="text-student-body-md font-student text-student-on-surface-variant">
+                  Try a different search term.
+                </p>
+              </div>
             ) : (
               <ResultsTable
-                results={rows}
+                results={filteredRows}
                 onSelect={handleSelect}
                 page={page}
-                totalPages={totalPages}
+                totalPages={searchQuery.trim() ? 1 : totalPages}
                 onPageChange={setPage}
                 loading={listLoading}
               />

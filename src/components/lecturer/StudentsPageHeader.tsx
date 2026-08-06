@@ -1,6 +1,6 @@
 import { memo } from 'react';
-import { Link } from 'react-router-dom';
 import Icon from '../student/Icon';
+import NotificationBellLink from './NotificationBellLink';
 import type { CourseFilterOption } from '../../types/lecturerStudents';
 
 type StudentsPageHeaderProps = {
@@ -11,6 +11,7 @@ type StudentsPageHeaderProps = {
   onSearchChange: (value: string) => void;
   onCourseChange: (value: string) => void;
   onGoLive: () => void;
+  goingLive?: boolean;
 };
 
 const StudentsPageHeader = memo(({
@@ -21,6 +22,7 @@ const StudentsPageHeader = memo(({
   onSearchChange,
   onCourseChange,
   onGoLive,
+  goingLive = false,
 }: StudentsPageHeaderProps) => (
   <header className="hidden md:flex shrink-0 justify-between items-center h-16 px-8 bg-student-surface/80 backdrop-blur-md border-b border-student-outline-variant/20 z-20 gap-4">
     <h2 className="text-student-headline-md font-student font-semibold text-student-primary shrink-0">Students</h2>
@@ -55,15 +57,14 @@ const StudentsPageHeader = memo(({
       <button
         type="button"
         onClick={onGoLive}
-        className="hidden sm:flex px-5 py-2 bg-gradient-to-r from-student-primary-fixed to-student-secondary-fixed text-student-on-primary-fixed rounded-full font-student font-bold text-student-label-md uppercase tracking-wider hover:opacity-90 transition-opacity shadow-[0_0_10px_rgba(133,220,87,0.2)] items-center gap-2 shrink-0"
+        disabled={goingLive}
+        className="hidden sm:flex px-5 py-2 bg-gradient-to-r from-student-primary-fixed to-student-secondary-fixed text-student-on-primary-fixed rounded-full font-student font-bold text-student-label-md uppercase tracking-wider hover:opacity-90 transition-opacity shadow-[0_0_10px_rgba(133,220,87,0.2)] items-center gap-2 shrink-0 disabled:opacity-60"
       >
-        Go Live
+        {goingLive ? 'Starting…' : 'Go Live'}
       </button>
 
       <div className="flex items-center gap-3 sm:gap-4 border-l border-student-surface-variant pl-4 shrink-0">
-        <Link to="/lecturer/settings" className="relative text-student-on-surface-variant hover:text-student-primary transition-colors p-1" aria-label="Notification settings">
-          <Icon name="notifications" />
-        </Link>
+        <NotificationBellLink className="p-1" />
         <div
           className="w-8 h-8 rounded-full shrink-0 bg-student-primary-container flex items-center justify-center text-student-on-primary-container text-xs font-bold border border-student-outline-variant"
           aria-hidden="true"

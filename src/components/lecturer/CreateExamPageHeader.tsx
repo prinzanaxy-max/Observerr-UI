@@ -1,6 +1,5 @@
 import { memo } from 'react';
-import { Link } from 'react-router-dom';
-import Icon from '../student/Icon';
+import NotificationBellLink from './NotificationBellLink';
 
 type CreateExamPageHeaderProps = {
   initials: string;
@@ -26,13 +25,7 @@ const CreateExamPageHeader = memo(({ initials, onSaveDraft }: CreateExamPageHead
       <div className="h-6 w-px bg-student-outline-variant/50" aria-hidden="true" />
 
       <div className="flex items-center gap-3">
-        <Link
-          to="/lecturer/settings"
-          className="w-10 h-10 rounded-full flex items-center justify-center text-student-on-surface-variant hover:bg-student-surface-container-high transition-colors"
-          aria-label="Notification settings"
-        >
-          <Icon name="notifications" />
-        </Link>
+        <NotificationBellLink className="w-10 h-10 flex items-center justify-center hover:bg-student-surface-container-high" />
         <div
           className="w-10 h-10 rounded-full bg-student-primary-container flex items-center justify-center text-student-on-primary-container text-xs font-bold border border-student-outline-variant/30"
           aria-hidden="true"

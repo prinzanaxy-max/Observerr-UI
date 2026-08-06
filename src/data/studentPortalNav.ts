@@ -11,7 +11,7 @@ export const STUDENT_PORTAL_NAV: StudentNavItem[] = [
   { id: 'home', label: 'Home', icon: 'home', path: '/student', filled: true },
   { id: 'exams', label: 'Exams', icon: 'assignment', path: '/student/exams' },
   { id: 'results', label: 'Results', icon: 'leaderboard', path: '/student/results' },
-  { id: 'notifications', label: 'Notifications', icon: 'notifications', path: '/student/notifications', badge: true },
+  { id: 'notifications', label: 'Notifications', icon: 'notifications', path: '/student/notifications', badge: false },
 ];
 
 export const STUDENT_PORTAL_FOOTER_NAV: StudentNavItem[] = [

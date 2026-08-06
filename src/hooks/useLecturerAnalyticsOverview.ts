@@ -10,7 +10,12 @@ import {
 import * as lecturerAnalyticsService from '../services/lecturerAnalyticsService';
 import useAuthStore from '../store/authStore';
 
-export function useLecturerAnalyticsOverview(period: DateRangeKey) {
+type CustomRange = {
+  startDate: string;
+  endDate: string;
+};
+
+export function useLecturerAnalyticsOverview(period: DateRangeKey, customRange: CustomRange) {
   const navigate = useNavigate();
   const clearAuth = useAuthStore((s) => s.clear);
 
@@ -21,16 +26,25 @@ export function useLecturerAnalyticsOverview(period: DateRangeKey) {
   const [forbidden, setForbidden] = useState(false);
 
   const loadOverview = useCallback(
-    async (range: Exclude<DateRangeKey, 'custom'>) => {
+    async () => {
+      if (period === 'custom' && (!customRange.startDate || !customRange.endDate)) {
+        setLoading(false);
+        setOverview(null);
+        setError('Select both a start and end date for the custom range.');
+        return;
+      }
+
       setLoading(true);
       setError('');
       setErrorHint('');
       setForbidden(false);
 
       try {
-        const data = await lecturerAnalyticsService.fetchLecturerAnalyticsOverview(
-          UI_PERIOD_TO_API[range],
-        );
+        const data = period === 'custom'
+          ? await lecturerAnalyticsService.fetchLecturerAnalyticsOverview('CUSTOM', customRange)
+          : await lecturerAnalyticsService.fetchLecturerAnalyticsOverview(
+              UI_PERIOD_TO_API[period],
+            );
         setOverview(mapAnalyticsOverviewToView(data));
       } catch (err) {
         console.error('[Analytics] load failed', err);
@@ -57,16 +71,12 @@ export function useLecturerAnalyticsOverview(period: DateRangeKey) {
         setLoading(false);
       }
     },
-    [clearAuth, navigate],
+    [clearAuth, customRange, navigate, period],
   );
 
   useEffect(() => {
-    if (period === 'custom') {
-      setLoading(false);
-      return;
-    }
-    void loadOverview(period);
-  }, [loadOverview, period]);
+    void loadOverview();
+  }, [loadOverview]);
 
   const report = useMemo(
     () =>
@@ -82,12 +92,12 @@ export function useLecturerAnalyticsOverview(period: DateRangeKey) {
 
   return {
     report,
-    loading: period !== 'custom' && loading,
+    loading,
     error,
     errorHint,
     forbidden,
     reload: () => {
-      if (period !== 'custom') void loadOverview(period);
+      void loadOverview();
     },
   };
 }

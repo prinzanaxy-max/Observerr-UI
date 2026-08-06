@@ -21,6 +21,7 @@ export const mapLecturerExamToOverview = (exam: LecturerExamDto): ExamOverview =
   enrollment: exam.enrollment,
   startAt: exam.startAt,
   durationMinutes: exam.durationMinutes,
+  published: exam.published,
   detail: exam.detail ?? undefined,
 });
 
