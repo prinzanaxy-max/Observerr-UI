@@ -69,6 +69,9 @@ type ExamSessionWithMonitorProps = {
   sessionError?: string | null;
   sessionId: string | null;
   onPublisherReady: (disconnect: () => Promise<void>) => void;
+  webcamMonitoring: boolean;
+  tabSwitchTracking: boolean;
+  blockCopyPaste: boolean;
   children: React.ReactNode;
 };
 
@@ -84,15 +87,19 @@ function ExamSessionWithMonitor({
   sessionError,
   sessionId,
   onPublisherReady,
+  webcamMonitoring,
+  tabSwitchTracking,
+  blockCopyPaste,
   children,
 }: ExamSessionWithMonitorProps) {
   const publisherDisconnectRef = useRef<(() => Promise<void>) | null>(null);
   const monitor = useIntegrityMonitor({
     videoRef,
     examContainerRef,
-    enabled: true,
+    enabled: webcamMonitoring,
     onIntegrityEvent,
-    blockClipboard: true,
+    blockClipboard: blockCopyPaste,
+    trackTabSwitch: tabSwitchTracking,
     beforeStopTracks: () => publisherDisconnectRef.current?.(),
   });
   const publisher = useStudentLiveKitPublisher({
@@ -574,6 +581,9 @@ const StudentExamSessionPage = () => {
         sessionError={sessionError}
         sessionId={sessionId}
         onPublisherReady={handlePublisherReady}
+        webcamMonitoring={exam.security.webcamMonitoring}
+        tabSwitchTracking={exam.security.tabSwitchTracking}
+        blockCopyPaste={exam.security.blockCopyPaste}
       >
         <ExamSessionHeader
           title={exam.title}

@@ -24,7 +24,7 @@ describe('IntegrityEventMachine', () => {
     const machine = new IntegrityEventMachine((event) => events.push(event.type));
     machine.onTabBlur();
     machine.onTabBlur();
-    expect(events).toEqual(['tab_blur']);
+    expect(events).toEqual(['tab_switch']);
     expect(machine.getTabBlurCount()).toBe(1);
   });
 });

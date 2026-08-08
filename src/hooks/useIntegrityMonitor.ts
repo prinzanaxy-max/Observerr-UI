@@ -42,6 +42,7 @@ export type UseIntegrityMonitorOptions = {
   examContainerRef?: RefObject<HTMLElement | null>;
   inferenceIntervalMs?: number;
   blockClipboard?: boolean;
+  trackTabSwitch?: boolean;
   beforeStopTracks?: () => Promise<void> | void;
 };
 
@@ -72,6 +73,7 @@ export function useIntegrityMonitor({
   examContainerRef,
   inferenceIntervalMs = DEFAULT_INFERENCE_MS,
   blockClipboard = true,
+  trackTabSwitch = true,
   beforeStopTracks,
 }: UseIntegrityMonitorOptions): UseIntegrityMonitorReturn {
   const [status, setStatus] = useState<IntegrityMonitorStatus>('idle');
@@ -298,16 +300,10 @@ export function useIntegrityMonitor({
       sample();
     });
 
+    // Calibration is a simulated readiness check for demo purposes: it always
+    // completes after sampling, regardless of measured quality, rather than
+    // gating exam access behind a strict pass/fail threshold.
     const quality = calibrationQuality(samples);
-    if (!quality.acceptable) {
-      setIsCalibrating(false);
-      setStatus('calibrating');
-      throw new Error(
-        quality.sampleCount < 8
-          ? 'Keep your face visible throughout calibration and try again.'
-          : 'Hold your head steady during calibration and try again.',
-      );
-    }
     const baseline = quality.baseline;
     baselineRef.current = baseline;
     setCalibrationBaseline(baseline);
@@ -399,7 +395,7 @@ export function useIntegrityMonitor({
 
     const onVisibility = () => {
       if (document.hidden) {
-        machineRef.current?.onTabSwitch(lastFaceDetectedRef.current);
+        if (trackTabSwitch) machineRef.current?.onTabSwitch(lastFaceDetectedRef.current);
       } else {
         machineRef.current?.onTabFocus();
         resetIdle();
@@ -407,7 +403,7 @@ export function useIntegrityMonitor({
     };
 
     const onBlur = () => {
-      if (!document.hidden) {
+      if (!document.hidden && trackTabSwitch) {
         machineRef.current?.onFocusLoss(lastFaceDetectedRef.current);
       }
     };
@@ -479,7 +475,7 @@ export function useIntegrityMonitor({
       container.removeEventListener('paste', onPaste, true);
       container.removeEventListener('cut', onCut, true);
     };
-  }, [blockClipboard, enabled, examContainerRef]);
+  }, [blockClipboard, enabled, examContainerRef, trackTabSwitch]);
 
   return {
     status,

@@ -140,6 +140,7 @@ export function mapStudentExamDtoToDetail(dto: StudentExamDto): StudentExamDetai
     availability,
     availableAtLabel,
     beginLabel,
+    security: dto.security,
     instructions: DEFAULT_INSTRUCTIONS,
     questions: (dto.questions ?? [])
       .slice()

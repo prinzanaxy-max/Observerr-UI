@@ -202,7 +202,7 @@ const AuthPage = () => {
             label="Institutional ID"
             icon="badge"
             type="text"
-            placeholder="e.g. STU-2024-001"
+            placeholder="12345678"
             value={siInstitutionalId}
             autoComplete="username"
             onChange={(v) => { setSiInstitutionalId(v); setSiErrors((e) => ({ ...e, institutionalId: '' })); }}
@@ -291,7 +291,7 @@ const AuthPage = () => {
             label="Institutional ID"
             icon="badge"
             type="text"
-            placeholder="e.g. STU-2024-001"
+            placeholder="12345678"
             value={suInstitutionalId}
             autoComplete="username"
             onChange={(v) => { setSuInstitutionalId(v); setSuErrors((e) => ({ ...e, institutionalId: '' })); }}

@@ -1,0 +1,21 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 5173
+    },
+    {
+      "name": "backend",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-Command",
+        "$env:JAVA_HOME = 'C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.8-hotspot'; $env:Path = \"$env:JAVA_HOME\\bin;$env:Path\"; cd '..\\OBSERVERR-BACKEND'; Get-Content .env | ForEach-Object { if ($_ -match '^\\s*([^#][^=]*)=(.*)$') { [System.Environment]::SetEnvironmentVariable($matches[1].Trim(), $matches[2]) } }; ./mvnw.cmd spring-boot:run"
+      ],
+      "port": 8080
+    }
+  ]
+}

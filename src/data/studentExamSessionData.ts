@@ -1,4 +1,5 @@
 import type { StudentExam } from './studentExamsData';
+import type { StudentExamSecurityDto } from '../types/studentExams';
 
 export type ExamAvailability = 'locked' | 'ready' | 'completed';
 
@@ -24,4 +25,5 @@ export type StudentExamDetail = StudentExam & {
   beginLabel?: string;
   instructions: string[];
   questions: ExamQuestion[];
+  security: StudentExamSecurityDto;
 };

@@ -28,6 +28,9 @@ export function resolveLiveKitUrl(response: ProctoringMediaToken): string | null
 export function isMediaUnavailable(error: unknown): boolean {
   return (
     error instanceof AxiosError &&
-    (error.response?.status === 404 || error.response?.status === 503)
+    // 409 covers ProctoringMediaService's "exam is not live" / webcam-monitoring-off
+    // gate — that's an expected unavailability, not a transient network error worth
+    // an indefinite retry loop.
+    (error.response?.status === 404 || error.response?.status === 503 || error.response?.status === 409)
   );
 }

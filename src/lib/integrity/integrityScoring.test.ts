@@ -14,10 +14,10 @@ const gaze = (durationMs: number) => ({
 });
 
 describe('integrity scoring model', () => {
-  it('closes the moderate gaze gap with flat 3-pt gaze deductions', () => {
-    expect(resolveDeductionsForEvent(gaze(3_999))[0]?.code).toBe('GAZE_DEVIATION_BRIEF');
-    expect(resolveDeductionsForEvent(gaze(4_000))[0]?.code).toBe('GAZE_DEVIATION_MODERATE');
-    expect(resolveDeductionsForEvent(gaze(10_000))[0]?.points).toBe(3);
+  it('scales gaze deductions with how long the student looked away', () => {
+    expect(resolveDeductionsForEvent(gaze(3_999))[0]).toMatchObject({ code: 'GAZE_DEVIATION_BRIEF', points: 3 });
+    expect(resolveDeductionsForEvent(gaze(4_000))[0]).toMatchObject({ code: 'GAZE_DEVIATION_MODERATE', points: 6 });
+    expect(resolveDeductionsForEvent(gaze(10_000))[0]).toMatchObject({ code: 'GAZE_DEVIATION_SUSTAINED', points: 10 });
   });
 
   it('separates copy and paste deductions', () => {

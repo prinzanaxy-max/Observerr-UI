@@ -176,7 +176,7 @@ export function useIntegritySessionSync({
         console.warn('[IntegritySession] Failed to submit session to backend', err);
         if (err instanceof AxiosError) {
           const detail = err.response?.data as { message?: string } | undefined;
-          throw new Error(detail?.message ?? 'Exam submission failed. Please retry.');
+          throw new Error(detail?.message ?? 'Exam submission failed. Please retry.', { cause: err });
         }
         throw err instanceof Error ? err : new Error('Exam submission failed. Please retry.');
       }

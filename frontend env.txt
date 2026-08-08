@@ -1,0 +1,6 @@
+VITE_PORT=5173
+VITE_API_URL=https://observerr-production.up.railway.app
+VITE_API_BASE_URL=https://observerr-production.up.railway.app
+
+# Native Web Push — must match backend VAPID_PUBLIC_KEY
+VITE_VAPID_PUBLIC_KEY=BH2itA8HTzdgEuC_ZHjX4DU6peZ-sQxl5vif7Zdon8fMnLUllPsoyIWnpp7b_W2HJY2liKQfavOp0uZd-i5Ey1g

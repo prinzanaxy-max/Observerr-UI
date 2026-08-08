@@ -110,7 +110,7 @@ const toResultItem = (item: ApiExamResult) => ({
   courseCode: item.courseCode,
   assessmentType: item.examTitle,
   category: item.courseCode,
-  dateTaken: item.submittedAt,
+  dateTaken: new Date(item.submittedAt).toLocaleDateString(),
   timing: { type: 'SUBMITTED' as const, submittedTime: new Date(item.submittedAt).toLocaleTimeString() },
   integrityScore: item.integrityScore,
   status: item.requiresReview ? ('UNDER_REVIEW' as const) : ('VERIFIED' as const),
@@ -153,7 +153,7 @@ export async function fetchResultDetail(resultId: number): Promise<StudentResult
     courseName: item.courseCode,
     courseCode: item.courseCode,
     assessmentType: item.examTitle,
-    dateTaken: item.submittedAt,
+    dateTaken: new Date(item.submittedAt).toLocaleDateString(),
     completedLabel: `Submitted ${new Date(item.submittedAt).toLocaleString()}`,
     integrityScore: item.integrityScore,
     status: item.requiresReview ? 'UNDER_REVIEW' : 'VERIFIED',
@@ -164,12 +164,17 @@ export async function fetchResultDetail(resultId: number): Promise<StudentResult
     feedbackMessage: `You scored ${item.academicScore} of ${item.maxScore} points (${Math.round(item.percentage)}%).`,
     score: item.academicScore,
     maxScore: item.maxScore,
-    timeline: normalized.analysis.map((answer, index) => ({
-      id: answer.questionId,
-      title: `Question ${index + 1}: ${answer.correct ? 'Correct' : 'Incorrect'}`,
-      timeLabel: `${answer.pointsEarned}/${answer.pointsPossible} points`,
-      description: `${answer.question} · Selected: ${answer.selectedAnswer ?? 'No answer'} · Correct: ${answer.correctAnswer}`,
-      type: answer.correct ? 'success' : 'neutral',
-    })),
+    timeline: normalized.analysis.map((answer, index) => {
+      const status = answer.selectedAnswer == null
+        ? 'Unanswered'
+        : answer.correct ? 'Correct' : 'Incorrect';
+      return {
+        id: answer.questionId,
+        title: `Question ${index + 1}: ${status}`,
+        timeLabel: `${answer.pointsEarned}/${answer.pointsPossible} points`,
+        description: `${answer.question} · Selected: ${answer.selectedAnswer ?? 'No answer'} · Correct: ${answer.correctAnswer}`,
+        type: answer.selectedAnswer == null ? 'neutral' : answer.correct ? 'success' : 'neutral',
+      };
+    }),
   };
 }

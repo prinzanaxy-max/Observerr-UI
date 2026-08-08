@@ -13,6 +13,9 @@ import type { ForegroundPushPayload, PushPermissionStatus } from '../types/pushN
 import useAuthStore from '../store/authStore';
 
 const PUSH_ENABLED_KEY = 'observerr:push-notifications-enabled';
+// getRegistration() expects a scope URL, not the script path — must match the
+// scope passed to register() below, or lookups silently return undefined.
+const PUSH_SW_SCOPE = '/';
 const SUBSCRIPTION_REFRESH_MS = 24 * 60 * 60 * 1000;
 
 const readPushEnabled = (): boolean => {
@@ -78,7 +81,7 @@ export function usePushNotifications() {
       throw new Error('This browser does not support web push.');
     }
 
-    const registration = await navigator.serviceWorker.register(PUSH_SW_PATH);
+    const registration = await navigator.serviceWorker.register(PUSH_SW_PATH, { scope: PUSH_SW_SCOPE });
     await navigator.serviceWorker.ready;
 
     let subscription = await registration.pushManager.getSubscription();
@@ -167,7 +170,7 @@ export function usePushNotifications() {
     }
 
     try {
-      const registration = await navigator.serviceWorker.getRegistration(PUSH_SW_PATH);
+      const registration = await navigator.serviceWorker.getRegistration(PUSH_SW_SCOPE);
       const subscription = await registration?.pushManager.getSubscription();
       if (subscription) {
         const payload = toSubscriptionPayload(subscription);
