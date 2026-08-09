@@ -22,6 +22,7 @@ import {
   closeFaceLandmarker,
   loadFaceLandmarker,
 } from '../lib/integrity/faceLandmarkerLoader';
+import { CALIBRATION_SIMULATED } from '../lib/demoConfig';
 import type { FaceLandmarker } from '@mediapipe/tasks-vision';
 import {
   frameDifferenceRatio,
@@ -266,6 +267,24 @@ export function useIntegrityMonitor({
   }, [videoRef]);
 
   const calibrate = useCallback(async (): Promise<CalibrationBaseline> => {
+    // SIMULATED for coursework demo — real gaze/webcam calibration is
+    // intentionally out of scope per assignment requirements.
+    if (CALIBRATION_SIMULATED) {
+      setIsCalibrating(true);
+      setStatus('calibrating');
+      monitoringRef.current = false;
+
+      await new Promise<void>((resolve) => window.setTimeout(resolve, 1200));
+
+      const baseline: CalibrationBaseline = { yaw: 0, pitch: 0, roll: 0 };
+      baselineRef.current = baseline;
+      setCalibrationBaseline(baseline);
+      setIsCalibrating(false);
+      monitoringRef.current = true;
+      setStatus('monitoring');
+      return baseline;
+    }
+
     const video = videoRef.current;
     const landmarker = landmarkerRef.current;
     if (!video || !landmarker) {
@@ -300,9 +319,6 @@ export function useIntegrityMonitor({
       sample();
     });
 
-    // Calibration is a simulated readiness check for demo purposes: it always
-    // completes after sampling, regardless of measured quality, rather than
-    // gating exam access behind a strict pass/fail threshold.
     const quality = calibrationQuality(samples);
     const baseline = quality.baseline;
     baselineRef.current = baseline;
