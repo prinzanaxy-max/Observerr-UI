@@ -5,7 +5,6 @@ import SettingsAlert from '../components/student/settings/SettingsAlert';
 import AccountSettingsForm from '../components/student/settings/AccountSettingsForm';
 import NotificationSettingsPanel from '../components/student/settings/NotificationSettingsPanel';
 import PrivacyMonitoringPanel from '../components/student/settings/PrivacyMonitoringPanel';
-import SupportPanel from '../components/student/settings/SupportPanel';
 import Icon from '../components/student/Icon';
 import { filterSettingsTabs, type SettingsTab } from '../data/studentSettingsData';
 import { useAccountSettings } from '../hooks/useAccountSettings';
@@ -108,8 +107,6 @@ const StudentSettingsPage = () => {
         );
       case 'privacy':
         return <PrivacyMonitoringPanel />;
-      case 'support':
-        return <SupportPanel />;
       default:
         return null;
     }
@@ -137,7 +134,7 @@ const StudentSettingsPage = () => {
             <Icon name="search_off" className="text-[48px] text-student-outline mb-4 mx-auto" />
             <h2 className="text-student-headline-sm font-student text-student-on-surface mb-2">No settings found</h2>
             <p className="text-student-body-md font-student text-student-on-surface-variant">
-              Try searching for account, notifications, privacy, or support.
+              Try searching for account, notifications, or privacy.
             </p>
           </div>
         ) : (

@@ -2,9 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthProfile } from '../hooks/useAuthProfile';
 import { useLecturerExams } from '../hooks/useLecturerExams';
-import { useLecturerGoLive } from '../hooks/useLecturerGoLive';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
-import ExamsPageHeader from '../components/lecturer/ExamsPageHeader';
 import ExamsFilterBar from '../components/lecturer/ExamsFilterBar';
 import ExamOverviewCard from '../components/lecturer/ExamOverviewCard';
 import Icon from '../components/student/Icon';
@@ -37,7 +35,6 @@ const LecturerExamsPage = () => {
   const [actionError, setActionError] = useState('');
 
   const { exams, loading, error, forbidden, reload } = useLecturerExams(searchQuery, activeTab);
-  const { goLive, goingLive, goLiveError } = useLecturerGoLive();
 
   useEffect(() => {
     document.title = 'Exams — Observerr Lecturer';
@@ -46,7 +43,6 @@ const LecturerExamsPage = () => {
   const handleTabChange = useCallback((tab: ExamFilterTab) => setActiveTab(tab), []);
   const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
   const handleNewExam = useCallback(() => navigate(CREATE_EXAM_PATH), [navigate]);
-  const handleGoLive = useCallback(() => void goLive(), [goLive]);
 
   const openExam = useCallback(
     (exam: ExamOverview) => {
@@ -100,13 +96,11 @@ const LecturerExamsPage = () => {
       initials={initials}
       onNewExam={handleNewExam}
       contentClassName="lecturer-exams-bg"
-      header={
-        <ExamsPageHeader initials={initials} onGoLive={handleGoLive} goingLive={goingLive} />
-      }
     >
       <div className="p-4 md:p-8 max-w-[1440px] mx-auto w-full pb-12">
-        <div className="md:hidden mb-6">
-          <h1 className="text-student-headline-md font-student font-semibold text-student-on-surface">Exams Overview</h1>
+        <div className="mb-6">
+          <h1 className="text-student-headline-md font-student font-semibold text-student-on-surface">Exams</h1>
+          <p className="text-student-body-md font-student text-student-on-surface-variant mt-1">Create, schedule, and manage your proctored exams.</p>
         </div>
 
         <ExamsFilterBar
@@ -116,9 +110,9 @@ const LecturerExamsPage = () => {
           onSearchChange={handleSearchChange}
         />
 
-        {(actionError || goLiveError) && (
+        {actionError && (
           <div className="mb-4 rounded-xl border border-student-error-container bg-student-error-container/30 px-4 py-3 text-student-on-error-container font-student text-student-body-md">
-            {actionError || goLiveError}
+            {actionError}
           </div>
         )}
 

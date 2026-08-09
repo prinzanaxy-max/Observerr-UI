@@ -20,6 +20,7 @@ const StudentNotificationsPage = lazy(() => import('./pages/StudentNotifications
 const StudentSettingsPage = lazy(() => import('./pages/StudentSettingsPage'));
 const StudentProfilePage = lazy(() => import('./pages/StudentProfilePage'));
 const StudentDocumentationPage = lazy(() => import('./pages/StudentDocumentationPage'));
+const StudentSupportPage = lazy(() => import('./pages/StudentSupportPage'));
 const LecturerDashboard = lazy(() => import('./pages/LecturerDashboard'));
 const LecturerExamsPage = lazy(() => import('./pages/LecturerExamsPage'));
 const LecturerLiveMonitoringPage = lazy(() => import('./pages/LecturerLiveMonitoringPage'));
@@ -72,6 +73,7 @@ function App() {
           <Route path="/student/settings" element={<StudentSettingsPage />} />
           <Route path="/student/profile" element={<StudentProfilePage />} />
           <Route path="/student/documentation" element={<StudentDocumentationPage />} />
+          <Route path="/student/support" element={<StudentSupportPage />} />
         </Route>
 
         {/* Role-protected — LECTURER only */}

@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import Icon from '../student/Icon';
+import CustomDateInput from '../shared/CustomDateInput';
 import type { DateRangeKey } from '../../data/integrityReportsData';
 import { DATE_RANGE_OPTIONS } from '../../data/integrityReportsData';
 
@@ -61,20 +62,18 @@ const AnalyticsDateRangeFilter = memo(({
       <div className="flex flex-wrap items-center gap-2 justify-end">
         <label className="flex items-center gap-2 text-student-label-md font-student text-student-on-surface-variant">
           From
-          <input
-            type="date"
+          <CustomDateInput
             value={customStart}
-            onChange={(e) => onCustomStartChange?.(e.target.value)}
-            className="rounded-full border border-student-outline-variant bg-student-surface px-3 py-1.5 text-student-body-md font-student text-student-on-surface"
+            onChange={(v) => onCustomStartChange?.(v)}
+            aria-label="Custom start date"
           />
         </label>
         <label className="flex items-center gap-2 text-student-label-md font-student text-student-on-surface-variant">
           To
-          <input
-            type="date"
+          <CustomDateInput
             value={customEnd}
-            onChange={(e) => onCustomEndChange?.(e.target.value)}
-            className="rounded-full border border-student-outline-variant bg-student-surface px-3 py-1.5 text-student-body-md font-student text-student-on-surface"
+            onChange={(v) => onCustomEndChange?.(v)}
+            aria-label="Custom end date"
           />
         </label>
       </div>

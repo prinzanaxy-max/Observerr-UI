@@ -6,7 +6,7 @@ export type PortalNavItem = {
 };
 
 export const PORTAL_NAV: PortalNavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', path: '/lecturer' },
+  { id: 'dashboard', label: 'Overview', icon: 'dashboard', path: '/lecturer' },
   { id: 'exams', label: 'Exams', icon: 'quiz', path: '/lecturer/exams' },
   { id: 'students', label: 'Students', icon: 'group', path: '/lecturer/students' },
   { id: 'proctoring', label: 'Proctoring', icon: 'visibility', path: '/lecturer/proctoring' },
@@ -14,6 +14,7 @@ export const PORTAL_NAV: PortalNavItem[] = [
 ];
 
 export const PORTAL_FOOTER_NAV: PortalNavItem[] = [
+  { id: 'notifications', label: 'Notifications', icon: 'notifications', path: '/lecturer/notifications' },
   { id: 'settings', label: 'Settings', icon: 'settings', path: '/lecturer/settings' },
   { id: 'support', label: 'Support', icon: 'help', path: '/lecturer/support' },
 ];

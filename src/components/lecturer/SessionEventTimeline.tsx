@@ -1,5 +1,6 @@
 import { memo, useMemo, useState } from 'react';
 import Icon from '../student/Icon';
+import CustomSelect from '../shared/CustomSelect';
 import type { TimelineEventView } from '../../lib/lecturerStudentsUtils';
 import {
   severityCardClass,
@@ -98,16 +99,13 @@ const SessionEventTimeline = memo(({ events, searchQuery, loading = false }: Ses
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-8 relative z-10">
         <h3 className="text-student-headline-sm font-student text-student-on-surface">Session Event Timeline</h3>
-        <select
+        <CustomSelect
           value={filter}
-          onChange={(e) => setFilter(e.target.value as EventFilter)}
-          className="px-3 py-1 bg-student-surface-container rounded-full text-student-label-md font-student text-student-on-surface-variant border-0 focus:ring-2 focus:ring-student-primary/30 cursor-pointer"
+          onChange={(v) => setFilter(v as EventFilter)}
+          options={FILTER_OPTIONS}
           aria-label="Filter events"
-        >
-          {FILTER_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
+          className="w-48"
+        />
       </div>
 
       <div className="relative z-10 pl-4 border-l-2 border-student-surface-container-high space-y-8">

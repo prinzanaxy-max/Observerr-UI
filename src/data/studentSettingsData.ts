@@ -1,4 +1,4 @@
-export type SettingsTab = 'account' | 'notifications' | 'privacy' | 'support';
+export type SettingsTab = 'account' | 'notifications' | 'privacy';
 
 export type StudentSettingsProfile = {
   firstName: string;
@@ -34,11 +34,6 @@ export const SETTINGS_TABS: { id: SettingsTab; label: string; keywords: string[]
     id: 'privacy',
     label: 'Privacy',
     keywords: ['privacy', 'monitoring', 'proctoring', 'data', 'encryption', 'video', 'audio'],
-  },
-  {
-    id: 'support',
-    label: 'Support',
-    keywords: ['support', 'help', 'contact', 'faq', 'documentation', 'issue'],
   },
 ];
 

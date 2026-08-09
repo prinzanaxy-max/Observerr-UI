@@ -64,9 +64,6 @@ const StudentSidebar = memo(({
               >
                 <Icon name={item.icon} filled={isActive} className="mr-3 text-[20px]" />
                 {item.label}
-                {item.id === 'notifications' && unreadCount > 0 && (
-                  <span className="absolute top-3 right-3 w-2 h-2 rounded-full bg-student-error" aria-hidden="true" />
-                )}
               </Link>
             );
           })}
@@ -81,7 +78,7 @@ const StudentSidebar = memo(({
               <Link
                 key={item.id}
                 to={item.path}
-                className={`flex items-center px-4 py-3 rounded-xl text-student-body-md font-student transition-colors ${
+                className={`relative flex items-center px-4 py-3 rounded-xl text-student-body-md font-student transition-colors ${
                   isActive
                     ? 'bg-student-surface-container-high text-student-on-surface font-semibold'
                     : 'text-student-on-surface-variant hover:bg-student-surface-container-high'
@@ -89,6 +86,9 @@ const StudentSidebar = memo(({
               >
                 <Icon name={item.icon} filled={isActive} className="mr-3 text-[20px]" />
                 {item.label}
+                {item.id === 'notifications' && unreadCount > 0 && (
+                  <span className="absolute top-3 right-3 w-2 h-2 rounded-full bg-student-error" aria-hidden="true" />
+                )}
               </Link>
             );
           })}

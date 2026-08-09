@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
 import PortalSettingsNav from '../components/shared/PortalSettingsNav';
 import SettingsAlert from '../components/student/settings/SettingsAlert';
@@ -123,27 +122,11 @@ const LecturerSettingsPage = () => {
       email={email}
       initials={initials}
       contentClassName="student-settings-bg relative"
-      header={
-        <header className="hidden md:flex shrink-0 h-20 bg-transparent items-center justify-between px-6 lg:px-8 sticky top-0 z-20 backdrop-blur-md bg-student-surface-bright/80 border-b border-student-outline-variant/10">
-          <h1 className="text-student-headline-md font-student text-student-on-background">Settings</h1>
-          <Link
-            to="/lecturer/support"
-            className="text-student-label-md font-student text-student-primary hover:text-student-primary-container transition-colors py-2 px-4 rounded-full border border-student-primary hover:bg-student-primary/5"
-          >
-            Support
-          </Link>
-        </header>
-      }
     >
       <div className="relative z-10 px-4 sm:px-6 md:px-8 py-6 md:py-8 max-w-[1200px] mx-auto w-full pb-24 md:pb-12">
-        <div className="md:hidden mb-4 pt-2 flex items-center justify-between gap-3">
+        <div className="mb-4 pt-2">
           <h1 className="text-student-headline-md font-student text-student-on-background font-bold">Settings</h1>
-          <Link
-            to="/lecturer/support"
-            className="text-student-label-md font-student text-student-primary py-1.5 px-3 rounded-full border border-student-primary shrink-0"
-          >
-            Support
-          </Link>
+          <p className="text-student-body-md font-student text-student-on-surface-variant mt-1">Manage your account, notification preferences, and privacy settings.</p>
         </div>
 
         <div className="mb-6">

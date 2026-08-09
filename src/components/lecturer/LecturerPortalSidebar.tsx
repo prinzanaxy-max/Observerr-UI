@@ -5,6 +5,7 @@ import Icon from '../student/Icon';
 import StudentAvatar from '../student/StudentAvatar';
 import LogoutActions from '../auth/LogoutActions';
 import { PORTAL_FOOTER_NAV, PORTAL_NAV } from '../../data/lecturerPortalNav';
+import { useUnreadNotificationCount } from '../../hooks/useUnreadNotificationCount';
 
 type LecturerPortalSidebarProps = {
   institutionalId: string;
@@ -19,6 +20,7 @@ const isActivePath = (pathname: string, path: string) =>
 const LecturerPortalSidebar = memo(({ institutionalId, email, initials, onNewExam }: LecturerPortalSidebarProps) => {
   const { pathname } = useLocation();
   const { profilePictureUrl } = useAuthProfile();
+  const { unreadCount } = useUnreadNotificationCount();
 
   return (
     <aside className="hidden md:flex w-[240px] shrink-0 flex-col h-full bg-student-surface shadow-[0px_10px_30px_rgba(0,0,0,0.05)] z-10 p-4">
@@ -76,7 +78,7 @@ const LecturerPortalSidebar = memo(({ institutionalId, email, initials, onNewExa
             <Link
               key={item.id}
               to={item.path}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl font-student text-student-body-lg transition-colors ${
+              className={`relative flex items-center gap-3 px-4 py-3 rounded-xl font-student text-student-body-lg transition-colors ${
                 isActive
                   ? 'bg-student-surface-container-high text-student-on-surface font-semibold'
                   : 'text-student-on-surface-variant hover:bg-student-surface-container-high'
@@ -84,6 +86,9 @@ const LecturerPortalSidebar = memo(({ institutionalId, email, initials, onNewExa
             >
               <Icon name={item.icon} filled={isActive} />
               {item.label}
+              {item.id === 'notifications' && unreadCount > 0 && (
+                <span className="absolute top-3 right-3 w-2 h-2 rounded-full bg-student-error" aria-hidden="true" />
+              )}
             </Link>
           );
         })}

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthProfile } from '../hooks/useAuthProfile';
 import { useLecturerDashboard } from '../hooks/useLecturerDashboard';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
-import LecturerTopBar from '../components/lecturer/LecturerTopBar';
+import Icon from '../components/student/Icon';
 import LiveExamCard from '../components/lecturer/LiveExamCard';
 import NeedsReviewTable from '../components/lecturer/NeedsReviewTable';
 import YourExamsSection from '../components/lecturer/YourExamsSection';
@@ -22,7 +22,7 @@ const LecturerDashboard = () => {
   const [examTab, setExamTab] = useState<ExamTab>('live');
 
   useEffect(() => {
-    document.title = 'Dashboard — Observerr Lecturer';
+    document.title = 'Overview — Observerr Lecturer';
   }, []);
 
   const filteredReview = useMemo(() => {
@@ -74,15 +74,25 @@ const LecturerDashboard = () => {
       email={email}
       initials={initials}
       onNewExam={handleNewExam}
-      header={
-        <LecturerTopBar
-          searchQuery={searchQuery}
-          onSearchChange={handleSearchChange}
-          onNewExam={handleNewExam}
-        />
-      }
     >
       <div className="p-4 sm:p-6 max-w-[1400px] mx-auto w-full pb-8">
+        <div className="hidden md:block mb-6">
+          <h1 className="text-student-headline-md font-student font-semibold text-student-on-surface">Overview</h1>
+          <p className="text-student-body-md font-student text-student-on-surface-variant mt-1">Monitor your exams and student activity at a glance.</p>
+        </div>
+        <div className="mb-4">
+          <div className="relative w-full sm:w-72 lg:w-96">
+            <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-student-on-surface-variant pointer-events-none" />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="w-full bg-student-surface-container-low border border-student-outline/20 rounded-full py-2 pl-10 pr-4 text-student-body-md font-student focus:outline-none focus:ring-2 focus:ring-student-primary/30 transition-all"
+              placeholder="Search exams, students, or flags..."
+              aria-label="Search exams, students, or flags"
+            />
+          </div>
+        </div>
         {(error || forbidden) && !loading && (
           <div className="mb-5 rounded-xl border border-student-error-container bg-student-error-container/30 px-4 py-3 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             <div className="min-w-0">

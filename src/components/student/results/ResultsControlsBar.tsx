@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import Icon from '../Icon';
+import CustomSelect from '../../shared/CustomSelect';
 import type { ResultSortKey } from '../../../types/studentResults';
 
 type ResultsControlsBarProps = {
@@ -33,21 +33,13 @@ const ResultsControlsBar = memo(({
       <span className="text-student-label-md font-student text-student-on-surface-variant uppercase tracking-wider">
         Sort By
       </span>
-      <div className="relative">
-        <select
-          value={sortKey}
-          onChange={(e) => onSortChange(e.target.value as ResultSortKey)}
-          className="appearance-none bg-student-surface-container-lowest border border-student-outline-variant rounded-lg py-2 pl-4 pr-10 text-student-body-md font-student text-student-on-surface focus:outline-none focus:border-student-primary focus:ring-1 focus:ring-student-primary shadow-sm cursor-pointer"
-        >
-          {SORT_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
-        <Icon
-          name="expand_more"
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-student-outline pointer-events-none text-[20px]"
-        />
-      </div>
+      <CustomSelect
+        value={sortKey}
+        onChange={(v) => onSortChange(v as ResultSortKey)}
+        options={SORT_OPTIONS}
+        aria-label="Sort results by"
+        className="w-44"
+      />
     </div>
   </div>
 ));
