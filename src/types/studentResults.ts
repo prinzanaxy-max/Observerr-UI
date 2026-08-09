@@ -73,7 +73,7 @@ export type TimelineEvent = {
   title: string;
   timeLabel: string;
   description: string;
-  type: 'success' | 'neutral' | 'shield';
+  type: 'success' | 'neutral' | 'shield' | 'skipped';
   imageUrl?: string;
   imageCaption?: string;
   aiConfidence?: { label: string; value: string };

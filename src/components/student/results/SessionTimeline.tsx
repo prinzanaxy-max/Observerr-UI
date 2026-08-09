@@ -20,6 +20,10 @@ const dotForType = (type: TimelineEvent['type']) => {
           <Icon name="shield" filled className="text-[14px] text-student-on-primary-container" />
         </div>
       );
+    case 'skipped':
+      return (
+        <div className="w-6 h-6 rounded-full bg-student-tertiary-container border-4 border-student-surface flex-shrink-0 mt-1 relative z-10 shadow-sm" />
+      );
     default:
       return (
         <div className="w-6 h-6 rounded-full bg-student-surface-container-high border-4 border-student-surface flex-shrink-0 mt-1 relative z-10 shadow-sm" />
