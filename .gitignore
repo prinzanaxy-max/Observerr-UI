@@ -18,6 +18,8 @@ test-results/
 .env
 .env.local
 .env.*.local
+frontend env.txt
+*env.txt
 
 # Editor directories and files
 .vscode/*
