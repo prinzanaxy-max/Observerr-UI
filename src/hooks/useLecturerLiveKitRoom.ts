@@ -58,6 +58,8 @@ export function useLecturerLiveKitRoom(
   const [participants, setParticipants] = useState(
     new Map<string, LiveParticipantState>(),
   );
+  const [retryAttempt, setRetryAttempt] = useState(0);
+  const retryTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (examId === null) {
@@ -90,7 +92,14 @@ export function useLecturerLiveKitRoom(
     room.on(RoomEvent.ConnectionStateChanged, (connectionState) => {
       if (connectionState === ConnectionState.Connected) setState('connected');
       else if (connectionState === ConnectionState.Reconnecting) setState('reconnecting');
-      else if (connectionState === ConnectionState.Disconnected) setState('disconnected');
+      else if (connectionState === ConnectionState.Disconnected) {
+        setState('disconnected');
+        if (retryTimerRef.current !== null) return;
+        retryTimerRef.current = window.setTimeout(() => {
+          retryTimerRef.current = null;
+          setRetryAttempt((attempt) => attempt + 1);
+        }, 5_000);
+      }
       refresh();
     });
     room.on(RoomEvent.ParticipantConnected, refresh);
@@ -122,10 +131,14 @@ export function useLecturerLiveKitRoom(
 
     return () => {
       cancelled = true;
+      if (retryTimerRef.current !== null) {
+        window.clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
+      }
       roomRef.current = null;
       room.disconnect();
     };
-  }, [examId]);
+  }, [examId, retryAttempt]);
 
   useEffect(() => {
     const room = roomRef.current;
