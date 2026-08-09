@@ -1,4 +1,8 @@
 /* Observerr native Web Push service worker */
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
 self.addEventListener('push', (event) => {
   let payload = { title: 'Observerr', body: 'You have a new notification', deepLink: '/' };
   try {

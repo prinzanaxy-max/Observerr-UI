@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useState, type ReactNode } from 'react';
 import Icon from './student/Icon';
 import { subscribeToForegroundMessages } from '../hooks/usePushNotifications';
+import { notifyNotificationsChanged } from '../hooks/useUnreadNotificationCount';
 import type { ForegroundPushPayload } from '../types/pushNotifications';
 
 type ToastItem = ForegroundPushPayload & { id: number };
@@ -74,6 +75,7 @@ const PushNotificationProvider = memo(({ children }: { children: ReactNode }) =>
     void subscribeToForegroundMessages((payload) => {
       toastId += 1;
       setToast({ ...payload, id: toastId });
+      notifyNotificationsChanged();
     }).then((unsub) => {
       if (!cancelled) {
         unsubscribe = unsub;
