@@ -1,17 +1,21 @@
 import { AxiosError } from 'axios';
 import apiClient from '../lib/axios';
-import type { AuthResponse, CurrentUser, ApiError } from '../types/auth';
+import { refreshAuthSession } from '../lib/authRefresh';
+import { API_URL } from '../lib/apiConfig';
+import type {
+  AuthResponse,
+  CurrentUser,
+  LoginRequest,
+  RegisterRequest,
+  ApiError,
+  LogoutResponse,
+} from '../types/auth';
 
-/* ─── Error normaliser ───────────────────────────────────────────────────── */
-/* Converts any thrown value into a consistent ApiError so components        */
-/* never have to deal with raw AxiosError or unknown shapes.                 */
 const toApiError = (error: unknown): ApiError => {
   if (error instanceof AxiosError) {
-    // Backend returned a structured error body
     if (error.response?.data) {
       return error.response.data as ApiError;
     }
-    // No response at all → network / CORS / backend down
     if (!error.response) {
       return {
         error: 'NETWORK_ERROR',
@@ -27,13 +31,7 @@ const toApiError = (error: unknown): ApiError => {
   };
 };
 
-/* ─── Auth API calls ─────────────────────────────────────────────────────── */
-export const register = async (data: {
-  fullName: string;
-  email: string;
-  password: string;
-  role: string;
-}): Promise<AuthResponse> => {
+export const register = async (data: RegisterRequest): Promise<AuthResponse> => {
   try {
     const { data: body } = await apiClient.post<AuthResponse>('/api/auth/register', data);
     return body;
@@ -42,10 +40,7 @@ export const register = async (data: {
   }
 };
 
-export const login = async (data: {
-  email: string;
-  password: string;
-}): Promise<AuthResponse> => {
+export const login = async (data: LoginRequest): Promise<AuthResponse> => {
   try {
     const { data: body } = await apiClient.post<AuthResponse>('/api/auth/login', data);
     return body;
@@ -54,14 +49,9 @@ export const login = async (data: {
   }
 };
 
-export const refreshToken = async (token: string): Promise<AuthResponse> => {
+export const refreshSession = async (): Promise<AuthResponse> => {
   try {
-    const { data: body } = await apiClient.post<AuthResponse>(
-      '/api/auth/refresh',
-      {},
-      { headers: { Authorization: `Bearer ${token}` } },
-    );
-    return body;
+    return await refreshAuthSession();
   } catch (err) {
     throw toApiError(err);
   }
@@ -76,10 +66,22 @@ export const getMe = async (): Promise<CurrentUser> => {
   }
 };
 
-export const logout = (): void => {
-  localStorage.removeItem('accessToken');
-  localStorage.removeItem('refreshToken');
-  localStorage.removeItem('authRole');
-  localStorage.removeItem('authFullName');
-  window.location.href = '/auth';
-};
+export async function logout(
+  accessToken: string | null,
+  allDevices = false,
+): Promise<LogoutResponse> {
+  const response = await fetch(`${API_URL}/api/auth/logout`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    },
+    body: JSON.stringify({ allDevices }),
+  });
+
+  return response.json().catch(() => ({
+    success: true,
+    message: 'Logged out successfully',
+  }));
+}

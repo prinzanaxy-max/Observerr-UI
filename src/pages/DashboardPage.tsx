@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
+import { useAuthProfile } from '../hooks/useAuthProfile';
 import apiClient from '../lib/axios';
-import { logout } from '../services/authService';
+import LogoutActions from '../components/auth/LogoutActions';
 
 const Icon = ({ name }: { name: string }) => (
   <span className="material-symbols-outlined"
@@ -61,9 +62,9 @@ const HelloCard = ({ role }: { role: string }) => {
 
 /* ─── Dashboard page ─────────────────────────────────────────────────────── */
 const DashboardPage = () => {
-  const { user, role, isAuthenticated } = useAuthStore();
-  const fullName = user?.fullName ?? localStorage.getItem('authFullName') ?? 'User';
-  const storedRole = role ?? (localStorage.getItem('authRole') as typeof role);
+  const { role, isAuthenticated } = useAuthStore();
+  const { institutionalId, email } = useAuthProfile();
+  const storedRole = role;
 
   // Redirect to role-specific dashboard
   if (storedRole === 'STUDENT')  return <Navigate to="/student"  replace />;
@@ -78,8 +79,11 @@ const DashboardPage = () => {
         {/* Header */}
         <div className="mb-10">
           <h1 className="font-headline-section text-headline-section text-primary mb-2">
-            Welcome, {fullName} 👋
+            Welcome, {institutionalId} 👋
           </h1>
+          {email && (
+            <p className="text-[#475569] text-[14px] mb-2">{email}</p>
+          )}
           <span className="inline-flex items-center gap-1.5 bg-[#EFF6FF] text-[#2563EB] text-[12px]
                            font-bold px-3 py-1 rounded-full uppercase tracking-wider">
             <Icon name="admin_panel_settings" />
@@ -110,12 +114,7 @@ const DashboardPage = () => {
           </a>
         </div>
 
-        <button
-          onClick={logout}
-          className="mt-8 flex items-center gap-2 text-[#64748B] text-[13px] hover:text-[#0F172A] transition-colors"
-        >
-          <Icon name="logout" /> Sign out
-        </button>
+        <LogoutActions className="mt-8 max-w-xs" />
       </div>
     </div>
   );

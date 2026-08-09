@@ -18,5 +18,13 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
+    rules: {
+      // These validate React Compiler constraints, but this app does not enable
+      // the compiler and existing hooks intentionally synchronize state in effects.
+      'react-hooks/immutability': 'off',
+      'react-hooks/preserve-manual-memoization': 'off',
+      'react-hooks/refs': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+    },
   },
 ])

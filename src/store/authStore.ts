@@ -1,154 +1,174 @@
 import { create } from 'zustand';
 import * as authService from '../services/authService';
-import type { CurrentUser, Role, ApiError } from '../types/auth';
+import * as accountService from '../services/accountService';
+import { clearAuthSession, getStoredAccessToken, persistAuthSession, setStoredAccessToken } from '../lib/authSessionStorage';
+import { refreshAuthSession } from '../lib/authRefresh';
+import type {
+  AuthResponse,
+  CurrentUser,
+  LoginRequest,
+  RegisterRequest,
+  UserRole,
+  ApiError,
+} from '../types/auth';
 
-/* ─── State shape ────────────────────────────────────────────────────────── */
 interface AuthState {
   user: CurrentUser | null;
   accessToken: string | null;
-  refreshToken: string | null;
+  institutionalId: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  isInitializing: boolean; // true while rehydrating from localStorage on first load
-  role: Role | null;
+  isInitializing: boolean;
+  role: UserRole | null;
 }
 
 interface AuthActions {
-  login: (credentials: { email: string; password: string }) => Promise<void>;
-  register: (data: {
-    fullName: string;
-    email: string;
-    password: string;
-    role: string;
-  }) => Promise<void>;
-  logout: () => void;
-  setTokens: (accessToken: string, refreshToken: string) => void;
-  loadFromStorage: () => Promise<void>;
-  fetchCurrentUser: () => Promise<void>;
+  login: (credentials: LoginRequest) => Promise<void>;
+  register: (data: RegisterRequest) => Promise<void>;
+  logout: (allDevices?: boolean) => Promise<void>;
+  clear: () => void;
+  setSession: (auth: AuthResponse) => void;
+  setAccessToken: (accessToken: string) => void;
+  updateProfilePicture: (profilePictureUrl: string | null) => void;
+  getAccessToken: () => string | null;
+  bootstrapSession: () => Promise<void>;
+  fetchCurrentUser: () => Promise<boolean>;
 }
 
-const STORAGE_KEYS = {
-  accessToken: 'accessToken',
-  refreshToken: 'refreshToken',
-  role: 'authRole',
-  fullName: 'authFullName',
-} as const;
-
-const persistTokens = (
-  accessToken: string,
-  refreshToken: string,
-  role: Role,
-  fullName: string,
-) => {
-  localStorage.setItem(STORAGE_KEYS.accessToken, accessToken);
-  localStorage.setItem(STORAGE_KEYS.refreshToken, refreshToken);
-  localStorage.setItem(STORAGE_KEYS.role, role);
-  localStorage.setItem(STORAGE_KEYS.fullName, fullName);
-};
-
-const clearStorage = () => {
-  Object.values(STORAGE_KEYS).forEach((k) => localStorage.removeItem(k));
-};
-
-/* ─── Store ──────────────────────────────────────────────────────────────── */
 const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
   user: null,
-  accessToken: localStorage.getItem(STORAGE_KEYS.accessToken),
-  refreshToken: localStorage.getItem(STORAGE_KEYS.refreshToken),
-  isAuthenticated: !!localStorage.getItem(STORAGE_KEYS.accessToken),
+  accessToken: null,
+  institutionalId: null,
+  isAuthenticated: false,
   isLoading: false,
   isInitializing: true,
-  role: (localStorage.getItem(STORAGE_KEYS.role) as Role) ?? null,
+  role: null,
 
-  /* ── login ────────────────────────────────────────────────────────────── */
   login: async (credentials) => {
     set({ isLoading: true });
     try {
       const data = await authService.login(credentials);
-      persistTokens(data.accessToken, data.refreshToken, data.role, data.fullName);
-      set({
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken,
-        isAuthenticated: true,
-        role: data.role,
-        isLoading: false,
-      });
+      clearAuthSession();
+      get().setSession(data);
+      set({ isLoading: false });
+      await get().fetchCurrentUser();
     } catch (err) {
       set({ isLoading: false });
       throw err as ApiError;
     }
   },
 
-  /* ── register ─────────────────────────────────────────────────────────── */
   register: async (data) => {
     set({ isLoading: true });
     try {
       const res = await authService.register(data);
-      persistTokens(res.accessToken, res.refreshToken, res.role, res.fullName);
-      set({
-        accessToken: res.accessToken,
-        refreshToken: res.refreshToken,
-        isAuthenticated: true,
-        role: res.role,
-        isLoading: false,
-      });
+      clearAuthSession();
+      get().setSession(res);
+      set({ isLoading: false });
+      await get().fetchCurrentUser();
     } catch (err) {
       set({ isLoading: false });
       throw err as ApiError;
     }
   },
 
-  /* ── logout ───────────────────────────────────────────────────────────── */
-  logout: () => {
-    clearStorage();
-    set({
-      user: null,
-      accessToken: null,
-      refreshToken: null,
-      isAuthenticated: false,
-      role: null,
-    });
+  logout: async (allDevices = false) => {
+    const accessToken = get().accessToken;
+    try {
+      await authService.logout(accessToken, allDevices);
+    } catch {
+      // Logout is idempotent — always proceed to login
+    }
+    get().clear();
     window.location.href = '/auth';
   },
 
-  /* ── setTokens (called by refresh interceptor externally if needed) ────── */
-  setTokens: (accessToken, refreshToken) => {
-    localStorage.setItem(STORAGE_KEYS.accessToken, accessToken);
-    localStorage.setItem(STORAGE_KEYS.refreshToken, refreshToken);
-    set({ accessToken, refreshToken, isAuthenticated: true });
+  clear: () => {
+    clearAuthSession();
+    set({
+      user: null,
+      accessToken: null,
+      institutionalId: null,
+      isAuthenticated: false,
+      role: null,
+      isLoading: false,
+    });
   },
 
-  /* ── loadFromStorage: rehydrate on page reload ────────────────────────── */
-  loadFromStorage: async () => {
-    const accessToken = localStorage.getItem(STORAGE_KEYS.accessToken);
-    const refreshToken = localStorage.getItem(STORAGE_KEYS.refreshToken);
-    const role = localStorage.getItem(STORAGE_KEYS.role) as Role | null;
+  setSession: (auth) => {
+    persistAuthSession(auth);
+    set({
+      accessToken: auth.accessToken,
+      role: auth.role,
+      institutionalId: auth.institutionalId,
+      isAuthenticated: true,
+    });
+  },
 
-    if (!accessToken) {
-      set({ isAuthenticated: false, user: null, role: null, isInitializing: false });
-      return;
+  setAccessToken: (accessToken) => {
+    setStoredAccessToken(accessToken);
+    set({ accessToken, isAuthenticated: true });
+  },
+
+  updateProfilePicture: (profilePictureUrl) => {
+    const { user } = get();
+    if (!user) return;
+    set({ user: { ...user, profilePictureUrl } });
+  },
+
+  getAccessToken: () => get().accessToken,
+
+  bootstrapSession: async () => {
+    set({ isInitializing: true });
+
+    const storedAccess = getStoredAccessToken();
+    if (storedAccess) {
+      set({ accessToken: storedAccess, isAuthenticated: true });
     }
 
-    set({ accessToken, refreshToken, role, isAuthenticated: true });
-
-    // Silently fetch current user — if token is expired the axios interceptor
-    // will handle the refresh transparently.
     try {
-      await get().fetchCurrentUser();
+      // Prefer validating the stored access token before forcing a refresh.
+      // Refresh often fails cross-origin (no cookie) even when the access token is still valid.
+      if (storedAccess) {
+        const restored = await get().fetchCurrentUser();
+        if (restored) return;
+      }
+
+      await refreshAuthSession();
+      const restored = await get().fetchCurrentUser();
+      if (!restored) {
+        get().clear();
+      }
     } catch {
-      // Interceptor already cleared tokens and redirected if refresh failed
+      get().clear();
     } finally {
       set({ isInitializing: false });
     }
   },
 
-  /* ── fetchCurrentUser ─────────────────────────────────────────────────── */
   fetchCurrentUser: async () => {
     try {
       const user = await authService.getMe();
-      set({ user, role: user.role });
+      let profilePictureUrl = user.profilePictureUrl ?? null;
+
+      if (!profilePictureUrl) {
+        try {
+          const account = await accountService.fetchAccount();
+          profilePictureUrl = account.profilePictureUrl ?? null;
+        } catch {
+          // Account endpoint optional for profile picture hydration
+        }
+      }
+
+      set({
+        user: { ...user, profilePictureUrl },
+        role: user.role,
+        institutionalId: user.institutionalId,
+        isAuthenticated: true,
+      });
+      return true;
     } catch {
-      // Silent — interceptor handles 401 / redirect
+      return false;
     }
   },
 }));

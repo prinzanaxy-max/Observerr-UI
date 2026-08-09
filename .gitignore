@@ -11,11 +11,15 @@ node_modules
 dist
 dist-ssr
 *.local
+playwright-report/
+test-results/
 
 # Environment variables — never commit secrets
 .env
 .env.local
 .env.*.local
+frontend env.txt
+*env.txt
 
 # Editor directories and files
 .vscode/*
