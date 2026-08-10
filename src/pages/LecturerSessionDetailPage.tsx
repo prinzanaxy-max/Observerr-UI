@@ -2,9 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useAuthProfile } from '../hooks/useAuthProfile';
 import { useLecturerSessionDetail } from '../hooks/useLecturerSessionDetail';
-import { useLecturerGoLive } from '../hooks/useLecturerGoLive';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
-import StudentTimelineTopBar from '../components/lecturer/StudentTimelineTopBar';
 import StudentProfileHeader from '../components/lecturer/StudentProfileHeader';
 import SessionEventTimeline from '../components/lecturer/SessionEventTimeline';
 import SessionStatisticsPanel from '../components/lecturer/SessionStatisticsPanel';
@@ -16,7 +14,6 @@ const LecturerSessionDetailPage = () => {
   const navigate = useNavigate();
   const { institutionalId, email, initials } = useAuthProfile();
   const [searchQuery, setSearchQuery] = useState('');
-  const { goLive, goingLive } = useLecturerGoLive();
 
   const sessionId = sessionIdParam?.trim() || null;
 
@@ -59,24 +56,28 @@ const LecturerSessionDetailPage = () => {
       initials={initials}
       onNewExam={() => navigate(CREATE_EXAM_PATH)}
       contentClassName="bg-gradient-to-b from-student-surface-container to-student-background"
-      header={
-        <StudentTimelineTopBar
-          initials={initials}
-          searchQuery={searchQuery}
-          onSearchChange={handleSearchChange}
-          onGoLive={() => void goLive()}
-          goingLive={goingLive}
-        />
-      }
     >
       <div className="p-4 md:p-8 max-w-[1400px] mx-auto w-full pb-12">
-        <Link
-          to="/lecturer/students"
-          className="hidden lg:inline-flex items-center gap-2 text-student-on-surface-variant hover:text-student-primary font-student text-student-body-md mb-4 transition-colors"
-        >
-          <Icon name="arrow_back" className="text-[18px]" />
-          Back to Students
-        </Link>
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <Link
+            to="/lecturer/students"
+            className="hidden lg:inline-flex items-center gap-2 text-student-on-surface-variant hover:text-student-primary font-student text-student-body-md transition-colors"
+          >
+            <Icon name="arrow_back" className="text-[18px]" />
+            Back to Students
+          </Link>
+          <div className="hidden md:block relative w-64 ml-auto">
+            <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-student-on-surface-variant pointer-events-none" />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-student-surface-container-lowest border border-student-outline-variant rounded-full text-student-body-md font-student focus:outline-none focus:ring-2 focus:ring-student-primary/20 focus:border-student-primary transition-all"
+              placeholder="Search timeline…"
+              aria-label="Search timeline"
+            />
+          </div>
+        </div>
 
         {error && !loading ? (
           <div className="text-center py-16 px-6 rounded-[24px] student-glass-card">
