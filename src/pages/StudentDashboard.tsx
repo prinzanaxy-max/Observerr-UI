@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StudentPortalLayout from '../components/student/StudentPortalLayout';
 import IntegrityScoreCard from '../components/student/IntegrityScoreCard';
@@ -16,7 +16,7 @@ import { useNotifications } from '../hooks/useNotifications';
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
+  const searchQuery = '';
   const { stats, loading: statsLoading } = useStudentStats();
   const { upcomingForDashboard, loading: examsLoading } = useStudentExams();
   const { rows: resultRows } = useStudentResults();
@@ -84,16 +84,9 @@ const StudentDashboard = () => {
     navigate(`/student/exams/${exam.id}`);
   }, [navigate]);
 
-  const handleSearchChange = useCallback((value: string) => {
-    setSearchQuery(value);
-  }, []);
 
   return (
-    <StudentPortalLayout
-      title="Overview"
-      searchQuery={searchQuery}
-      onSearchChange={handleSearchChange}
-    >
+    <StudentPortalLayout>
       <div className="p-4 sm:p-8 max-w-[1200px] mx-auto w-full pb-8">
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="lg:w-[65%] space-y-8">

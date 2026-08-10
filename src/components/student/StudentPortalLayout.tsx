@@ -10,20 +10,12 @@ import StudentAvatar from './StudentAvatar';
 
 type StudentPortalLayoutProps = {
   children: ReactNode;
-  title?: string;
-  searchQuery?: string;
-  onSearchChange?: (value: string) => void;
-  searchPlaceholder?: string;
   contentClassName?: string;
   header?: ReactNode;
 };
 
 const StudentPortalLayout = memo(({
   children,
-  title = '',
-  searchQuery = '',
-  onSearchChange,
-  searchPlaceholder = 'Search exams or results...',
   contentClassName = '',
   header,
 }: StudentPortalLayoutProps) => {

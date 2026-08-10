@@ -20,7 +20,7 @@ import type { SaveStatus } from '../hooks/useAccountSettings';
 import { useStudentResults } from '../hooks/useStudentResults';
 
 const StudentProfilePage = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const searchQuery = '';
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [saveMessage, setSaveMessage] = useState('');
 
@@ -70,7 +70,6 @@ const StudentProfilePage = () => {
     [resultRows, searchQuery],
   );
 
-  const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
 
   const clearStatus = useCallback(() => {
     setSaveStatus('idle');
@@ -102,10 +101,6 @@ const StudentProfilePage = () => {
 
   return (
     <StudentPortalLayout
-      title="Profile"
-      searchQuery={searchQuery}
-      onSearchChange={handleSearchChange}
-      searchPlaceholder="Search assessments..."
       contentClassName="student-profile-bg relative"
     >
       <div className="relative z-10 px-4 sm:px-6 md:px-8 py-6 md:py-8 max-w-[1200px] mx-auto w-full pb-24 md:pb-12">

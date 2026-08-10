@@ -12,7 +12,7 @@ import { usePushNotifications } from '../hooks/usePushNotifications';
 import { useStudentSettings } from '../hooks/useStudentSettings';
 
 const StudentSettingsPage = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const searchQuery = '';
   const [activeTab, setActiveTab] = useState<SettingsTab>('account');
   const [savingNotifications, setSavingNotifications] = useState(false);
   const savingNotificationsRef = useRef(false);
@@ -45,7 +45,6 @@ const StudentSettingsPage = () => {
     }
   }, [activeTab, visibleTabs]);
 
-  const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
 
   const handleSaveNotifications = useCallback(async (...args: Parameters<typeof saveAllNotifications>) => {
     if (savingNotificationsRef.current) return false;
@@ -114,10 +113,6 @@ const StudentSettingsPage = () => {
 
   return (
     <StudentPortalLayout
-      title="Settings"
-      searchQuery={searchQuery}
-      onSearchChange={handleSearchChange}
-      searchPlaceholder="Search settings..."
       contentClassName="student-settings-bg relative"
     >
       <div className="relative z-10 px-4 sm:px-6 md:px-8 py-6 md:py-8 max-w-[1200px] mx-auto w-full pb-24 md:pb-12">

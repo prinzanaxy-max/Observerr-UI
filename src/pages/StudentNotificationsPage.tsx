@@ -17,7 +17,7 @@ const CATEGORY_OPTIONS: { value: '' | NotificationCategory; label: string }[] = 
 
 const StudentNotificationsPage = () => {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
+  const searchQuery = '';
   const [category, setCategory] = useState<'' | NotificationCategory>('');
   const {
     notifications,
@@ -52,7 +52,6 @@ const StudentNotificationsPage = () => {
     [notifications, searchQuery],
   );
 
-  const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
 
   const handleSelect = useCallback(async (notification: NotificationItem) => {
     try {
@@ -70,9 +69,6 @@ const StudentNotificationsPage = () => {
 
   return (
     <StudentPortalLayout
-      searchQuery={searchQuery}
-      onSearchChange={handleSearchChange}
-      searchPlaceholder="Search notifications..."
       contentClassName="student-notifications-bg relative"
       header={
         <NotificationsHeader

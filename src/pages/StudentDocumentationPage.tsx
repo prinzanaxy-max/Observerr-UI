@@ -11,7 +11,7 @@ import {
 } from '../data/studentDocumentationData';
 
 const StudentDocumentationPage = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const searchQuery = '';
   const [activeSection, setActiveSection] = useState(OBSERVERR_DOCUMENTATION[0]?.id ?? '');
 
   useEffect(() => {
@@ -29,7 +29,6 @@ const StudentDocumentationPage = () => {
     );
   }, [searchQuery]);
 
-  const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
 
   const scrollToSection = useCallback((id: string) => {
     setActiveSection(id);
@@ -38,10 +37,6 @@ const StudentDocumentationPage = () => {
 
   return (
     <StudentPortalLayout
-      title="Documentation"
-      searchQuery={searchQuery}
-      onSearchChange={handleSearchChange}
-      searchPlaceholder="Search documentation..."
       contentClassName="student-settings-bg relative"
     >
       <div className="relative z-10 px-4 sm:px-6 md:px-8 py-6 md:py-8 max-w-[1000px] mx-auto w-full pb-24 md:pb-12">

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StudentPortalLayout from '../components/student/StudentPortalLayout';
 import ResultsControlsBar from '../components/student/results/ResultsControlsBar';
@@ -10,7 +10,7 @@ import type { StudentResultRow } from '../types/studentResults';
 
 const StudentResultsPage = () => {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
+  const searchQuery = '';
   const {
     summaryCards,
     rows,
@@ -40,7 +40,6 @@ const StudentResultsPage = () => {
     [navigate],
   );
 
-  const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
 
   const filteredRows = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -57,10 +56,6 @@ const StudentResultsPage = () => {
 
   return (
     <StudentPortalLayout
-      title="Results"
-      searchQuery={searchQuery}
-      onSearchChange={handleSearchChange}
-      searchPlaceholder="Search results..."
       contentClassName="student-results-bg relative"
     >
       <div className="pointer-events-none fixed top-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-student-primary-container opacity-20 blur-[100px] z-0" />

@@ -11,7 +11,7 @@ import { studentExamActionPath } from '../lib/examResultNavigation';
 const StudentExamsPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<ExamListTab>('upcoming');
-  const [searchQuery, setSearchQuery] = useState('');
+  const searchQuery = '';
   const { upcomingExams, completedExams, loading, error, reload } = useStudentExams();
 
   useEffect(() => {
@@ -32,7 +32,6 @@ const StudentExamsPage = () => {
     });
   }, [tabExams, searchQuery]);
 
-  const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
   const handleTabChange = useCallback((tab: ExamListTab) => setActiveTab(tab), []);
   const handleExamAction = useCallback((exam: StudentExam) => {
     navigate(studentExamActionPath(
@@ -44,10 +43,6 @@ const StudentExamsPage = () => {
 
   return (
     <StudentPortalLayout
-      title="Exams"
-      searchQuery={searchQuery}
-      onSearchChange={handleSearchChange}
-      searchPlaceholder="Search exams..."
       contentClassName="student-exams-bg"
     >
       <div className="px-4 sm:px-6 md:px-8 pb-24 md:pb-8 max-w-[1200px] mx-auto w-full">
