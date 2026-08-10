@@ -61,6 +61,35 @@ const PushNotificationsToggle = memo(({
         >
           {helperText}
         </p>
+        {status === 'denied' && (
+          <div className="mt-3 flex items-start gap-2 rounded-xl bg-student-error-container/30 border border-student-error/30 px-3 py-2.5" role="alert">
+            <Icon name="block" className="text-student-error shrink-0 mt-0.5 text-[18px]" />
+            <div>
+              <p className="text-student-body-md font-student font-medium text-student-on-error-container">
+                Notifications are blocked in your browser.
+              </p>
+              <p className="text-student-label-md font-student text-student-on-error-container/80 mt-0.5">
+                To enable: open your browser settings, find this site under Notifications, and set it to Allow.
+              </p>
+            </div>
+          </div>
+        )}
+        {status === 'error' && (
+          <div className="mt-3 flex items-start gap-2 rounded-xl bg-student-error-container/30 border border-student-error/30 px-3 py-2.5" role="alert">
+            <Icon name="error" className="text-student-error shrink-0 mt-0.5 text-[18px]" />
+            <p className="text-student-body-md font-student text-student-on-error-container">
+              Push notifications could not be enabled. Try again or check your browser settings.
+            </p>
+          </div>
+        )}
+        {status === 'granted' && isOn && (
+          <div className="mt-3 flex items-center gap-2 rounded-xl bg-student-primary-container/20 border border-student-primary/20 px-3 py-2" role="status">
+            <Icon name="check_circle" className="text-student-primary shrink-0 text-[18px]" />
+            <p className="text-student-label-md font-student text-student-on-surface">
+              Device registered. You'll receive notifications if the server has push configured.
+            </p>
+          </div>
+        )}
       </div>
 
       <button

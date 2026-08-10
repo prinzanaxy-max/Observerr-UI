@@ -1,5 +1,6 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import Icon from '../student/Icon';
+import CustomSelect from '../shared/CustomSelect';
 import type { ProctoringExam } from '../../data/proctoringData';
 
 const formatTimer = (totalSeconds: number) => {
@@ -26,6 +27,10 @@ const ProctoringPageHeader = memo(({
 }: ProctoringPageHeaderProps) => {
   const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
   const selectedExam = exams.find((exam) => exam.id === selectedExamId);
+  const examOptions = useMemo(
+    () => exams.map((exam) => ({ value: String(exam.id), label: `${exam.courseCode} — ${exam.title}` })),
+    [exams],
+  );
 
   useEffect(() => {
     const id = window.setInterval(() => {
@@ -44,21 +49,13 @@ const ProctoringPageHeader = memo(({
           </span>
 
           {exams.length > 0 && (
-            <div className="relative min-w-0 max-w-md">
-              <select
-                value={selectedExamId}
-                onChange={(e) => onExamChange(Number(e.target.value))}
-                className="w-full appearance-none bg-student-surface-container-lowest border border-student-outline-variant rounded-full py-2 pl-4 pr-10 text-student-body-md font-student text-student-on-surface focus:outline-none focus:border-student-primary focus:ring-1 focus:ring-student-primary truncate"
-                aria-label="Select exam session"
-              >
-                {exams.map((exam) => (
-                  <option key={exam.id} value={exam.id}>
-                    {exam.courseCode} — {exam.title}
-                  </option>
-                ))}
-              </select>
-              <Icon name="expand_more" className="absolute right-3 top-1/2 -translate-y-1/2 text-student-outline pointer-events-none" />
-            </div>
+            <CustomSelect
+              value={String(selectedExamId)}
+              onChange={(v) => onExamChange(Number(v))}
+              options={examOptions}
+              aria-label="Select exam session"
+              className="min-w-0 max-w-md"
+            />
           )}
         </div>
 

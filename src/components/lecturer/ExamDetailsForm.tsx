@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import Icon from '../student/Icon';
+import CustomDateTimeInput from '../shared/CustomDateTimeInput';
 import type { CreateExamFormState } from '../../data/createExamData';
 
 type ExamDetailsFormProps = {
@@ -66,16 +67,13 @@ const ExamDetailsForm = memo(({ form, onChange }: ExamDetailsFormProps) => (
           <label htmlFor="datetime" className="block text-student-label-md font-student text-student-on-surface-variant uppercase mb-2">
             Start Date &amp; Time
           </label>
-          <div className="relative">
-            <Icon name="calendar_month" className="absolute left-4 top-1/2 -translate-y-1/2 text-student-outline pointer-events-none" />
-            <input
-              id="datetime"
-              type="datetime-local"
-              value={form.startDateTime}
-              onChange={(e) => onChange({ startDateTime: e.target.value })}
-              className="w-full bg-student-surface-container-lowest border border-student-outline-variant rounded-lg pl-12 pr-4 py-3 font-student text-student-body-lg text-student-on-surface focus:border-student-primary focus:ring-1 focus:ring-student-primary transition-colors"
-            />
-          </div>
+          <CustomDateTimeInput
+            id="datetime"
+            value={form.startDateTime}
+            onChange={(v) => onChange({ startDateTime: v })}
+            aria-label="Start date and time"
+            className="w-full"
+          />
         </div>
 
         <div>

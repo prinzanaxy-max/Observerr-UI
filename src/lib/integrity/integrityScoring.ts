@@ -17,7 +17,7 @@ export const DEDUCTION_CAPS: Record<string, number> = {
   FULLSCREEN_EXIT: 15,
   PAGE_REFRESH: 18,
   IDLE: 15,
-  GAZE: 15,
+  GAZE: 25,
   TAB_BLUR_NO_FACE: 45,
   CAMERA_PERMISSION: 40,
   CAMERA_FROZEN: 55,

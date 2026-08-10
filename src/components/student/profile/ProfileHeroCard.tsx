@@ -1,5 +1,4 @@
 import { memo } from 'react';
-import { Link } from 'react-router-dom';
 import Icon from '../Icon';
 import ProfilePhotoUpload from './ProfilePhotoUpload';
 
@@ -80,13 +79,6 @@ const ProfileHeroCard = memo(({
           <p className="text-student-label-md font-student text-student-on-surface-variant">Integrity Score</p>
           <p className="text-student-headline-md font-student font-bold text-student-primary">{integrityScore}%</p>
         </div>
-        <Link
-          to="/student/settings"
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full border border-student-primary text-student-primary text-student-body-md font-student font-medium hover:bg-student-primary/5 transition-colors"
-        >
-          <Icon name="edit" className="text-[18px]" />
-          Edit Profile
-        </Link>
       </div>
     </div>
   </section>

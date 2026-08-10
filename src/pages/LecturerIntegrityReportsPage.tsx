@@ -2,9 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthProfile } from '../hooks/useAuthProfile';
 import { useLecturerAnalyticsOverview } from '../hooks/useLecturerAnalyticsOverview';
-import { useLecturerGoLive } from '../hooks/useLecturerGoLive';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
-import IntegrityReportsPageHeader from '../components/lecturer/IntegrityReportsPageHeader';
 import AnalyticsDateRangeFilter from '../components/lecturer/AnalyticsDateRangeFilter';
 import IntegritySummaryCards from '../components/lecturer/IntegritySummaryCards';
 import IntegrityEventTrendsChart from '../components/lecturer/IntegrityEventTrendsChart';
@@ -26,7 +24,6 @@ const defaultCustomStart = () => {
 const LecturerIntegrityReportsPage = () => {
   const navigate = useNavigate();
   const { institutionalId, email, initials } = useAuthProfile();
-  const { goLive, goingLive, goLiveError } = useLecturerGoLive();
 
   const [dateRange, setDateRange] = useState<DateRangeKey>('7d');
   const [customStart, setCustomStart] = useState(defaultCustomStart);
@@ -54,7 +51,6 @@ const LecturerIntegrityReportsPage = () => {
   }, []);
 
   const handleDateRangeChange = useCallback((value: DateRangeKey) => setDateRange(value), []);
-  const handleGoLive = useCallback(() => void goLive(), [goLive]);
   const handleNewExam = useCallback(() => navigate(CREATE_EXAM_PATH), [navigate]);
   const handleViewFullReport = useCallback(() => setShowFullReport(true), []);
 
@@ -110,13 +106,6 @@ const LecturerIntegrityReportsPage = () => {
       initials={initials}
       onNewExam={handleNewExam}
       contentClassName="lecturer-exams-bg"
-      header={
-        <IntegrityReportsPageHeader
-          initials={initials}
-          onGoLive={handleGoLive}
-          goingLive={goingLive}
-        />
-      }
     >
       <div className="p-4 md:p-8 max-w-[1200px] mx-auto w-full pb-12 space-y-8 md:space-y-10">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -135,12 +124,6 @@ const LecturerIntegrityReportsPage = () => {
             onCustomEndChange={setCustomEnd}
           />
         </div>
-
-        {goLiveError && (
-          <div className="rounded-xl border border-student-error-container bg-student-error-container/30 px-4 py-3 text-student-on-error-container font-student text-student-body-md">
-            {goLiveError}
-          </div>
-        )}
 
         {(error || forbidden) && !loading && (
           <div className="rounded-xl border border-student-error-container bg-student-error-container/30 px-4 py-3 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">

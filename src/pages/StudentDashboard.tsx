@@ -28,7 +28,7 @@ const StudentDashboard = () => {
   );
 
   useEffect(() => {
-    document.title = 'Dashboard — Observerr';
+    document.title = 'Overview — Observerr';
   }, []);
 
   const filteredExams = useMemo(() => {
@@ -90,7 +90,7 @@ const StudentDashboard = () => {
 
   return (
     <StudentPortalLayout
-      title="Dashboard"
+      title="Overview"
       searchQuery={searchQuery}
       onSearchChange={handleSearchChange}
     >

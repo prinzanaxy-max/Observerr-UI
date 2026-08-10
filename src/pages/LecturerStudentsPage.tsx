@@ -2,10 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthProfile } from '../hooks/useAuthProfile';
 import { useLecturerStudents } from '../hooks/useLecturerStudents';
-import { useLecturerGoLive } from '../hooks/useLecturerGoLive';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
-import StudentsPageHeader from '../components/lecturer/StudentsPageHeader';
 import StudentsTable from '../components/lecturer/StudentsTable';
+import CustomSelect from '../components/shared/CustomSelect';
 import Icon from '../components/student/Icon';
 import { CREATE_EXAM_PATH } from '../data/createExamData';
 
@@ -35,10 +34,8 @@ const LecturerStudentsPage = () => {
     document.title = 'Students — Observerr Lecturer';
   }, []);
 
-  const { goLive, goingLive, goLiveError } = useLecturerGoLive();
   const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
   const handleCourseChange = useCallback((value: string) => setCourseFilter(value), []);
-  const handleGoLive = useCallback(() => void goLive(), [goLive]);
 
   return (
     <LecturerPortalLayout
@@ -47,45 +44,28 @@ const LecturerStudentsPage = () => {
       initials={initials}
       onNewExam={() => navigate(CREATE_EXAM_PATH)}
       contentClassName="bg-gradient-to-b from-student-surface-container to-student-background"
-      header={
-        <StudentsPageHeader
-          initials={initials}
-          searchQuery={searchQuery}
-          courseFilter={courseFilter}
-          courseOptions={courseOptions}
-          onSearchChange={handleSearchChange}
-          onCourseChange={handleCourseChange}
-          onGoLive={handleGoLive}
-          goingLive={goingLive}
-        />
-      }
     >
       <div className="p-4 md:p-8 max-w-[1200px] mx-auto w-full pb-12">
-        {goLiveError && (
-          <div className="mb-4 rounded-xl border border-student-error-container bg-student-error-container/30 px-4 py-3 text-student-on-error-container font-student text-student-body-md">
-            {goLiveError}
-          </div>
-        )}
-        <div className="md:hidden mb-6 space-y-4">
+        <div className="mb-6">
           <h1 className="text-student-headline-md font-student font-semibold text-student-on-surface">Students</h1>
+          <p className="text-student-body-md font-student text-student-on-surface-variant mt-1">Review enrolled students and their exam status.</p>
+        </div>
+        <div className="mb-6 flex flex-col sm:flex-row gap-4">
           <input
             type="search"
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full px-4 py-2 bg-student-surface-container-lowest border border-student-outline-variant rounded-full text-student-body-md font-student"
+            className="flex-1 px-4 py-2 bg-student-surface-container-lowest border border-student-outline-variant rounded-full text-student-body-md font-student"
             placeholder="Search students..."
             aria-label="Search students"
           />
-          <select
+          <CustomSelect
             value={courseFilter}
-            onChange={(e) => handleCourseChange(e.target.value)}
-            className="w-full px-4 py-2 bg-student-surface-container-lowest border border-student-outline-variant rounded-full text-student-body-md font-student"
+            onChange={handleCourseChange}
+            options={courseOptions}
             aria-label="Filter by course"
-          >
-            {courseOptions.map((course) => (
-              <option key={course.value} value={course.value}>{course.label}</option>
-            ))}
-          </select>
+            className="sm:w-56"
+          />
         </div>
 
         {error ? (

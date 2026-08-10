@@ -1,5 +1,6 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import Icon from '../student/Icon';
+import CustomSelect from '../shared/CustomSelect';
 import type {
   IntegrityReportEvent,
   IntegrityReportPage,
@@ -21,6 +22,14 @@ type Props = {
   onClose: () => void;
 };
 
+const SEVERITY_OPTIONS = [
+  { value: '', label: 'All severities' },
+  { value: 'DANGER', label: 'Danger' },
+  { value: 'WARNING', label: 'Warning' },
+  { value: 'NEUTRAL', label: 'Neutral' },
+  { value: 'SUCCESS', label: 'Success' },
+];
+
 const IntegrityFullReportPanel = memo(({
   report,
   loading,
@@ -35,7 +44,13 @@ const IntegrityFullReportPanel = memo(({
   onOpenTimeline,
   onRetry,
   onClose,
-}: Props) => (
+}: Props) => {
+  const eventTypeOptions = useMemo(() => [
+    { value: '', label: 'All event types' },
+    ...(report?.eventTypes ?? []).map((type) => ({ value: type, label: type })),
+  ], [report?.eventTypes]);
+
+  return (
   <section className="bg-student-surface rounded-[24px] p-4 sm:p-6 lecturer-card-elevation" aria-labelledby="full-report-heading">
     <div className="flex items-start justify-between gap-4 mb-5">
       <div>
@@ -51,17 +66,18 @@ const IntegrityFullReportPanel = memo(({
 
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
       <input type="search" value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="Student or exam" aria-label="Search report" className="rounded-xl border border-student-outline-variant px-4 py-2.5" />
-      <select value={eventType} onChange={(event) => onEventTypeChange(event.target.value)} aria-label="Filter event type" className="rounded-xl border border-student-outline-variant px-4 py-2.5">
-        <option value="">All event types</option>
-        {(report?.eventTypes ?? []).map((type) => <option key={type} value={type}>{type}</option>)}
-      </select>
-      <select value={severity} onChange={(event) => onSeverityChange(event.target.value as typeof severity)} aria-label="Filter severity" className="rounded-xl border border-student-outline-variant px-4 py-2.5">
-        <option value="">All severities</option>
-        <option value="DANGER">Danger</option>
-        <option value="WARNING">Warning</option>
-        <option value="NEUTRAL">Neutral</option>
-        <option value="SUCCESS">Success</option>
-      </select>
+      <CustomSelect
+        value={eventType}
+        onChange={onEventTypeChange}
+        options={eventTypeOptions}
+        aria-label="Filter event type"
+      />
+      <CustomSelect
+        value={severity}
+        onChange={(v) => onSeverityChange(v as typeof severity)}
+        options={SEVERITY_OPTIONS}
+        aria-label="Filter severity"
+      />
     </div>
 
     {error ? (
@@ -104,7 +120,8 @@ const IntegrityFullReportPanel = memo(({
       </>
     )}
   </section>
-));
+  );
+});
 
 IntegrityFullReportPanel.displayName = 'IntegrityFullReportPanel';
 export default IntegrityFullReportPanel;

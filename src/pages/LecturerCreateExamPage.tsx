@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthProfile } from '../hooks/useAuthProfile';
 import { useCreateExam } from '../hooks/useCreateExam';
 import LecturerPortalLayout from '../components/lecturer/LecturerPortalLayout';
-import CreateExamPageHeader from '../components/lecturer/CreateExamPageHeader';
 import ExamDetailsForm from '../components/lecturer/ExamDetailsForm';
 import ExamQuestionEditor from '../components/lecturer/ExamQuestionEditor';
 import ExamSecuritySettingsPanel from '../components/lecturer/ExamSecuritySettingsPanel';
@@ -119,25 +118,21 @@ const LecturerCreateExamPage = () => {
       initials={initials}
       onNewExam={() => navigate(CREATE_EXAM_PATH)}
       contentClassName="create-exam-bg relative"
-      header={
-        <CreateExamPageHeader
-          initials={initials}
-          onSaveDraft={handleSaveDraft}
-          draftSavedLabel={draftSavedLabel}
-        />
-      }
     >
       <div className="create-exam-ambient pointer-events-none" aria-hidden="true" />
 
       <div className="relative z-10 p-4 md:p-8 max-w-[1200px] mx-auto w-full pb-12">
-        <div className="md:hidden mb-6 flex items-center justify-between gap-4">
-          <h1 className="text-student-headline-md font-student font-bold text-student-on-surface">Create New Exam</h1>
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-student-headline-md font-student font-bold text-student-on-surface">Create New Exam</h1>
+            <p className="text-student-body-md font-student text-student-on-surface-variant mt-1">Define exam details, add questions, and configure security settings.</p>
+          </div>
           <button
             type="button"
             onClick={handleSaveDraft}
-            className="text-student-primary font-student text-student-body-md font-medium shrink-0"
+            className="shrink-0 text-student-primary font-student text-student-body-md font-medium py-2 px-4 rounded-full border border-student-primary hover:bg-student-primary/5 transition-colors"
           >
-            Save Draft
+            {draftSavedLabel === 'Draft not saved yet' ? 'Save Draft' : draftSavedLabel}
           </button>
         </div>
 

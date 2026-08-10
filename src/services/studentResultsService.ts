@@ -110,7 +110,7 @@ const toResultItem = (item: ApiExamResult) => ({
   courseCode: item.courseCode,
   assessmentType: item.examTitle,
   category: item.courseCode,
-  dateTaken: new Date(item.submittedAt).toLocaleDateString(),
+  dateTaken: new Date(item.submittedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
   timing: { type: 'SUBMITTED' as const, submittedTime: new Date(item.submittedAt).toLocaleTimeString() },
   integrityScore: item.integrityScore,
   status: item.requiresReview ? ('UNDER_REVIEW' as const) : ('VERIFIED' as const),
@@ -173,7 +173,7 @@ export async function fetchResultDetail(resultId: number): Promise<StudentResult
         title: `Question ${index + 1}: ${status}`,
         timeLabel: `${answer.pointsEarned}/${answer.pointsPossible} points`,
         description: `${answer.question} · Selected: ${answer.selectedAnswer ?? 'No answer'} · Correct: ${answer.correctAnswer}`,
-        type: answer.selectedAnswer == null ? 'neutral' : answer.correct ? 'success' : 'neutral',
+        type: answer.selectedAnswer == null ? 'skipped' : answer.correct ? 'success' : 'neutral',
       };
     }),
   };

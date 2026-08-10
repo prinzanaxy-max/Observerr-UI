@@ -54,14 +54,7 @@ const StudentPortalLayout = memo(({
           </Link>
         </div>
 
-        {header ?? (
-          <StudentTopBar
-            title={title}
-            searchQuery={searchQuery}
-            onSearchChange={onSearchChange ?? (() => {})}
-            searchPlaceholder={searchPlaceholder}
-          />
-        )}
+        {header ?? <StudentTopBar />}
 
         <main className={`flex-1 min-h-0 overflow-y-auto overscroll-contain student-hide-scrollbar ${contentClassName}`}>
           {children}
